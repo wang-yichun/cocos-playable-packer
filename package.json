@@ -6,11 +6,18 @@
   "scripts": {
     "scan": "tsx src/scan.ts",
     "analyze": "tsx src/analyze-compression.ts",
+    "analyze-entry": "tsx src/analyze-entry.ts",
+    "analyze-modules": "tsx src/analyze-modules.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "acorn": "^8.17.0",
+    "acorn-walk": "^8.3.5",
+    "cheerio": "^1.2.0"
   }
 }
