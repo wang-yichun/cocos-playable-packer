@@ -1,0 +1,56 @@
+{
+  "projectName": "game141_TriChoiceShooter",
+  "projectRoot": "D:/Projects/game141_TriChoiceShooter",
+  "assetsDirectory": "assets",
+
+  "workspaceDirectory": "workspaces/game141",
+  "cacheDirectory": ".tinypng-cache",
+
+  "extensions": [".png", ".jpg", ".jpeg"],
+
+  "autoAtlas": {
+    "enabled": true,
+    "configExtensions": [".pac"],
+    "excludeAtlasDirectory": true,
+    "excludeAtlasSubdirectories": true
+  },
+
+  "excludeDirectories": [
+    "raw",
+    "normal",
+    "normals",
+    "mask",
+    "masks",
+    "lut",
+    "sdf",
+    "data-texture",
+    "data-textures"
+  ],
+
+  "excludeNamePatterns": [
+    "_normal.",
+    "_norm.",
+    "_n.",
+    "_mask.",
+    "_sdf.",
+    "_lut.",
+    "_roughness.",
+    "_metallic.",
+    "_metalness.",
+    "_ao.",
+    "_height.",
+    "_flow.",
+    "_noise."
+  ],
+
+  "manualReviewNamePatterns": ["pixel", "font", "text", "gradient", "spine"],
+
+  "minimumFileSizeBytes": 2048,
+
+  "compression": {
+    "processPng": true,
+    "processJpeg": true,
+    "preserveExtension": true,
+    "overwriteSource": false
+  }
+}

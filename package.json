@@ -13,7 +13,8 @@
     "pack:br": "tsx src/pack-compressed.ts",
     "serve": "http-server ./dist -p 8080 -c-1",
     "analyze:encoding": "tsx src/analyze-text-encoding.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "analyze:resources": "tsx src/analyze-resource-optimization.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
