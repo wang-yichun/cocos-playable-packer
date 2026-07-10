@@ -19,7 +19,9 @@
     "tinypng:cache-check": "tsx src/tinypng/check-cache.ts",
     "tinypng:test-one": "node --env-file=.env --import tsx src/tinypng/test-one.ts",
     "tinypng:preview": "node --env-file=.env --import tsx src/tinypng/compress-source-images.ts",
-    "tinypng:apply-plan": "tsx src/tinypng/plan-source-image-apply.ts"
+    "tinypng:apply-plan": "tsx src/tinypng/plan-source-image-apply.ts",
+    "tinypng:apply": "tsx src/tinypng/apply-source-images.ts",
+    "tinypng:restore": "tsx src/tinypng/restore-source-images.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

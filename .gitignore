@@ -19,3 +19,9 @@ entry-report.json
 
 .tinypng-cache/
 workspaces/*/preview/
+
+workspaces/*/backups/
+workspaces/*/manifests/applications/
+workspaces/*/manifests/restores/
+workspaces/*/manifests/latest-application.json
+workspaces/*/manifests/latest-restore.json

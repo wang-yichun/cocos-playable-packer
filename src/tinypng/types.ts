@@ -699,3 +699,93 @@ export interface TinyPngApplyPlan {
 
     notes: string[];
 }
+
+export interface TinyPngApplicationFile {
+    projectRelativePath: string;
+    assetsRelativePath: string;
+
+    sourceSha256: string;
+    sourceBytes: number;
+
+    compressedSha256: string;
+    compressedBytes: number;
+    compressedRelativePath: string;
+
+    backupRelativePath: string;
+
+    appliedAt: string | null;
+}
+
+export interface TinyPngApplicationManifestSummary {
+    plannedFileCount: number;
+    appliedCount: number;
+
+    sourceBytes: number;
+    compressedBytes: number;
+
+    savedBytes: number;
+    savedPercent: number;
+}
+
+export interface TinyPngApplicationManifest {
+    schemaVersion: number;
+
+    applicationId: string;
+    planId: string;
+
+    state:
+        | "prepared"
+        | "applied"
+        | "rolled-back";
+
+    preparedAt: string;
+    appliedAt: string | null;
+
+    projectName: string;
+
+    configFilePath: string;
+    applyPlanPath: string;
+
+    projectRoot: string;
+    assetsDirectory: string;
+
+    cacheDirectory: string;
+    backupDirectory: string;
+
+    summary: TinyPngApplicationManifestSummary;
+    files: TinyPngApplicationFile[];
+
+    notes: string[];
+}
+
+export type TinyPngRestoreItemStatus =
+    | "restored"
+    | "already-restored";
+
+export interface TinyPngRestoreItem {
+    projectRelativePath: string;
+    sourceSha256: string;
+    compressedSha256: string;
+
+    status: TinyPngRestoreItemStatus;
+    restoredAt: string | null;
+}
+
+export interface TinyPngRestoreReport {
+    schemaVersion: number;
+
+    restoreId: string;
+    restoredAt: string;
+
+    applicationId: string;
+    applicationManifestPath: string;
+
+    projectName: string;
+
+    restoredCount: number;
+    alreadyRestoredCount: number;
+
+    files: TinyPngRestoreItem[];
+
+    notes: string[];
+}
