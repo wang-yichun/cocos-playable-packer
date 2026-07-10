@@ -8,10 +8,13 @@
     "analyze": "tsx src/analyze-compression.ts",
     "analyze-entry": "tsx src/analyze-entry.ts",
     "analyze-modules": "tsx src/analyze-modules.ts",
+    "pack:raw": "tsx src/pack-uncompressed.ts",
+    "serve": "http-server ./dist -p 8080 -c-1",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
+    "http-server": "^14.1.1",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"
   },
