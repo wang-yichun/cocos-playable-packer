@@ -1,4 +1,4 @@
-{
+﻿{
   "projectName": "game141_TriChoiceShooter",
   "projectRoot": "D:/Projects/game141_TriChoiceShooter",
   "assetsDirectory": "assets",
@@ -6,11 +6,17 @@
   "workspaceDirectory": "workspaces/game141",
   "cacheDirectory": ".tinypng-cache",
 
-  "extensions": [".png", ".jpg", ".jpeg"],
+  "extensions": [
+    ".png",
+    ".jpg",
+    ".jpeg"
+  ],
 
   "autoAtlas": {
     "enabled": true,
-    "configExtensions": [".pac"],
+    "configExtensions": [
+      ".pac"
+    ],
     "excludeAtlasDirectory": true,
     "excludeAtlasSubdirectories": true
   },
@@ -39,11 +45,17 @@
     "_metalness.",
     "_ao.",
     "_height.",
-    "_flow.",
-    "_noise."
+    "_flow."
   ],
 
-  "manualReviewNamePatterns": ["pixel", "font", "text", "gradient", "spine"],
+  "manualReviewNamePatterns": [
+    "pixel",
+    "font",
+    "text",
+    "gradient",
+    "spine",
+    "noise"
+  ],
 
   "minimumFileSizeBytes": 2048,
 
