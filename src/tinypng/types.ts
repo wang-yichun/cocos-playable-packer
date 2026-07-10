@@ -564,3 +564,72 @@ export interface TinyPngCompressionResult {
      */
     compressionCount: number | null;
 }
+
+export type TinyPngPreviewItemStatus =
+    | "cache-hit"
+    | "compressed"
+    | "skipped-limit"
+    | "skipped-api-error"
+    | "source-changed"
+    | "failed";
+
+export interface TinyPngPreviewRunItem {
+    projectRelativePath: string;
+    sourceSha256: string;
+
+    status: TinyPngPreviewItemStatus;
+
+    sourceBytes: number;
+    compressedBytes: number | null;
+
+    savedBytes: number | null;
+    savedPercent: number | null;
+
+    previewPath: string | null;
+
+    /**
+     * TinyPNG 返回的本月压缩次数。
+     */
+    compressionCount: number | null;
+
+    message: string | null;
+}
+
+export interface TinyPngPreviewRunSummary {
+    candidateCount: number;
+
+    cacheHitCount: number;
+    compressedCount: number;
+
+    apiRequestAttempts: number;
+    apiRequestSuccesses: number;
+
+    skippedLimitCount: number;
+    skippedApiErrorCount: number;
+
+    sourceChangedCount: number;
+    failedCount: number;
+
+    previewFileCount: number;
+
+    previewSourceBytes: number;
+    previewCompressedBytes: number;
+    previewSavedBytes: number;
+}
+
+export interface TinyPngPreviewRunReport {
+    schemaVersion: number;
+
+    startedAt: string;
+    completedAt: string;
+
+    projectName: string;
+    candidateManifestPath: string;
+
+    apiRequestLimit: number | null;
+
+    summary: TinyPngPreviewRunSummary;
+    files: TinyPngPreviewRunItem[];
+
+    notes: string[];
+}

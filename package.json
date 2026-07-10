@@ -17,7 +17,8 @@
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
     "analyze:source-images": "tsx src/tinypng/analyze-source-images.ts",
     "tinypng:cache-check": "tsx src/tinypng/check-cache.ts",
-    "tinypng:test-one": "node --env-file=.env --import tsx src/tinypng/test-one.ts"
+    "tinypng:test-one": "node --env-file=.env --import tsx src/tinypng/test-one.ts",
+    "tinypng:preview": "node --env-file=.env --import tsx src/tinypng/compress-source-images.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
