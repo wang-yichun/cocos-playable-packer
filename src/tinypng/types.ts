@@ -633,3 +633,69 @@ export interface TinyPngPreviewRunReport {
 
     notes: string[];
 }
+
+export type TinyPngApplyPlanItemStatus =
+    | "ready"
+    | "source-changed"
+    | "cache-miss"
+    | "cache-invalid"
+    | "not-smaller"
+    | "failed";
+
+export interface TinyPngApplyPlanItem {
+    projectRelativePath: string;
+    assetsRelativePath: string;
+
+    sourceSha256: string;
+    currentSourceSha256: string | null;
+
+    sourceBytes: number;
+
+    compressedRelativePath: string | null;
+    compressedSha256: string | null;
+    compressedBytes: number | null;
+
+    savedBytes: number | null;
+    savedPercent: number | null;
+
+    status: TinyPngApplyPlanItemStatus;
+    message: string | null;
+}
+
+export interface TinyPngApplyPlanSummary {
+    candidateCount: number;
+
+    readyCount: number;
+    sourceChangedCount: number;
+    cacheMissCount: number;
+    cacheInvalidCount: number;
+    notSmallerCount: number;
+    failedCount: number;
+
+    readySourceBytes: number;
+    readyCompressedBytes: number;
+    readySavedBytes: number;
+    readySavedPercent: number;
+}
+
+export interface TinyPngApplyPlan {
+    schemaVersion: number;
+    planId: string;
+    generatedAt: string;
+
+    projectName: string;
+
+    configFilePath: string;
+    candidateManifestPath: string;
+
+    projectRoot: string;
+    assetsDirectory: string;
+
+    cacheDirectory: string;
+    backupDirectory: string;
+
+    summary: TinyPngApplyPlanSummary;
+    files: TinyPngApplyPlanItem[];
+
+    notes: string[];
+}
