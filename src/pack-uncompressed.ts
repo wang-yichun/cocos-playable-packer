@@ -280,6 +280,56 @@ function nameAnonymousSystemRegister(
     source: string,
     moduleId: string,
 ): TransformResult {
+    type SourceEdit = {
+        start: number;
+        end: number;
+        text: string;
+    };
+
+    function isSystemRegisterCall(
+        node: any,
+    ): boolean {
+        const callee = node?.callee;
+
+        return (
+            node?.type === 'CallExpression'
+            && callee?.type
+            === 'MemberExpression'
+            && callee.computed === false
+            && callee.object?.type
+            === 'Identifier'
+            && callee.object.name === 'System'
+            && callee.property?.type
+            === 'Identifier'
+            && callee.property.name === 'register'
+        );
+    }
+
+    function getStaticModuleName(
+        node: any,
+    ): string | null {
+        if (
+            node?.type === 'Literal'
+            && typeof node.value === 'string'
+        ) {
+            return node.value;
+        }
+
+        if (
+            node?.type === 'TemplateLiteral'
+            && node.expressions?.length === 0
+            && node.quasis?.length === 1
+        ) {
+            return (
+                node.quasis[0]?.value?.cooked
+                ?? node.quasis[0]?.value?.raw
+                ?? null
+            );
+        }
+
+        return null;
+    }
+
     const ast = parse(source, {
         ecmaVersion: 'latest',
         sourceType: 'script',
@@ -292,104 +342,98 @@ function nameAnonymousSystemRegister(
         ast,
         {
             CallExpression(node: any): void {
-                if (isSystemRegisterCall(node)) {
+                if (
+                    isSystemRegisterCall(node)
+                ) {
                     registerCalls.push(node);
                 }
             },
         } as any,
     );
 
-    /*
-     * 收集当前文件内已经注册的命名虚拟模块。
-     *
-     * 例如：
-     *
-     * chunks:///_virtual/GameManager.ts
-     */
-    const namedModuleIds = new Set<string>();
-
-    for (const call of registerCalls) {
-        const existingName =
-            getStaticStringValue(
-                call.arguments?.[0],
-            );
-
-        if (existingName !== null) {
-            namedModuleIds.add(
-                existingName,
-            );
-        }
-    }
-
     const edits: SourceEdit[] = [];
 
     let registerCount = 0;
     let anonymousRegisterCount = 0;
     let namedRegisterCount = 0;
-    let rewrittenDependencyCount = 0;
 
     for (const call of registerCalls) {
         registerCount += 1;
 
-        const firstArgument =
-            call.arguments?.[0];
+        const argumentsList: any[] =
+            call.arguments ?? [];
 
-        const existingName =
-            getStaticStringValue(
+        const firstArgument =
+            argumentsList[0];
+
+        const staticModuleName =
+            getStaticModuleName(
                 firstArgument,
             );
 
-        if (existingName !== null) {
+        /*
+         * 情况一：第一个参数是字符串。
+         *
+         * System.register(
+         *     "chunks:///_virtual/xxx",
+         *     dependencies,
+         *     declaration
+         * );
+         *
+         * 这是已经命名的模块，保持原样。
+         */
+        if (staticModuleName !== null) {
             namedRegisterCount += 1;
             continue;
         }
 
-        anonymousRegisterCount += 1;
-
-        const argumentsList =
-            call.arguments ?? [];
-
-        console.log(
-            '发现匿名 System.register：',
-            moduleId,
-            argumentsList.map(
-                (argument: any) =>
-                    argument?.type ?? 'unknown',
-            ),
-        );
-
-        if (argumentsList.length === 0) {
-            throw new Error(
-                'System.register 没有任何参数：'
-                + moduleId,
-            );
-        }
-
-        if (
-            typeof firstArgument?.start
-            !== 'number'
-        ) {
-            throw new Error(
-                '无法定位匿名 System.register '
-                + `第一个参数：${moduleId}`,
-            );
+        /*
+         * 情况二：三个参数。
+         *
+         * System.register(
+         *     moduleNameVariable,
+         *     dependencies,
+         *     declaration
+         * );
+         *
+         * Cocos Creator 的 Bundle 入口会使用这种形式，
+         * 模块名称被保存在 Identifier 变量中。
+         *
+         * 它依然是已经命名的模块，绝对不能再插入
+         * 一个新的 moduleId，否则会变成四个参数。
+         */
+        if (argumentsList.length === 3) {
+            namedRegisterCount += 1;
+            continue;
         }
 
         /*
-         * 匿名模块的常规形式：
+         * 情况三：两个参数。
          *
-         * System.register(dependencies, declaration)
+         * System.register(
+         *     dependencies,
+         *     declaration
+         * );
          *
-         * dependencies 不一定直接写成数组，也可能被
-         * 压缩器提升成变量：
+         * 这是标准匿名模块，转换为：
          *
-         * const deps = [];
-         * System.register(deps, declaration);
-         *
-         * 因此这里不能强制要求第一个参数是
-         * ArrayExpression。
+         * System.register(
+         *     "moduleId",
+         *     dependencies,
+         *     declaration
+         * );
          */
-        if (argumentsList.length >= 2) {
+        if (argumentsList.length === 2) {
+            if (
+                typeof firstArgument?.start
+                !== 'number'
+            ) {
+                throw new Error(
+                    '无法定位匿名 System.register '
+                    + `的依赖参数：${moduleId}`,
+                );
+            }
+
             edits.push({
                 start: firstArgument.start,
                 end: firstArgument.start,
@@ -397,93 +441,36 @@ function nameAnonymousSystemRegister(
                     `${JSON.stringify(moduleId)},`,
             });
 
-            /*
-             * 只有依赖直接写成数组时，我们才能安全分析
-             * 并重写其中的相对模块名称。
-             *
-             * 如果依赖是 Identifier，则保留其原始内容。
-             */
-            if (
-                firstArgument.type
-                === 'ArrayExpression'
-            ) {
-                for (
-                    const dependencyNode
-                    of firstArgument.elements ?? []
-                ) {
-                    const dependency =
-                        getStaticStringValue(
-                            dependencyNode,
-                        );
-
-                    if (
-                        dependency === null
-                        || !dependency.startsWith('./')
-                    ) {
-                        continue;
-                    }
-
-                    const virtualDependency =
-                        'chunks:///_virtual/'
-                        + dependency.slice(2);
-
-                    /*
-                     * 确认目标模块确实在当前文件中注册后
-                     * 才进行替换。
-                     */
-                    if (
-                        !namedModuleIds.has(
-                            virtualDependency,
-                        )
-                    ) {
-                        continue;
-                    }
-
-                    if (
-                        typeof dependencyNode.start
-                        !== 'number'
-                        || typeof dependencyNode.end
-                        !== 'number'
-                    ) {
-                        throw new Error(
-                            '无法定位依赖字符串：'
-                            + dependency,
-                        );
-                    }
-
-                    edits.push({
-                        start:
-                            dependencyNode.start,
-
-                        end:
-                            dependencyNode.end,
-
-                        text:
-                            JSON.stringify(
-                                virtualDependency,
-                            ),
-                    });
-
-                    rewrittenDependencyCount += 1;
-                }
-            }
-
+            anonymousRegisterCount += 1;
             continue;
         }
 
         /*
-         * 只有一个参数时，参数就是 declaration：
+         * 情况四：一个参数。
          *
-         * System.register(declaration)
+         * System.register(
+         *     declaration
+         * );
          *
-         * 转换为命名形式时需要补充空依赖数组：
+         * 转换为：
          *
-         * System.register("module-id", [], declaration)
-         *
-         * declaration 也可能是 Identifier，因此不能要求
-         * 它必须直接是 FunctionExpression。
+         * System.register(
+         *     "moduleId",
+         *     [],
+         *     declaration
+         * );
          */
         if (argumentsList.length === 1) {
+            if (
+                typeof firstArgument?.start
+                !== 'number'
+            ) {
+                throw new Error(
+                    '无法定位匿名 System.register '
+                    + `的声明参数：${moduleId}`,
+                );
+            }
+
             edits.push({
                 start: firstArgument.start,
                 end: firstArgument.start,
@@ -491,57 +478,57 @@ function nameAnonymousSystemRegister(
                     `${JSON.stringify(moduleId)},[],`,
             });
 
+            anonymousRegisterCount += 1;
             continue;
         }
 
-
         throw new Error(
-            '无法识别匿名 System.register 格式：'
-            + `${moduleId}，第一个参数类型：`
-            + `${firstArgument?.type
-            ?? 'missing'
-            }`,
-        );
-    }
-
-    if (anonymousRegisterCount > 1) {
-        throw new Error(
-            `${moduleId} 包含 `
-            + `${anonymousRegisterCount} 个匿名 `
-            + 'System.register，暂时不能安全内联。',
+            '无法识别 System.register 调用：'
+            + `${moduleId}，参数数量为 `
+            + argumentsList.length,
         );
     }
 
     /*
-     * 从后向前应用编辑，防止字符位置偏移。
+     * 一个物理 JS 文件正常情况下最多只有一个
+     * 匿名入口模块。
+     *
+     * 文件内其他模块通常已经使用
+     * chunks:///_virtual/... 命名。
+     */
+    if (anonymousRegisterCount > 1) {
+        throw new Error(
+            `${moduleId} 包含 `
+            + `${anonymousRegisterCount} 个匿名 `
+            + 'System.register，不能安全地使用'
+            + '同一个模块 ID 命名。',
+        );
+    }
+
+    /*
+     * 从源码末尾向前修改，避免较早的插入操作
+     * 改变后续 AST 节点的字符位置。
      */
     edits.sort(
         (a, b) => b.start - a.start,
     );
 
-    let transformed = source;
+    let transformedSource = source;
 
     for (const edit of edits) {
-        transformed =
-            transformed.slice(
+        transformedSource =
+            transformedSource.slice(
                 0,
                 edit.start,
             )
             + edit.text
-            + transformed.slice(
+            + transformedSource.slice(
                 edit.end,
             );
     }
 
-    if (rewrittenDependencyCount > 0) {
-        console.log(
-            `重写 Bundle 依赖：${moduleId}，`
-            + `${rewrittenDependencyCount} 项`,
-        );
-    }
-
     return {
-        source: transformed,
+        source: transformedSource,
         registerCount,
         anonymousRegisterCount,
         namedRegisterCount,
@@ -744,7 +731,6 @@ function escapeJavaScriptSource(
         .replace(/\u2028/g, '\\u2028')
         .replace(/\u2029/g, '\\u2029');
 }
-
 function createRuntimeSource(): string {
     return String.raw`
 (function () {
@@ -754,14 +740,23 @@ function createRuntimeSource(): string {
     var BOOT = window.__PACK_BOOT__;
     var BASE = BOOT.base;
 
-    var paths = Object.keys(FILES).sort(function (a, b) {
-        return b.length - a.length;
-    });
+    var paths = Object.keys(FILES).sort(
+        function (a, b) {
+            return b.length - a.length;
+        }
+    );
 
     var byteCache = Object.create(null);
     var textCache = Object.create(null);
     var blobUrlCache = Object.create(null);
 
+    /**
+     * 消除路径中的：
+     *
+     * .
+     * ..
+     * 多余斜杠
+     */
     function collapsePath(value) {
         var input = String(value)
             .replace(/\\/g, '/')
@@ -771,10 +766,17 @@ function createRuntimeSource(): string {
         var parts = input.split('/');
         var output = [];
 
-        for (var i = 0; i < parts.length; i += 1) {
-            var part = parts[i];
+        for (
+            var index = 0;
+            index < parts.length;
+            index += 1
+        ) {
+            var part = parts[index];
 
-            if (!part || part === '.') {
+            if (
+                !part
+                || part === '.'
+            ) {
                 continue;
             }
 
@@ -792,8 +794,14 @@ function createRuntimeSource(): string {
         return output.join('/');
     }
 
+    /**
+     * 将浏览器 URL 转为 VFS 内部相对路径。
+     */
     function normalizeUrl(input) {
-        if (input === null || input === undefined) {
+        if (
+            input === null
+            || input === undefined
+        ) {
             return null;
         }
 
@@ -817,6 +825,7 @@ function createRuntimeSource(): string {
             raw.indexOf('data:') === 0
             || raw.indexOf('blob:') === 0
             || raw.indexOf('chunks://') === 0
+            || raw.indexOf('virtual:///') === 0
         ) {
             return null;
         }
@@ -829,17 +838,14 @@ function createRuntimeSource(): string {
                 document.baseURI
             );
 
-            if (parsed.origin === 'https://playable.local') {
-                candidates.push(
-                    parsed.pathname.replace(/^\/+/, '')
-                );
-            } else {
-                candidates.push(
-                    parsed.pathname.replace(/^\/+/, '')
-                );
-            }
+            candidates.push(
+                parsed.pathname.replace(
+                    /^\/+/,
+                    ''
+                )
+            );
         } catch (_error) {
-            // 接下来继续使用原字符串解析。
+            // 不是标准 URL 时继续用原字符串。
         }
 
         candidates.push(raw);
@@ -849,32 +855,47 @@ function createRuntimeSource(): string {
             candidateIndex < candidates.length;
             candidateIndex += 1
         ) {
-            var candidate;
+            var candidate =
+                candidates[candidateIndex];
 
             try {
-                candidate = decodeURIComponent(
-                    candidates[candidateIndex]
-                );
+                candidate =
+                    decodeURIComponent(
+                        candidate
+                    );
             } catch (_error) {
-                candidate = candidates[candidateIndex];
+                // 保留原字符串。
             }
 
-            candidate = collapsePath(candidate);
+            candidate =
+                collapsePath(candidate);
 
             if (FILES[candidate]) {
                 return candidate;
             }
 
+            /*
+             * 有些 Cocos URL 会在路径前面附带：
+             *
+             * http://127.0.0.1:8080/
+             * blob origin
+             * 临时目录
+             *
+             * 因此再尝试尾部匹配。
+             */
             for (
                 var pathIndex = 0;
                 pathIndex < paths.length;
                 pathIndex += 1
             ) {
-                var knownPath = paths[pathIndex];
+                var knownPath =
+                    paths[pathIndex];
 
                 if (
                     candidate === knownPath
-                    || candidate.endsWith('/' + knownPath)
+                    || candidate.endsWith(
+                        '/' + knownPath
+                    )
                 ) {
                     return knownPath;
                 }
@@ -886,7 +907,11 @@ function createRuntimeSource(): string {
 
     function decodeBase64(base64) {
         var binary = atob(base64);
-        var bytes = new Uint8Array(binary.length);
+
+        var bytes =
+            new Uint8Array(
+                binary.length
+            );
 
         for (
             var index = 0;
@@ -917,7 +942,9 @@ function createRuntimeSource(): string {
             return null;
         }
 
-        var bytes = decodeBase64(entry.b);
+        var bytes =
+            decodeBase64(entry.b);
+
         byteCache[key] = bytes;
 
         return bytes;
@@ -928,11 +955,14 @@ function createRuntimeSource(): string {
 
         if (!key) {
             throw new Error(
-                'VFS text not found: ' + input
+                'VFS text not found: '
+                + String(input)
             );
         }
 
-        if (textCache[key] !== undefined) {
+        if (
+            textCache[key] !== undefined
+        ) {
             return textCache[key];
         }
 
@@ -940,12 +970,14 @@ function createRuntimeSource(): string {
 
         if (!bytes) {
             throw new Error(
-                'VFS text not found: ' + input
+                'VFS text not found: '
+                + String(input)
             );
         }
 
         var text =
-            new TextDecoder('utf-8').decode(bytes);
+            new TextDecoder('utf-8')
+                .decode(bytes);
 
         textCache[key] = text;
 
@@ -966,7 +998,10 @@ function createRuntimeSource(): string {
         var entry = FILES[key];
         var bytes = getBytes(key);
 
-        if (!entry || !bytes) {
+        if (
+            !entry
+            || !bytes
+        ) {
             return null;
         }
 
@@ -979,7 +1014,9 @@ function createRuntimeSource(): string {
             }
         );
 
-        var url = URL.createObjectURL(blob);
+        var url =
+            URL.createObjectURL(blob);
+
         blobUrlCache[key] = url;
 
         return url;
@@ -997,11 +1034,73 @@ function createRuntimeSource(): string {
         blobUrl: getBlobUrl,
     };
 
-    var nativeFetch = window.fetch
-        ? window.fetch.bind(window)
-        : null;
+    /**
+     * 将 CSS 中的本地资源 URL 替换为 Blob URL。
+     *
+     * 主要处理：
+     *
+     * @font-face {
+     *     src: url("assets/.../font.ttf");
+     * }
+     */
+    function rewriteCssResourceUrls(value) {
+        if (typeof value !== 'string') {
+            return value;
+        }
 
-    window.fetch = function (input, init) {
+        return value.replace(
+            /url\(\s*(['"]?)(.*?)\1\s*\)/gi,
+            function (
+                original,
+                _quote,
+                rawUrl
+            ) {
+                var resourceUrl =
+                    String(rawUrl).trim();
+
+                if (
+                    !resourceUrl
+                    || resourceUrl.indexOf(
+                        'data:'
+                    ) === 0
+                    || resourceUrl.indexOf(
+                        'blob:'
+                    ) === 0
+                    || resourceUrl.indexOf(
+                        '#'
+                    ) === 0
+                ) {
+                    return original;
+                }
+
+                var mappedUrl =
+                    getBlobUrl(resourceUrl);
+
+                if (!mappedUrl) {
+                    return original;
+                }
+
+                return (
+                    'url("'
+                    + mappedUrl
+                    + '")'
+                );
+            }
+        );
+    }
+
+    /**
+     * 拦截 fetch。
+     */
+    var nativeFetch =
+        window.fetch
+            ? window.fetch.bind(window)
+            : null;
+
+    window.fetch = function (
+        input,
+        init
+    ) {
         var key = normalizeUrl(input);
 
         if (!key) {
@@ -1014,11 +1113,30 @@ function createRuntimeSource(): string {
                 );
             }
 
-            return nativeFetch(input, init);
+            return nativeFetch(
+                input,
+                init
+            );
         }
 
         var entry = FILES[key];
         var bytes = getBytes(key);
+
+        if (
+            !entry
+            || !bytes
+        ) {
+            return Promise.resolve(
+                new Response(
+                    null,
+                    {
+                        status: 404,
+                        statusText:
+                            'Not Found',
+                    }
+                )
+            );
+        }
 
         return Promise.resolve(
             new Response(
@@ -1030,28 +1148,46 @@ function createRuntimeSource(): string {
                         'Content-Type':
                             entry.m
                             || 'application/octet-stream',
+
                         'Content-Length':
-                            String(bytes.byteLength),
+                            String(
+                                bytes.byteLength
+                            ),
                     },
                 }
             )
         );
     };
 
+    /**
+     * 拦截 XMLHttpRequest。
+     */
     var NativeXMLHttpRequest =
         window.XMLHttpRequest;
 
-    function dispatchHandler(target, type, event) {
-        var handler = target['on' + type];
+    function dispatchHandler(
+        target,
+        type,
+        event
+    ) {
+        var handler =
+            target['on' + type];
 
-        if (typeof handler === 'function') {
-            handler.call(target, event);
+        if (
+            typeof handler
+            === 'function'
+        ) {
+            handler.call(
+                target,
+                event
+            );
         }
 
         target.dispatchEvent(event);
     }
 
-    class PackXMLHttpRequest extends EventTarget {
+    class PackXMLHttpRequest
+        extends EventTarget {
         constructor() {
             super();
 
@@ -1063,6 +1199,7 @@ function createRuntimeSource(): string {
             this._readyState = 0;
             this._status = 0;
             this._statusText = '';
+
             this._response = null;
             this._responseText = '';
             this._responseXML = null;
@@ -1072,7 +1209,8 @@ function createRuntimeSource(): string {
             this._timeout = 0;
             this._withCredentials = false;
 
-            this.upload = new EventTarget();
+            this.upload =
+                new EventTarget();
 
             this.onreadystatechange = null;
             this.onloadstart = null;
@@ -1136,7 +1274,8 @@ function createRuntimeSource(): string {
             this._responseType = value;
 
             if (this._native) {
-                this._native.responseType = value;
+                this._native.responseType =
+                    value;
             }
         }
 
@@ -1150,7 +1289,8 @@ function createRuntimeSource(): string {
             this._timeout = value;
 
             if (this._native) {
-                this._native.timeout = value;
+                this._native.timeout =
+                    value;
             }
         }
 
@@ -1161,10 +1301,13 @@ function createRuntimeSource(): string {
         }
 
         set withCredentials(value) {
-            this._withCredentials = value;
+            this._withCredentials =
+                value;
 
             if (this._native) {
-                this._native.withCredentials = value;
+                this._native
+                    .withCredentials =
+                    value;
             }
         }
 
@@ -1177,9 +1320,13 @@ function createRuntimeSource(): string {
         ) {
             this._method = method;
             this._url = String(url);
-            this._async = async !== false;
+            this._async =
+                async !== false;
 
-            var key = normalizeUrl(this._url);
+            var key =
+                normalizeUrl(
+                    this._url
+                );
 
             if (key) {
                 this._readyState = 1;
@@ -1187,7 +1334,9 @@ function createRuntimeSource(): string {
                 dispatchHandler(
                     this,
                     'readystatechange',
-                    new Event('readystatechange')
+                    new Event(
+                        'readystatechange'
+                    )
                 );
 
                 return;
@@ -1224,16 +1373,17 @@ function createRuntimeSource(): string {
                 var eventName =
                     eventNames[index];
 
-                this._native.addEventListener(
-                    eventName,
-                    function (event) {
-                        dispatchHandler(
-                            this,
-                            event.type,
-                            event
-                        );
-                    }.bind(this)
-                );
+                this._native
+                    .addEventListener(
+                        eventName,
+                        function (event) {
+                            dispatchHandler(
+                                this,
+                                event.type,
+                                event
+                            );
+                        }.bind(this)
+                    );
             }
 
             this._native.open(
@@ -1251,20 +1401,171 @@ function createRuntimeSource(): string {
                 return;
             }
 
-            var execute = function () {
-                var key =
-                    normalizeUrl(this._url);
+            var execute =
+                function () {
+                    var key =
+                        normalizeUrl(
+                            this._url
+                        );
 
-                var entry =
-                    key ? FILES[key] : null;
+                    var entry =
+                        key
+                            ? FILES[key]
+                            : null;
 
-                var bytes =
-                    key ? getBytes(key) : null;
+                    var bytes =
+                        key
+                            ? getBytes(key)
+                            : null;
 
-                if (!entry || !bytes) {
-                    this._status = 404;
-                    this._statusText =
-                        'Not Found';
+                    if (
+                        !entry
+                        || !bytes
+                    ) {
+                        this._status = 404;
+                        this._statusText =
+                            'Not Found';
+
+                        this._readyState = 4;
+
+                        dispatchHandler(
+                            this,
+                            'readystatechange',
+                            new Event(
+                                'readystatechange'
+                            )
+                        );
+
+                        dispatchHandler(
+                            this,
+                            'error',
+                            new Event(
+                                'error'
+                            )
+                        );
+
+                        dispatchHandler(
+                            this,
+                            'loadend',
+                            new Event(
+                                'loadend'
+                            )
+                        );
+
+                        return;
+                    }
+
+                    dispatchHandler(
+                        this,
+                        'loadstart',
+                        new Event(
+                            'loadstart'
+                        )
+                    );
+
+                    this._readyState = 2;
+                    this._status = 200;
+                    this._statusText = 'OK';
+                    this._responseURL =
+                        BASE + key;
+
+                    dispatchHandler(
+                        this,
+                        'readystatechange',
+                        new Event(
+                            'readystatechange'
+                        )
+                    );
+
+                    this._readyState = 3;
+
+                    dispatchHandler(
+                        this,
+                        'readystatechange',
+                        new Event(
+                            'readystatechange'
+                        )
+                    );
+
+                    var buffer =
+                        bytes.buffer.slice(
+                            bytes.byteOffset,
+                            bytes.byteOffset
+                                + bytes.byteLength
+                        );
+
+                    var text = null;
+
+                    switch (
+                        this._responseType
+                    ) {
+                        case 'arraybuffer':
+                            this._response =
+                                buffer;
+                            break;
+
+                        case 'blob':
+                            this._response =
+                                new Blob(
+                                    [bytes],
+                                    {
+                                        type:
+                                            entry.m,
+                                    }
+                                );
+                            break;
+
+                        case 'json':
+                            text =
+                                new TextDecoder(
+                                    'utf-8'
+                                ).decode(
+                                    bytes
+                                );
+
+                            this._response =
+                                JSON.parse(
+                                    text
+                                );
+                            break;
+
+                        case 'document':
+                            text =
+                                new TextDecoder(
+                                    'utf-8'
+                                ).decode(
+                                    bytes
+                                );
+
+                            this._responseXML =
+                                new DOMParser()
+                                    .parseFromString(
+                                        text,
+                                        entry.m
+                                            || 'text/xml'
+                                    );
+
+                            this._response =
+                                this
+                                    ._responseXML;
+                            break;
+
+                        default:
+                            text =
+                                new TextDecoder(
+                                    'utf-8'
+                                ).decode(
+                                    bytes
+                                );
+
+                            this._responseText =
+                                text;
+
+                            this._response =
+                                text;
+                            break;
+                    }
+
                     this._readyState = 4;
 
                     dispatchHandler(
@@ -1275,155 +1576,51 @@ function createRuntimeSource(): string {
                         )
                     );
 
+                    if (
+                        typeof ProgressEvent
+                        !== 'undefined'
+                    ) {
+                        dispatchHandler(
+                            this,
+                            'progress',
+                            new ProgressEvent(
+                                'progress',
+                                {
+                                    lengthComputable:
+                                        true,
+
+                                    loaded:
+                                        bytes
+                                            .byteLength,
+
+                                    total:
+                                        bytes
+                                            .byteLength,
+                                }
+                            )
+                        );
+                    }
+
                     dispatchHandler(
                         this,
-                        'error',
-                        new Event('error')
+                        'load',
+                        new Event('load')
                     );
 
                     dispatchHandler(
                         this,
                         'loadend',
-                        new Event('loadend')
+                        new Event(
+                            'loadend'
+                        )
                     );
-
-                    return;
-                }
-
-                dispatchHandler(
-                    this,
-                    'loadstart',
-                    new Event('loadstart')
-                );
-
-                this._readyState = 2;
-                this._status = 200;
-                this._statusText = 'OK';
-                this._responseURL =
-                    BASE + key;
-
-                dispatchHandler(
-                    this,
-                    'readystatechange',
-                    new Event(
-                        'readystatechange'
-                    )
-                );
-
-                this._readyState = 3;
-
-                dispatchHandler(
-                    this,
-                    'readystatechange',
-                    new Event(
-                        'readystatechange'
-                    )
-                );
-
-                var buffer = bytes.buffer.slice(
-                    bytes.byteOffset,
-                    bytes.byteOffset
-                        + bytes.byteLength
-                );
-
-                var text = null;
-
-                switch (this._responseType) {
-                    case 'arraybuffer':
-                        this._response = buffer;
-                        break;
-
-                    case 'blob':
-                        this._response =
-                            new Blob(
-                                [bytes],
-                                {
-                                    type: entry.m,
-                                }
-                            );
-                        break;
-
-                    case 'json':
-                        text =
-                            new TextDecoder(
-                                'utf-8'
-                            ).decode(bytes);
-
-                        this._response =
-                            JSON.parse(text);
-                        break;
-
-                    case 'document':
-                        text =
-                            new TextDecoder(
-                                'utf-8'
-                            ).decode(bytes);
-
-                        this._responseXML =
-                            new DOMParser()
-                                .parseFromString(
-                                    text,
-                                    entry.m
-                                        || 'text/xml'
-                                );
-
-                        this._response =
-                            this._responseXML;
-                        break;
-
-                    default:
-                        text =
-                            new TextDecoder(
-                                'utf-8'
-                            ).decode(bytes);
-
-                        this._responseText =
-                            text;
-
-                        this._response = text;
-                        break;
-                }
-
-                this._readyState = 4;
-
-                dispatchHandler(
-                    this,
-                    'readystatechange',
-                    new Event(
-                        'readystatechange'
-                    )
-                );
-
-                dispatchHandler(
-                    this,
-                    'progress',
-                    new ProgressEvent(
-                        'progress',
-                        {
-                            lengthComputable: true,
-                            loaded:
-                                bytes.byteLength,
-                            total:
-                                bytes.byteLength,
-                        }
-                    )
-                );
-
-                dispatchHandler(
-                    this,
-                    'load',
-                    new Event('load')
-                );
-
-                dispatchHandler(
-                    this,
-                    'loadend',
-                    new Event('loadend')
-                );
-            }.bind(this);
+                }.bind(this);
 
             if (this._async) {
-                setTimeout(execute, 0);
+                setTimeout(
+                    execute,
+                    0
+                );
             } else {
                 execute();
             }
@@ -1450,40 +1647,54 @@ function createRuntimeSource(): string {
             );
         }
 
-        setRequestHeader(name, value) {
+        setRequestHeader(
+            name,
+            value
+        ) {
             if (this._native) {
-                this._native.setRequestHeader(
-                    name,
-                    value
-                );
+                this._native
+                    .setRequestHeader(
+                        name,
+                        value
+                    );
             }
         }
 
         getResponseHeader(name) {
             if (this._native) {
                 return this._native
-                    .getResponseHeader(name);
+                    .getResponseHeader(
+                        name
+                    );
             }
 
             var key =
-                normalizeUrl(this._url);
+                normalizeUrl(
+                    this._url
+                );
 
             var entry =
-                key ? FILES[key] : null;
+                key
+                    ? FILES[key]
+                    : null;
 
             if (!entry) {
                 return null;
             }
 
+            var lowerName =
+                String(name)
+                    .toLowerCase();
+
             if (
-                String(name).toLowerCase()
+                lowerName
                 === 'content-type'
             ) {
                 return entry.m;
             }
 
             if (
-                String(name).toLowerCase()
+                lowerName
                 === 'content-length'
             ) {
                 return String(entry.s);
@@ -1499,10 +1710,14 @@ function createRuntimeSource(): string {
             }
 
             var key =
-                normalizeUrl(this._url);
+                normalizeUrl(
+                    this._url
+                );
 
             var entry =
-                key ? FILES[key] : null;
+                key
+                    ? FILES[key]
+                    : null;
 
             if (!entry) {
                 return '';
@@ -1511,7 +1726,8 @@ function createRuntimeSource(): string {
             return (
                 'content-type: '
                 + entry.m
-                + '\r\ncontent-length: '
+                + '\r\n'
+                + 'content-length: '
                 + entry.s
                 + '\r\n'
             );
@@ -1520,7 +1736,9 @@ function createRuntimeSource(): string {
         overrideMimeType(value) {
             if (this._native) {
                 this._native
-                    .overrideMimeType(value);
+                    .overrideMimeType(
+                        value
+                    );
             }
         }
     }
@@ -1534,6 +1752,9 @@ function createRuntimeSource(): string {
     window.XMLHttpRequest =
         PackXMLHttpRequest;
 
+    /**
+     * 拦截 DOM 元素的 src 属性。
+     */
     function patchUrlProperty(
         prototype,
         propertyName
@@ -1550,7 +1771,8 @@ function createRuntimeSource(): string {
 
         if (
             !descriptor
-            || typeof descriptor.set !== 'function'
+            || typeof descriptor.set
+                !== 'function'
         ) {
             return;
         }
@@ -1561,20 +1783,23 @@ function createRuntimeSource(): string {
             {
                 configurable:
                     descriptor.configurable,
+
                 enumerable:
                     descriptor.enumerable,
 
-                get: descriptor.get,
+                get:
+                    descriptor.get,
 
-                set: function (value) {
-                    var mapped =
-                        getBlobUrl(value);
+                set:
+                    function (value) {
+                        var mapped =
+                            getBlobUrl(value);
 
-                    descriptor.set.call(
-                        this,
-                        mapped || value
-                    );
-                },
+                        descriptor.set.call(
+                            this,
+                            mapped || value
+                        );
+                    },
             }
         );
     }
@@ -1603,6 +1828,158 @@ function createRuntimeSource(): string {
         'src'
     );
 
+    /**
+     * 拦截动态加入的 style 标签。
+     */
+    function rewriteStyleElement(
+        element
+    ) {
+        if (
+            !element
+            || element.nodeType !== 1
+            || String(element.tagName)
+                .toUpperCase()
+                !== 'STYLE'
+        ) {
+            return;
+        }
+
+        var cssText =
+            element.textContent;
+
+        if (
+            typeof cssText === 'string'
+            && cssText.indexOf(
+                'url('
+            ) >= 0
+        ) {
+            element.textContent =
+                rewriteCssResourceUrls(
+                    cssText
+                );
+        }
+    }
+
+    var nativeAppendChild =
+        Node.prototype.appendChild;
+
+    Node.prototype.appendChild =
+        function (child) {
+            rewriteStyleElement(child);
+
+            return nativeAppendChild.call(
+                this,
+                child
+            );
+        };
+
+    var nativeInsertBefore =
+        Node.prototype.insertBefore;
+
+    Node.prototype.insertBefore =
+        function (
+            newNode,
+            referenceNode
+        ) {
+            rewriteStyleElement(
+                newNode
+            );
+
+            return nativeInsertBefore.call(
+                this,
+                newNode,
+                referenceNode
+            );
+        };
+
+    /**
+     * 拦截：
+     *
+     * styleSheet.insertRule(...)
+     */
+    if (
+        window.CSSStyleSheet
+        && CSSStyleSheet.prototype
+            .insertRule
+    ) {
+        var nativeInsertRule =
+            CSSStyleSheet.prototype
+                .insertRule;
+
+        CSSStyleSheet.prototype
+            .insertRule =
+            function (
+                rule,
+                index
+            ) {
+                var rewrittenRule =
+                    rewriteCssResourceUrls(
+                        String(rule)
+                    );
+
+                if (
+                    index === undefined
+                ) {
+                    return nativeInsertRule.call(
+                        this,
+                        rewrittenRule
+                    );
+                }
+
+                return nativeInsertRule.call(
+                    this,
+                    rewrittenRule,
+                    index
+                );
+            };
+    }
+
+    /**
+     * 拦截：
+     *
+     * style.setProperty(
+     *     "src",
+     *     "url(...)"
+     * );
+     */
+    if (
+        window.CSSStyleDeclaration
+        && CSSStyleDeclaration
+            .prototype
+            .setProperty
+    ) {
+        var nativeSetProperty =
+            CSSStyleDeclaration
+                .prototype
+                .setProperty;
+
+        CSSStyleDeclaration
+            .prototype
+            .setProperty =
+            function (
+                propertyName,
+                value,
+                priority
+            ) {
+                var nextValue =
+                    typeof value === 'string'
+                        ? rewriteCssResourceUrls(
+                            value
+                        )
+                        : value;
+
+                return nativeSetProperty.call(
+                    this,
+                    propertyName,
+                    nextValue,
+                    priority
+                );
+            };
+    }
+
+    /**
+     * 拦截 FontFace。
+     */
     if (window.FontFace) {
         var NativeFontFace =
             window.FontFace;
@@ -1612,30 +1989,16 @@ function createRuntimeSource(): string {
             source,
             descriptors
         ) {
-            var transformedSource = source;
+            var transformedSource =
+                source;
 
-            if (typeof source === 'string') {
+            if (
+                typeof source
+                === 'string'
+            ) {
                 transformedSource =
-                    source.replace(
-                        /url\(\s*(['"]?)(.*?)\1\s*\)/gi,
-                        function (
-                            original,
-                            _quote,
-                            rawUrl
-                        ) {
-                            var mapped =
-                                getBlobUrl(rawUrl);
-
-                            if (!mapped) {
-                                return original;
-                            }
-
-                            return (
-                                'url("'
-                                + mapped
-                                + '")'
-                            );
-                        }
+                    rewriteCssResourceUrls(
+                        source
                     );
             }
 
@@ -1650,18 +2013,109 @@ function createRuntimeSource(): string {
             NativeFontFace.prototype;
     }
 
-    /*
-     * 本地预览渠道桩。
-     * 真正的 AppLovin 模板会在后续阶段替换。
+    /**
+     * 浏览器要求用户交互后才能启动 AudioContext。
+     *
+     * 首次点击或触摸时尝试恢复。
      */
-    if (!window.ALPlayableAnalytics) {
-        window.ALPlayableAnalytics = {
-            trackEvent: function (name) {
-                console.log(
-                    '[PlayableAnalytics]',
-                    name
+    function resumeAudioContexts() {
+        var context =
+            window.__audioContext
+            || window.audioContext;
+
+        if (
+            context
+            && typeof context.resume
+                === 'function'
+            && context.state
+                === 'suspended'
+        ) {
+            context.resume().catch(
+                function () {}
+            );
+        }
+
+        /*
+         * Cocos 通常会自行监听用户输入恢复音频。
+         * 这里额外尝试恢复页面上可访问到的音频元素。
+         */
+        var mediaElements =
+            document.querySelectorAll(
+                'audio,video'
+            );
+
+        for (
+            var index = 0;
+            index < mediaElements.length;
+            index += 1
+        ) {
+            var media =
+                mediaElements[index];
+
+            if (
+                media
+                && media.paused
+                && media.autoplay
+                && typeof media.play
+                    === 'function'
+            ) {
+                media.play().catch(
+                    function () {}
                 );
-            },
+            }
+        }
+    }
+
+    var unlockEvents = [
+        'pointerdown',
+        'touchstart',
+        'mousedown',
+        'keydown',
+    ];
+
+    function unlockAudioOnce() {
+        resumeAudioContexts();
+
+        for (
+            var index = 0;
+            index < unlockEvents.length;
+            index += 1
+        ) {
+            window.removeEventListener(
+                unlockEvents[index],
+                unlockAudioOnce,
+                true
+            );
+        }
+    }
+
+    for (
+        var unlockIndex = 0;
+        unlockIndex
+            < unlockEvents.length;
+        unlockIndex += 1
+    ) {
+        window.addEventListener(
+            unlockEvents[unlockIndex],
+            unlockAudioOnce,
+            true
+        );
+    }
+
+    /**
+     * 本地预览用渠道桩。
+     */
+    if (
+        !window.ALPlayableAnalytics
+    ) {
+        window.ALPlayableAnalytics = {
+            trackEvent:
+                function (name) {
+                    console.log(
+                        '[PlayableAnalytics]',
+                        name
+                    );
+                },
         };
     }
 
@@ -1670,71 +2124,105 @@ function createRuntimeSource(): string {
             Object.create(null);
 
         window.mraid = {
-            getState: function () {
-                return 'default';
-            },
+            getState:
+                function () {
+                    return 'default';
+                },
 
-            getVersion: function () {
-                return 'preview';
-            },
+            getVersion:
+                function () {
+                    return 'preview';
+                },
 
-            isViewable: function () {
-                return true;
-            },
+            isViewable:
+                function () {
+                    return true;
+                },
 
-            getScreenSize: function () {
-                return {
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                };
-            },
+            getScreenSize:
+                function () {
+                    return {
+                        width:
+                            window
+                                .innerWidth,
 
-            getMaxSize: function () {
-                return {
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                };
-            },
+                        height:
+                            window
+                                .innerHeight,
+                    };
+                },
+
+            getMaxSize:
+                function () {
+                    return {
+                        width:
+                            window
+                                .innerWidth,
+
+                        height:
+                            window
+                                .innerHeight,
+                    };
+                },
 
             addEventListener:
-                function (name, callback) {
+                function (
+                    name,
+                    callback
+                ) {
                     mraidListeners[name] =
                         callback;
                 },
 
             removeEventListener:
                 function (name) {
-                    delete mraidListeners[name];
+                    delete mraidListeners[
+                        name
+                    ];
                 },
 
-            open: function (url) {
-                window.open(
-                    url,
-                    '_blank'
-                );
-            },
+            open:
+                function (url) {
+                    window.open(
+                        url,
+                        '_blank'
+                    );
+                },
         };
     }
 
     if (!window.xsd_playable) {
         window.xsd_playable = {
-            adapter: function () {},
-            download: function () {},
-            mraidOpen: function () {},
-            gameReady: function () {},
-            gameEnd: function () {},
-            onInteracted: function () {},
+            adapter:
+                function () {},
+
+            download:
+                function () {},
+
+            mraidOpen:
+                function () {},
+
+            gameReady:
+                function () {},
+
+            gameEnd:
+                function () {},
+
+            onInteracted:
+                function () {},
+
             playableSDKsendEvent:
                 function () {},
         };
     }
 
+    /**
+     * 在全局作用域执行 JS 文件。
+     */
     function evaluateFile(filePath) {
-        var source = getText(filePath);
+        var source =
+            getText(filePath);
 
-        /*
-         * 间接 eval，确保代码在全局作用域执行。
-         */
         (0, eval)(
             source
             + '\n//# sourceURL='
@@ -1745,16 +2233,21 @@ function createRuntimeSource(): string {
 
     async function boot() {
         /*
-         * 原始顺序：
-         * polyfills -> SystemJS。
+         * 原始执行顺序：
+         *
+         * polyfills
+         * system.bundle
          */
         for (
             var runtimeIndex = 0;
-            runtimeIndex < BOOT.runtime.length;
+            runtimeIndex
+                < BOOT.runtime.length;
             runtimeIndex += 1
         ) {
             evaluateFile(
-                BOOT.runtime[runtimeIndex]
+                BOOT.runtime[
+                    runtimeIndex
+                ]
             );
         }
 
@@ -1764,6 +2257,9 @@ function createRuntimeSource(): string {
             );
         }
 
+        /*
+         * 安装 Import Map。
+         */
         if (
             typeof System.addImportMap
             === 'function'
@@ -1773,12 +2269,15 @@ function createRuntimeSource(): string {
             );
         } else {
             var importMapElement =
-                document.createElement('script');
+                document.createElement(
+                    'script'
+                );
 
             importMapElement.type =
                 'systemjs-importmap';
 
-            importMapElement.textContent =
+            importMapElement
+                .textContent =
                 JSON.stringify(
                     BOOT.importMap
                 );
@@ -1789,73 +2288,93 @@ function createRuntimeSource(): string {
         }
 
         /*
-         * 所有 System.register 文件只执行注册，
-         * 真正模块代码会在 System.import 时执行。
+         * 执行全部 System.register 文件。
+         *
+         * 这里只注册模块，不立即执行模块主体。
          */
         for (
             var moduleIndex = 0;
-            moduleIndex < BOOT.modules.length;
+            moduleIndex
+                < BOOT.modules.length;
             moduleIndex += 1
         ) {
             evaluateFile(
-                BOOT.modules[moduleIndex]
+                BOOT.modules[
+                    moduleIndex
+                ]
             );
         }
 
         /*
-         * SystemJS named-register 扩展会在微任务中
-         * 清理最近一次同步注册记录。
-         *
-         * 我们一次性执行了数百个 System.register，
-         * 因此必须先让清理微任务执行，再导入入口。
+         * 让 SystemJS named-register 的清理微任务
+         * 先执行完毕。
          */
         await Promise.resolve();
 
+        /*
+         * 导入 Cocos 启动入口。
+         */
         await System.import(
             BOOT.entry
         );
     }
 
-    boot().catch(function (error) {
-        console.error(
-            '[Playable Packer] 启动失败：',
-            error
-        );
-
-        var errorElement =
-            document.createElement('pre');
-
-        errorElement.style.position =
-            'fixed';
-
-        errorElement.style.left = '0';
-        errorElement.style.top = '0';
-        errorElement.style.right = '0';
-        errorElement.style.zIndex = '999999';
-        errorElement.style.margin = '0';
-        errorElement.style.padding = '12px';
-        errorElement.style.background =
-            '#300';
-
-        errorElement.style.color =
-            '#fff';
-
-        errorElement.style.whiteSpace =
-            'pre-wrap';
-
-        errorElement.textContent =
-            'Playable 启动失败\n\n'
-            + (
+    boot().catch(
+        function (error) {
+            console.error(
+                '[Playable Packer] 启动失败：',
                 error
-                && error.stack
-                    ? error.stack
-                    : String(error)
             );
 
-        document.body.appendChild(
-            errorElement
-        );
-    });
+            var errorElement =
+                document.createElement(
+                    'pre'
+                );
+
+            errorElement.style.position =
+                'fixed';
+
+            errorElement.style.left =
+                '0';
+
+            errorElement.style.top =
+                '0';
+
+            errorElement.style.right =
+                '0';
+
+            errorElement.style.zIndex =
+                '999999';
+
+            errorElement.style.margin =
+                '0';
+
+            errorElement.style.padding =
+                '12px';
+
+            errorElement.style.background =
+                '#300';
+
+            errorElement.style.color =
+                '#fff';
+
+            errorElement.style.whiteSpace =
+                'pre-wrap';
+
+            errorElement.textContent =
+                'Playable 启动失败\n\n'
+                + (
+                    error
+                    && error.stack
+                        ? error.stack
+                        : String(error)
+                );
+
+            document.body.appendChild(
+                errorElement
+            );
+        }
+    );
 })();
 `;
 }
@@ -2098,6 +2617,7 @@ async function main(): Promise<void> {
         }>`,
         '<head>',
         preservedHead,
+        '<link rel="icon" href="data:,">',
 
         styleSource
             ? `<style>${styleSource.replace(
