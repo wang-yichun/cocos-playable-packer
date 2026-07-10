@@ -27,7 +27,7 @@
     "data-textures"
   ],
 
-  "manualReviewDirectories": ["effect", "effects", "spine"],
+  "manualReviewDirectories": [],
 
   "excludeNamePatterns": [
     "_normal.",

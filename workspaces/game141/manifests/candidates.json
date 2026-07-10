@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T08:44:35.942Z",
+  "generatedAt": "2026-07-10T16:01:16.771Z",
   "schemaVersion": 1,
   "generatorVersion": "0.1.0",
   "projectName": "game141_TriChoiceShooter",
@@ -7,12 +7,60 @@
   "projectRoot": "D:\\Projects\\game141_TriChoiceShooter",
   "assetsDirectory": "D:\\Projects\\game141_TriChoiceShooter\\assets",
   "summary": {
-    "candidateFileCount": 55,
-    "uniqueSourceCount": 55,
-    "duplicateReusableCount": 0,
-    "totalSourceBytes": 1212883
+    "candidateFileCount": 97,
+    "uniqueSourceCount": 96,
+    "duplicateReusableCount": 1,
+    "totalSourceBytes": 1993844
   },
   "files": [
+    {
+      "projectRelativePath": "assets/Art0/Effects/火苗/fire.png",
+      "assetsRelativePath": "Art0/Effects/火苗/fire.png",
+      "basename": "fire.png",
+      "extension": ".png",
+      "sizeBytes": 60046,
+      "sha256": "70ba14da417dbf35264391d983ce84dfe54dee040da14e7d893129e4421f0df2",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": false,
+        "pixelCount": 262144
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Effects/火苗/smoke.png",
+      "assetsRelativePath": "Art0/Effects/火苗/smoke.png",
+      "basename": "smoke.png",
+      "extension": ".png",
+      "sizeBytes": 3114,
+      "sha256": "96dfbea203b4d4a8b7f1ea83a657ae0991cc421e36c880c99631c13dddf87d74",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Effects/烟特效/烟雾3.png",
+      "assetsRelativePath": "Art0/Effects/烟特效/烟雾3.png",
+      "basename": "烟雾3.png",
+      "extension": ".png",
+      "sizeBytes": 52328,
+      "sha256": "20ea5e9edd06d5886e3604ee2bdb273bea14e416dd778d81b019e281c6ebc0b5",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 232,
+        "height": 232,
+        "hasAlpha": true,
+        "pixelCount": 53824
+      }
+    },
     {
       "projectRelativePath": "assets/Art0/internal/default_skybox/default_skybox_diffusion.png",
       "assetsRelativePath": "Art0/internal/default_skybox/default_skybox_diffusion.png",
@@ -811,6 +859,630 @@
         "height": 55,
         "hasAlpha": true,
         "pixelCount": 4400
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/ammosign.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/ammosign.png",
+      "basename": "ammosign.png",
+      "extension": ".png",
+      "sizeBytes": 6440,
+      "sha256": "5c3dac97d459ca85e40027c836d857d6565f91b457902464f504d57a19b4cf04",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/damagesign.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/damagesign.png",
+      "basename": "damagesign.png",
+      "extension": ".png",
+      "sizeBytes": 5668,
+      "sha256": "062ed32726326c3e8a011accfc2c7689901656625758bd76e186737635f95073",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/healsign.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/healsign.png",
+      "basename": "healsign.png",
+      "extension": ".png",
+      "sizeBytes": 6894,
+      "sha256": "8ba3a02eb478658fac96e0367d4eb9fa8fc3f84c2961c4923b1fc60252590641",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/shield.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/shield.png",
+      "basename": "shield.png",
+      "extension": ".png",
+      "sizeBytes": 7126,
+      "sha256": "0c53aef0c8d6c59b2a2659a04469d9627aec22844875966273e3a2b5b6a03976",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/光圈.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/光圈.png",
+      "basename": "光圈.png",
+      "extension": ".png",
+      "sizeBytes": 8502,
+      "sha256": "ac87092dd81d6b448244bdb84796763734e24543a30c5d1d6c4fe0217b165f1d",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 148,
+        "height": 148,
+        "hasAlpha": true,
+        "pixelCount": 21904
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/光点.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/光点.png",
+      "basename": "光点.png",
+      "extension": ".png",
+      "sizeBytes": 55378,
+      "sha256": "36b8ad10f611b32da982f4095265285e88b701e6c8071ad63acbf56f0890b783",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": true,
+        "pixelCount": 262144
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/01l.png",
+      "assetsRelativePath": "Effect/Tex/01l.png",
+      "basename": "01l.png",
+      "extension": ".png",
+      "sizeBytes": 19450,
+      "sha256": "429737a98a80c70284730e51bdfbdd9803d24564b75c6a5a1a96ab3817556d9e",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/boom_3.png",
+      "assetsRelativePath": "Effect/Tex/boom_3.png",
+      "basename": "boom_3.png",
+      "extension": ".png",
+      "sizeBytes": 7217,
+      "sha256": "8860d8d80a2c3505acadfdfc19abe0b719855631bfe94c7ce591feb5c4cf64b5",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_fire_256x256_a_039.png",
+      "assetsRelativePath": "Effect/Tex/eff_fire_256x256_a_039.png",
+      "basename": "eff_fire_256x256_a_039.png",
+      "extension": ".png",
+      "sizeBytes": 21519,
+      "sha256": "ae0606e32c57428384edb8fb421e20877d99942f923f6960b7ad563554626700",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_fire_512x512_a_020.png",
+      "assetsRelativePath": "Effect/Tex/eff_fire_512x512_a_020.png",
+      "basename": "eff_fire_512x512_a_020.png",
+      "extension": ".png",
+      "sizeBytes": 20614,
+      "sha256": "9b8bfa6ae7663a6edb36d042a23733eb3ce4b3499c79212bbb178481a0ca1fea",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_flare_256x256_a_011.png",
+      "assetsRelativePath": "Effect/Tex/eff_flare_256x256_a_011.png",
+      "basename": "eff_flare_256x256_a_011.png",
+      "extension": ".png",
+      "sizeBytes": 4261,
+      "sha256": "97869aaf0fd8baf5e9cd0c31b7f88f8d919fa058b9bdf859e2cd1dfc4d3e66cf",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_object_64x64_a_010.png",
+      "assetsRelativePath": "Effect/Tex/eff_object_64x64_a_010.png",
+      "basename": "eff_object_64x64_a_010.png",
+      "extension": ".png",
+      "sizeBytes": 23698,
+      "sha256": "8cfdbafb923b82e366936ea9cdfd54bef4e138604a2ec4c588150c1abecde192",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/FX_T_CityAction_assassin_w06.png",
+      "assetsRelativePath": "Effect/Tex/FX_T_CityAction_assassin_w06.png",
+      "basename": "FX_T_CityAction_assassin_w06.png",
+      "extension": ".png",
+      "sizeBytes": 18343,
+      "sha256": "eec4fa828df1de597f5ca50d1646fb416f9ea31712f20c57b33ed3ef9fef9a93",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/K2_04_Glow_4007.png",
+      "assetsRelativePath": "Effect/Tex/K2_04_Glow_4007.png",
+      "basename": "K2_04_Glow_4007.png",
+      "extension": ".png",
+      "sizeBytes": 19242,
+      "sha256": "e051d1e99df0add252b3fcb157f4a65b37da07954fcf755f378994b5ca59ff17",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/Lujq_sequence_004.png",
+      "assetsRelativePath": "Effect/Tex/Lujq_sequence_004.png",
+      "basename": "Lujq_sequence_004.png",
+      "extension": ".png",
+      "sizeBytes": 24612,
+      "sha256": "fc556fdb9ac23b9f57d51657daf10a8e703c01f259b7c754efbec0161783429c",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/T_Flash21.png",
+      "assetsRelativePath": "Effect/Tex/T_Flash21.png",
+      "basename": "T_Flash21.png",
+      "extension": ".png",
+      "sizeBytes": 8531,
+      "sha256": "e58e18cec45babca27c650cc358a8c7aa2b4e01c4ae1169a7d029fab1a9c823c",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/T_Smoke_110_NA_C.png",
+      "assetsRelativePath": "Effect/Tex/T_Smoke_110_NA_C.png",
+      "basename": "T_Smoke_110_NA_C.png",
+      "extension": ".png",
+      "sizeBytes": 20560,
+      "sha256": "101e46002985f9111dff222f4333b6f984acb0294cc8f8d98fe252e2ccbc2717",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/tuowei01.png",
+      "assetsRelativePath": "Effect/Tex/tuowei01.png",
+      "basename": "tuowei01.png",
+      "extension": ".png",
+      "sizeBytes": 16531,
+      "sha256": "90eca5baee0f346e047e9e2253666d0cd5ad8dd1b84acd0291a08976996c4c79",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/枪口01.png",
+      "assetsRelativePath": "Effect/Tex/枪口01.png",
+      "basename": "枪口01.png",
+      "extension": ".png",
+      "sizeBytes": 23217,
+      "sha256": "0204e5b6b3f397f3328c8e8cfeb6fe2358f8e05711731e282357d0a52b57959b",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/烟写实.png",
+      "assetsRelativePath": "Effect/Tex/烟写实.png",
+      "basename": "烟写实.png",
+      "extension": ".png",
+      "sizeBytes": 72035,
+      "sha256": "8cbd230990cfd47e3a65a308a38f528b4bca9f401d331cfd2ec33ce03b95d072",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/baodian5.png",
+      "assetsRelativePath": "Effect/三选一升级射击/baodian5.png",
+      "basename": "baodian5.png",
+      "extension": ".png",
+      "sizeBytes": 4120,
+      "sha256": "a62bcedb7d37a50696c6d65f3e6a11aa86e854e736310df3b9106a4936b4821f",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/ef_glow020.png",
+      "assetsRelativePath": "Effect/三选一升级射击/ef_glow020.png",
+      "basename": "ef_glow020.png",
+      "extension": ".png",
+      "sizeBytes": 11934,
+      "sha256": "da6860e6aeb9ef3491b6b832f636e9cfeb7ca9275e725cc949dc10c43984e48d",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/eff_ring_256x256_a_003_2.png",
+      "assetsRelativePath": "Effect/三选一升级射击/eff_ring_256x256_a_003_2.png",
+      "basename": "eff_ring_256x256_a_003_2.png",
+      "extension": ".png",
+      "sizeBytes": 35692,
+      "sha256": "15dc32b4398d5831d72ebba8eac15b1481f63df65ef6b6c53ee61431ce16fb5d",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/血滴2.png",
+      "assetsRelativePath": "Effect/三选一升级射击/血滴2.png",
+      "basename": "血滴2.png",
+      "extension": ".png",
+      "sizeBytes": 4041,
+      "sha256": "dca4d08586abd13598bcbb64b4de8a30e16797baa32d1576e01db069caf29f1a",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/奖励特效/01.png",
+      "assetsRelativePath": "Effect/奖励特效/01.png",
+      "basename": "01.png",
+      "extension": ".png",
+      "sizeBytes": 11481,
+      "sha256": "3542d3fe6c0691174e97b9a5ad30c2ad7cb62dc20d14c0bf962cc6f2813fc3c0",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/奖励特效/05.png",
+      "assetsRelativePath": "Effect/奖励特效/05.png",
+      "basename": "05.png",
+      "extension": ".png",
+      "sizeBytes": 3585,
+      "sha256": "c099cea9accb4d77001a95780df3c99e67dfb498c85049b3e3d00b071fd44d39",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/奖励特效/55.png",
+      "assetsRelativePath": "Effect/奖励特效/55.png",
+      "basename": "55.png",
+      "extension": ".png",
+      "sizeBytes": 29885,
+      "sha256": "37433fae830443e9a11691944b104ce28df8d03feb10a2af8d56831befed0255",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/射击密集伞兵_升级/白圆.png",
+      "assetsRelativePath": "Effect/射击密集伞兵_升级/白圆.png",
+      "basename": "白圆.png",
+      "extension": ".png",
+      "sizeBytes": 2528,
+      "sha256": "f8f5e824bf24ab05962843d3568340de8a7ea9148a2b8597a1ae348bf5aadc70",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 40,
+        "height": 40,
+        "hasAlpha": true,
+        "pixelCount": 1600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_爆炸/ef_ani_fire07.png",
+      "assetsRelativePath": "Effect/战争射击_爆炸/ef_ani_fire07.png",
+      "basename": "ef_ani_fire07.png",
+      "extension": ".png",
+      "sizeBytes": 15904,
+      "sha256": "2c1aa35436ac790961a87be571ea41d740ba1182501005ba6294ab0f1a334bd9",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_爆炸/eff_fire_256x256_a_039.png",
+      "assetsRelativePath": "Effect/战争射击_爆炸/eff_fire_256x256_a_039.png",
+      "basename": "eff_fire_256x256_a_039.png",
+      "extension": ".png",
+      "sizeBytes": 8800,
+      "sha256": "0053ddb72713134a47bfe5c24a8de9484b193a882636e3f21a917b6f44744687",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_破损黑烟/02.png",
+      "assetsRelativePath": "Effect/战争射击_破损黑烟/02.png",
+      "basename": "02.png",
+      "extension": ".png",
+      "sizeBytes": 16991,
+      "sha256": "3455fc9a464823659530f367b5112619b49753780c3e87369ff1fac9f9748fe7",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 235,
+        "height": 241,
+        "hasAlpha": true,
+        "pixelCount": 56635
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_破损黑烟/ef_smoke_06hmm.png",
+      "assetsRelativePath": "Effect/战争射击_破损黑烟/ef_smoke_06hmm.png",
+      "basename": "ef_smoke_06hmm.png",
+      "extension": ".png",
+      "sizeBytes": 80509,
+      "sha256": "96fa7bc3c99135e85ef991b28047ee9bcd910b4bbcbc1eb88e79119e3a2de306",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/掉血/烟雾5.png",
+      "assetsRelativePath": "Effect/掉血/烟雾5.png",
+      "basename": "烟雾5.png",
+      "extension": ".png",
+      "sizeBytes": 3037,
+      "sha256": "a0205f46b08c63c8579429056e06c7bc25e7d22bcc3e3df642801a029ab5b859",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/掉血/血渍8.png",
+      "assetsRelativePath": "Effect/掉血/血渍8.png",
+      "basename": "血渍8.png",
+      "extension": ".png",
+      "sizeBytes": 15252,
+      "sha256": "e422e00919c887bcde50dfaac0155a7db3564b536c37842317c19dae85af2d23",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/掉血/血滴2.png",
+      "assetsRelativePath": "Effect/掉血/血滴2.png",
+      "basename": "血滴2.png",
+      "extension": ".png",
+      "sizeBytes": 9885,
+      "sha256": "bfdcbac064316a821d1bd455694ed6f11aa1f77b64b929eab1857bdfe2cd3cd7",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/敌人枪口/K2_04_Glow_4007.png",
+      "assetsRelativePath": "Effect/敌人枪口/K2_04_Glow_4007.png",
+      "basename": "K2_04_Glow_4007.png",
+      "extension": ".png",
+      "sizeBytes": 7170,
+      "sha256": "c666d69e7eed82359028b93acb4bdd82ab3f859117f082d598e1ca4cd6628b0f",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/敌人枪口/K9_03_smoke_4002.png",
+      "assetsRelativePath": "Effect/敌人枪口/K9_03_smoke_4002.png",
+      "basename": "K9_03_smoke_4002.png",
+      "extension": ".png",
+      "sizeBytes": 7161,
+      "sha256": "51d9bcdb43da20b79f279163d47fed8af7a4444c73082cad96ee28b43508f6f1",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/铲斗升级/VFX/升级特效/Eff_ui_tex_glow_127_jnsf.png",
+      "assetsRelativePath": "Effect/铲斗升级/VFX/升级特效/Eff_ui_tex_glow_127_jnsf.png",
+      "basename": "Eff_ui_tex_glow_127_jnsf.png",
+      "extension": ".png",
+      "sizeBytes": 3021,
+      "sha256": "a5ac2a9a581fa6c0a160ebae45aa1a986e746958e8e943bb38f56668b4c8bb5d",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/effects/propellers/propeller.png",
+      "assetsRelativePath": "effects/propellers/propeller.png",
+      "basename": "propeller.png",
+      "extension": ".png",
+      "sizeBytes": 4639,
+      "sha256": "9f3dbf5c4ad55cf91e08ef19b94603639710d402e9237b9bc64de8ac0916b3e0",
+      "classification": "safe",
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
       }
     },
     {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T08:44:35.942Z",
+  "generatedAt": "2026-07-10T16:01:16.771Z",
   "schemaVersion": 1,
   "analyzerVersion": "0.1.0",
   "projectName": "game141_TriChoiceShooter",
@@ -14,14 +14,14 @@
     "pngBytes": 2886587,
     "jpegBytes": 517527,
     "classificationCounts": {
-      "safe": 55,
+      "safe": 97,
       "atlas": 34,
       "specialTexture": 3,
-      "manualReview": 43,
+      "manualReview": 1,
       "tooSmall": 17,
       "unsupported": 0
     },
-    "safeCandidateBytes": 1212883,
+    "safeCandidateBytes": 1993844,
     "atlasImageBytes": 1290348
   },
   "files": [
@@ -33,9 +33,9 @@
       "extension": ".png",
       "sizeBytes": 60046,
       "sha256": "70ba14da417dbf35264391d983ce84dfe54dee040da14e7d893129e4421f0df2",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effects"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -54,9 +54,9 @@
       "extension": ".png",
       "sizeBytes": 3114,
       "sha256": "96dfbea203b4d4a8b7f1ea83a657ae0991cc421e36c880c99631c13dddf87d74",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effects"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -75,9 +75,9 @@
       "extension": ".png",
       "sizeBytes": 52328,
       "sha256": "20ea5e9edd06d5886e3604ee2bdb273bea14e416dd778d81b019e281c6ebc0b5",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effects"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -1966,9 +1966,9 @@
       "extension": ".png",
       "sizeBytes": 6440,
       "sha256": "5c3dac97d459ca85e40027c836d857d6565f91b457902464f504d57a19b4cf04",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -1987,9 +1987,9 @@
       "extension": ".png",
       "sizeBytes": 5668,
       "sha256": "062ed32726326c3e8a011accfc2c7689901656625758bd76e186737635f95073",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2008,9 +2008,9 @@
       "extension": ".png",
       "sizeBytes": 6894,
       "sha256": "8ba3a02eb478658fac96e0367d4eb9fa8fc3f84c2961c4923b1fc60252590641",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2029,9 +2029,9 @@
       "extension": ".png",
       "sizeBytes": 7126,
       "sha256": "0c53aef0c8d6c59b2a2659a04469d9627aec22844875966273e3a2b5b6a03976",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2050,9 +2050,9 @@
       "extension": ".png",
       "sizeBytes": 8502,
       "sha256": "ac87092dd81d6b448244bdb84796763734e24543a30c5d1d6c4fe0217b165f1d",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2071,9 +2071,9 @@
       "extension": ".png",
       "sizeBytes": 55378,
       "sha256": "36b8ad10f611b32da982f4095265285e88b701e6c8071ad63acbf56f0890b783",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2092,9 +2092,9 @@
       "extension": ".png",
       "sizeBytes": 19450,
       "sha256": "429737a98a80c70284730e51bdfbdd9803d24564b75c6a5a1a96ab3817556d9e",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2113,9 +2113,9 @@
       "extension": ".png",
       "sizeBytes": 7217,
       "sha256": "8860d8d80a2c3505acadfdfc19abe0b719855631bfe94c7ce591feb5c4cf64b5",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2134,9 +2134,9 @@
       "extension": ".png",
       "sizeBytes": 21519,
       "sha256": "ae0606e32c57428384edb8fb421e20877d99942f923f6960b7ad563554626700",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2155,9 +2155,9 @@
       "extension": ".png",
       "sizeBytes": 20614,
       "sha256": "9b8bfa6ae7663a6edb36d042a23733eb3ce4b3499c79212bbb178481a0ca1fea",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2176,9 +2176,9 @@
       "extension": ".png",
       "sizeBytes": 4261,
       "sha256": "97869aaf0fd8baf5e9cd0c31b7f88f8d919fa058b9bdf859e2cd1dfc4d3e66cf",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2197,9 +2197,9 @@
       "extension": ".png",
       "sizeBytes": 23698,
       "sha256": "8cfdbafb923b82e366936ea9cdfd54bef4e138604a2ec4c588150c1abecde192",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2218,9 +2218,9 @@
       "extension": ".png",
       "sizeBytes": 18343,
       "sha256": "eec4fa828df1de597f5ca50d1646fb416f9ea31712f20c57b33ed3ef9fef9a93",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2239,9 +2239,9 @@
       "extension": ".png",
       "sizeBytes": 19242,
       "sha256": "e051d1e99df0add252b3fcb157f4a65b37da07954fcf755f378994b5ca59ff17",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2260,9 +2260,9 @@
       "extension": ".png",
       "sizeBytes": 24612,
       "sha256": "fc556fdb9ac23b9f57d51657daf10a8e703c01f259b7c754efbec0161783429c",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2281,9 +2281,9 @@
       "extension": ".png",
       "sizeBytes": 8531,
       "sha256": "e58e18cec45babca27c650cc358a8c7aa2b4e01c4ae1169a7d029fab1a9c823c",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2302,9 +2302,9 @@
       "extension": ".png",
       "sizeBytes": 20560,
       "sha256": "101e46002985f9111dff222f4333b6f984acb0294cc8f8d98fe252e2ccbc2717",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2323,9 +2323,9 @@
       "extension": ".png",
       "sizeBytes": 16531,
       "sha256": "90eca5baee0f346e047e9e2253666d0cd5ad8dd1b84acd0291a08976996c4c79",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2344,9 +2344,9 @@
       "extension": ".png",
       "sizeBytes": 23217,
       "sha256": "0204e5b6b3f397f3328c8e8cfeb6fe2358f8e05711731e282357d0a52b57959b",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2365,9 +2365,9 @@
       "extension": ".png",
       "sizeBytes": 72035,
       "sha256": "8cbd230990cfd47e3a65a308a38f528b4bca9f401d331cfd2ec33ce03b95d072",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2386,9 +2386,9 @@
       "extension": ".png",
       "sizeBytes": 4120,
       "sha256": "a62bcedb7d37a50696c6d65f3e6a11aa86e854e736310df3b9106a4936b4821f",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2407,9 +2407,9 @@
       "extension": ".png",
       "sizeBytes": 11934,
       "sha256": "da6860e6aeb9ef3491b6b832f636e9cfeb7ca9275e725cc949dc10c43984e48d",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2428,9 +2428,9 @@
       "extension": ".png",
       "sizeBytes": 35692,
       "sha256": "15dc32b4398d5831d72ebba8eac15b1481f63df65ef6b6c53ee61431ce16fb5d",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2449,9 +2449,9 @@
       "extension": ".png",
       "sizeBytes": 4041,
       "sha256": "dca4d08586abd13598bcbb64b4de8a30e16797baa32d1576e01db069caf29f1a",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2470,9 +2470,9 @@
       "extension": ".png",
       "sizeBytes": 11481,
       "sha256": "3542d3fe6c0691174e97b9a5ad30c2ad7cb62dc20d14c0bf962cc6f2813fc3c0",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2491,9 +2491,9 @@
       "extension": ".png",
       "sizeBytes": 3585,
       "sha256": "c099cea9accb4d77001a95780df3c99e67dfb498c85049b3e3d00b071fd44d39",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2512,9 +2512,9 @@
       "extension": ".png",
       "sizeBytes": 29885,
       "sha256": "37433fae830443e9a11691944b104ce28df8d03feb10a2af8d56831befed0255",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2535,8 +2535,7 @@
       "sha256": "29bdb03dd53d5b90c9ee1aa1266c7d7169c1048d30f03b78301c4156393043fe",
       "classification": "too-small",
       "reasons": [
-        "文件小于最小处理体积 2048 字节",
-        "路径命中人工检查目录：effect"
+        "文件小于最小处理体积 2048 字节"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2555,9 +2554,9 @@
       "extension": ".png",
       "sizeBytes": 2528,
       "sha256": "f8f5e824bf24ab05962843d3568340de8a7ea9148a2b8597a1ae348bf5aadc70",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2576,9 +2575,9 @@
       "extension": ".png",
       "sizeBytes": 15904,
       "sha256": "2c1aa35436ac790961a87be571ea41d740ba1182501005ba6294ab0f1a334bd9",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2597,9 +2596,9 @@
       "extension": ".png",
       "sizeBytes": 8800,
       "sha256": "0053ddb72713134a47bfe5c24a8de9484b193a882636e3f21a917b6f44744687",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2618,9 +2617,9 @@
       "extension": ".png",
       "sizeBytes": 16991,
       "sha256": "3455fc9a464823659530f367b5112619b49753780c3e87369ff1fac9f9748fe7",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2639,9 +2638,9 @@
       "extension": ".png",
       "sizeBytes": 80509,
       "sha256": "96fa7bc3c99135e85ef991b28047ee9bcd910b4bbcbc1eb88e79119e3a2de306",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2660,9 +2659,9 @@
       "extension": ".png",
       "sizeBytes": 3037,
       "sha256": "a0205f46b08c63c8579429056e06c7bc25e7d22bcc3e3df642801a029ab5b859",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2681,9 +2680,9 @@
       "extension": ".png",
       "sizeBytes": 15252,
       "sha256": "e422e00919c887bcde50dfaac0155a7db3564b536c37842317c19dae85af2d23",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2702,9 +2701,9 @@
       "extension": ".png",
       "sizeBytes": 9885,
       "sha256": "bfdcbac064316a821d1bd455694ed6f11aa1f77b64b929eab1857bdfe2cd3cd7",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2723,9 +2722,9 @@
       "extension": ".png",
       "sizeBytes": 7170,
       "sha256": "c666d69e7eed82359028b93acb4bdd82ab3f859117f082d598e1ca4cd6628b0f",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2744,9 +2743,9 @@
       "extension": ".png",
       "sizeBytes": 7161,
       "sha256": "51d9bcdb43da20b79f279163d47fed8af7a4444c73082cad96ee28b43508f6f1",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2767,8 +2766,7 @@
       "sha256": "eef4fc939085c377248487fa545f7439f6e378b20935f0c1ad7eddd65b3e9100",
       "classification": "too-small",
       "reasons": [
-        "文件小于最小处理体积 2048 字节",
-        "路径命中人工检查目录：effect"
+        "文件小于最小处理体积 2048 字节"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2789,8 +2787,7 @@
       "sha256": "e321cb8b6878c7089e43c8293a7a2476a6b57675e506a0e7a043917014cc37b8",
       "classification": "too-small",
       "reasons": [
-        "文件小于最小处理体积 2048 字节",
-        "路径命中人工检查目录：effect"
+        "文件小于最小处理体积 2048 字节"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2811,8 +2808,7 @@
       "sha256": "66e526a454238cc8902a8b65d4545071ab89cf0a8d9cc820a7df1e753b54ad47",
       "classification": "too-small",
       "reasons": [
-        "文件小于最小处理体积 2048 字节",
-        "路径命中人工检查目录：effect"
+        "文件小于最小处理体积 2048 字节"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2831,9 +2827,9 @@
       "extension": ".png",
       "sizeBytes": 3021,
       "sha256": "a5ac2a9a581fa6c0a160ebae45aa1a986e746958e8e943bb38f56668b4c8bb5d",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effect"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2852,9 +2848,9 @@
       "extension": ".png",
       "sizeBytes": 4639,
       "sha256": "9f3dbf5c4ad55cf91e08ef19b94603639710d402e9237b9bc64de8ac0916b3e0",
-      "classification": "manual-review",
+      "classification": "safe",
       "reasons": [
-        "路径命中人工检查目录：effects"
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
       ],
       "atlasConfigPath": null,
       "metadata": {
@@ -2875,8 +2871,7 @@
       "sha256": "ed493412625fb250e52ebfa7bd2d344bac62302633d235e78124082ecf7e22cd",
       "classification": "too-small",
       "reasons": [
-        "文件小于最小处理体积 2048 字节",
-        "路径命中人工检查目录：effects"
+        "文件小于最小处理体积 2048 字节"
       ],
       "atlasConfigPath": null,
       "metadata": {
