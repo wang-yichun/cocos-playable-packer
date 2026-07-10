@@ -117,6 +117,10 @@ function validateConfig(
         "excludeDirectories",
     );
     assertStringArray(
+        config.manualReviewDirectories,
+        "manualReviewDirectories",
+    );
+    assertStringArray(
         config.excludeNamePatterns,
         "excludeNamePatterns",
     );
@@ -248,6 +252,10 @@ export async function loadSourceImageOptimizerConfig(
 
         excludeDirectories: normalizeStringArray(
             parsedConfig.excludeDirectories,
+        ),
+
+        manualReviewDirectories: normalizeStringArray(
+            parsedConfig.manualReviewDirectories,
         ),
 
         excludeNamePatterns: normalizeStringArray(

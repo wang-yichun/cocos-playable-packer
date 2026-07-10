@@ -90,6 +90,11 @@ export interface SourceImageOptimizerConfig {
     excludeDirectories: string[];
 
     /**
+     * 目录名称命中这些值时，归类为人工检查。
+     */
+    manualReviewDirectories: string[];
+
+    /**
      * 文件名包含这些字符串时，归类为特殊纹理。
      */
     excludeNamePatterns: string[];
@@ -312,4 +317,71 @@ export interface ScannedSourceImageFile {
 
     sizeBytes: number;
     modifiedTimeMs: number;
+}
+
+/**
+ * 已读取文件内容，并完成哈希和图片头解析的源图片。
+ */
+export interface InspectedSourceImageFile
+    extends ScannedSourceImageFile {
+    /**
+     * 原始图片文件内容的 SHA-256。
+     *
+     * 后续 TinyPNG 缓存会使用这个值作为唯一键，
+     * 而不是使用可能发生变化的文件路径。
+     */
+    sha256: string;
+
+    /**
+     * 从 PNG/JPEG 文件头解析出的基础信息。
+     */
+    metadata: SourceImageMetadata;
+}
+
+/**
+ * 检测到的 Cocos Creator 自动图集目录。
+ */
+export interface AutoAtlasDirectoryInfo {
+    /**
+     * .pac 文件绝对路径。
+     */
+    absoluteConfigPath: string;
+
+    /**
+     * .pac 所在目录的绝对路径。
+     */
+    absoluteDirectoryPath: string;
+
+    /**
+     * 相对于 Cocos Creator 工程根目录的 .pac 路径。
+     */
+    projectRelativeConfigPath: string;
+
+    /**
+     * 相对于 assets 的 .pac 路径。
+     */
+    assetsRelativeConfigPath: string;
+
+    /**
+     * 相对于 assets 的图集目录路径。
+     */
+    assetsRelativeDirectoryPath: string;
+}
+
+/**
+ * 完成自动图集和安全性分类后的图片。
+ */
+export interface ClassifiedSourceImageFile
+    extends InspectedSourceImageFile {
+    classification: SourceImageClassification;
+
+    /**
+     * 记录命中的所有规则，不仅限于最终分类依据。
+     */
+    reasons: string[];
+
+    /**
+     * 命中的自动图集配置路径。
+     */
+    atlasConfigPath: string | null;
 }

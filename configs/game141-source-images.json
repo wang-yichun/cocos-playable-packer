@@ -6,17 +6,11 @@
   "workspaceDirectory": "workspaces/game141",
   "cacheDirectory": ".tinypng-cache",
 
-  "extensions": [
-    ".png",
-    ".jpg",
-    ".jpeg"
-  ],
+  "extensions": [".png", ".jpg", ".jpeg"],
 
   "autoAtlas": {
     "enabled": true,
-    "configExtensions": [
-      ".pac"
-    ],
+    "configExtensions": [".pac"],
     "excludeAtlasDirectory": true,
     "excludeAtlasSubdirectories": true
   },
@@ -33,10 +27,15 @@
     "data-textures"
   ],
 
+  "manualReviewDirectories": ["effect", "effects", "spine"],
+
   "excludeNamePatterns": [
     "_normal.",
     "_norm.",
     "_n.",
+    "-normal.",
+    "-norm.",
+    "-n.",
     "_mask.",
     "_sdf.",
     "_lut.",
