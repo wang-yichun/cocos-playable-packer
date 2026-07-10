@@ -449,3 +449,118 @@ export interface WrittenSourceImageAnalysisOutputs {
     candidateFileCount: number;
     uniqueCandidateContentCount: number;
 }
+
+/**
+ * TinyPNG 缓存中的单条记录。
+ */
+export interface TinyPngCacheEntry {
+    /**
+     * 原始源图片的 SHA-256，同时也是缓存索引键。
+     */
+    sourceSha256: string;
+
+    sourceBytes: number;
+    sourceExtension: string;
+    sourceFormat: "png" | "jpeg";
+
+    /**
+     * 相对于 cacheDirectory 的压缩文件路径。
+     *
+     * 例如：
+     * files/abc123.png
+     */
+    compressedRelativePath: string;
+
+    compressedSha256: string;
+    compressedBytes: number;
+
+    /**
+     * compressedBytes / sourceBytes。
+     */
+    compressionRatio: number;
+
+    createdAt: string;
+    updatedAt: string;
+}
+
+/**
+ * .tinypng-cache/index.json。
+ */
+export interface TinyPngCacheIndex {
+    schemaVersion: number;
+    provider: "tinypng";
+
+    createdAt: string;
+    updatedAt: string;
+
+    /**
+     * key 是源文件 SHA-256。
+     */
+    entries: Record<string, TinyPngCacheEntry>;
+}
+
+/**
+ * 已加载的缓存运行时对象。
+ */
+export interface LoadedTinyPngCache {
+    cacheDirectory: string;
+    filesDirectory: string;
+    indexPath: string;
+
+    index: TinyPngCacheIndex;
+}
+
+export type TinyPngCacheLookupResult =
+    | {
+        status: "hit";
+        entry: TinyPngCacheEntry;
+        compressedFilePath: string;
+    }
+    | {
+        status: "miss";
+        entry: null;
+        compressedFilePath: null;
+    }
+    | {
+        status: "invalid";
+        entry: TinyPngCacheEntry;
+        compressedFilePath: string | null;
+        reason: string;
+    };
+
+export interface TinyPngCacheVerificationResult {
+    totalEntries: number;
+    validEntries: number;
+    invalidEntries: number;
+
+    totalSourceBytes: number;
+    totalCompressedBytes: number;
+
+    invalidItems: Array<{
+        sourceSha256: string;
+        reason: string;
+    }>;
+}
+
+export interface TinyPngClientOptions {
+    apiKey: string;
+
+    /**
+     * 可选 HTTP 代理，例如：
+     * http://127.0.0.1:7890
+     */
+    proxy?: string;
+
+    appIdentifier?: string;
+}
+
+export interface TinyPngCompressionResult {
+    compressedBuffer: Buffer;
+
+    /**
+     * 当前自然月已经使用的压缩次数。
+     *
+     * API 未返回时为 null。
+     */
+    compressionCount: number | null;
+}

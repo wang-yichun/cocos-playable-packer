@@ -15,7 +15,9 @@
     "analyze:encoding": "tsx src/analyze-text-encoding.ts",
     "typecheck": "tsc --noEmit",
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
-    "analyze:source-images": "tsx src/tinypng/analyze-source-images.ts"
+    "analyze:source-images": "tsx src/tinypng/analyze-source-images.ts",
+    "tinypng:cache-check": "tsx src/tinypng/check-cache.ts",
+    "tinypng:test-one": "node --env-file=.env --import tsx src/tinypng/test-one.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
@@ -27,6 +29,7 @@
   "dependencies": {
     "acorn": "^8.17.0",
     "acorn-walk": "^8.3.5",
-    "cheerio": "^1.2.0"
+    "cheerio": "^1.2.0",
+    "tinify": "^1.8.3"
   }
 }

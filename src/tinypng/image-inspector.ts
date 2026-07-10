@@ -42,7 +42,9 @@ const JPEG_SOF_MARKERS = new Set([
     0xcf,
 ]);
 
-function calculateSha256(buffer: Buffer): string {
+export function calculateImageSha256(
+    buffer: Buffer,
+): string {
     return createHash("sha256")
         .update(buffer)
         .digest("hex");
@@ -308,7 +310,7 @@ function parseJpegMetadata(
     };
 }
 
-function parseImageMetadata(
+export function inspectImageBufferMetadata(
     buffer: Buffer,
 ): SourceImageMetadata {
     if (isPng(buffer)) {
@@ -355,8 +357,8 @@ export async function inspectSourceImageFile(
 
     return {
         ...file,
-        sha256: calculateSha256(buffer),
-        metadata: parseImageMetadata(buffer),
+        sha256: calculateImageSha256(buffer),
+        metadata: inspectImageBufferMetadata(buffer),
     };
 }
 
