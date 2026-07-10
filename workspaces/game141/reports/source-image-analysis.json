@@ -1,0 +1,3237 @@
+{
+  "generatedAt": "2026-07-10T08:44:35.942Z",
+  "schemaVersion": 1,
+  "analyzerVersion": "0.1.0",
+  "projectName": "game141_TriChoiceShooter",
+  "configFilePath": "D:\\Projects\\cocos-playable-packer\\configs\\game141-source-images.json",
+  "projectRoot": "D:\\Projects\\game141_TriChoiceShooter",
+  "assetsDirectory": "D:\\Projects\\game141_TriChoiceShooter\\assets",
+  "summary": {
+    "totalImageCount": 152,
+    "totalImageBytes": 3404114,
+    "pngCount": 130,
+    "jpegCount": 22,
+    "pngBytes": 2886587,
+    "jpegBytes": 517527,
+    "classificationCounts": {
+      "safe": 55,
+      "atlas": 34,
+      "specialTexture": 3,
+      "manualReview": 43,
+      "tooSmall": 17,
+      "unsupported": 0
+    },
+    "safeCandidateBytes": 1212883,
+    "atlasImageBytes": 1290348
+  },
+  "files": [
+    {
+      "projectRelativePath": "assets/Art0/Effects/火苗/fire.png",
+      "assetsRelativePath": "Art0/Effects/火苗/fire.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Effects\\火苗\\fire.png",
+      "basename": "fire.png",
+      "extension": ".png",
+      "sizeBytes": 60046,
+      "sha256": "70ba14da417dbf35264391d983ce84dfe54dee040da14e7d893129e4421f0df2",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effects"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": false,
+        "pixelCount": 262144
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Effects/火苗/smoke.png",
+      "assetsRelativePath": "Art0/Effects/火苗/smoke.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Effects\\火苗\\smoke.png",
+      "basename": "smoke.png",
+      "extension": ".png",
+      "sizeBytes": 3114,
+      "sha256": "96dfbea203b4d4a8b7f1ea83a657ae0991cc421e36c880c99631c13dddf87d74",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effects"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Effects/烟特效/烟雾3.png",
+      "assetsRelativePath": "Art0/Effects/烟特效/烟雾3.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Effects\\烟特效\\烟雾3.png",
+      "basename": "烟雾3.png",
+      "extension": ".png",
+      "sizeBytes": 52328,
+      "sha256": "20ea5e9edd06d5886e3604ee2bdb273bea14e416dd778d81b019e281c6ebc0b5",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effects"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 232,
+        "height": 232,
+        "hasAlpha": true,
+        "pixelCount": 53824
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/internal/default_skybox/default_skybox_diffusion.png",
+      "assetsRelativePath": "Art0/internal/default_skybox/default_skybox_diffusion.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\internal\\default_skybox\\default_skybox_diffusion.png",
+      "basename": "default_skybox_diffusion.png",
+      "extension": ".png",
+      "sizeBytes": 10018,
+      "sha256": "b6582cf554d5b2859553ef25a93d9d45af8b1606a7c9545aaf61ab5bf34560cb",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 8192
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Shader/noise1.jpg",
+      "assetsRelativePath": "Art0/Shader/noise1.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Shader\\noise1.jpg",
+      "basename": "noise1.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 6538,
+      "sha256": "db8a41f07c8ec815de9d24665ba000135d76559b16f88303f4841169df5e93fd",
+      "classification": "manual-review",
+      "reasons": [
+        "文件名命中人工检查规则：noise"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/ak-zidongbuqiang.png",
+      "assetsRelativePath": "Art0/Texture/ak-zidongbuqiang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\ak-zidongbuqiang.png",
+      "basename": "ak-zidongbuqiang.png",
+      "extension": ".png",
+      "sizeBytes": 11166,
+      "sha256": "3db044784c659d1a5b2fd1c1217318336a1f66b55b3ee5b4c71b7167d047e35b",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/awm-jvjiqiang.png",
+      "assetsRelativePath": "Art0/Texture/awm-jvjiqiang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\awm-jvjiqiang.png",
+      "basename": "awm-jvjiqiang.png",
+      "extension": ".png",
+      "sizeBytes": 12170,
+      "sha256": "681e98962b1bf85be568684fc5657d7b22d2c0c3034a9556f075a93afcb7a2dd",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/baofeiqiche.jpg",
+      "assetsRelativePath": "Art0/Texture/baofeiqiche.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\baofeiqiche.jpg",
+      "basename": "baofeiqiche.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 24401,
+      "sha256": "246bd31afc4fc88d0394fbdb68989c170c386435aa40ac966285f8b12e96c641",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/chongfengqiang.png",
+      "assetsRelativePath": "Art0/Texture/chongfengqiang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\chongfengqiang.png",
+      "basename": "chongfengqiang.png",
+      "extension": ".png",
+      "sizeBytes": 11970,
+      "sha256": "0e81749398eac3e234fea88d479535d80eaff3fa67f2d60b8adf0b163a10c358",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dankeng-di-T.png",
+      "assetsRelativePath": "Art0/Texture/dankeng-di-T.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dankeng-di-T.png",
+      "basename": "dankeng-di-T.png",
+      "extension": ".png",
+      "sizeBytes": 10519,
+      "sha256": "155161b4be7e099a153233bd7da46907094571e52151595afbfbb7c08c5376ee",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dankeng-T.png",
+      "assetsRelativePath": "Art0/Texture/dankeng-T.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dankeng-T.png",
+      "basename": "dankeng-T.png",
+      "extension": ".png",
+      "sizeBytes": 40330,
+      "sha256": "9a6fa6941cc33c743f9a8fa77b5a9f65263b0e5ffb788b37f44c333a5af85f8e",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/danyaoxiang/danyaoxiang.png",
+      "assetsRelativePath": "Art0/Texture/danyaoxiang/danyaoxiang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\danyaoxiang\\danyaoxiang.png",
+      "basename": "danyaoxiang.png",
+      "extension": ".png",
+      "sizeBytes": 9626,
+      "sha256": "1555462e4a3d01e6bb997bf7165658ef764783c2864e4115d54092336dbabcfc",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dimian-shamo.jpg",
+      "assetsRelativePath": "Art0/Texture/dimian-shamo.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dimian-shamo.jpg",
+      "basename": "dimian-shamo.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 20261,
+      "sha256": "03d622f9a6a55835a14f4e9f567c871d3dd601eb1ec04753670f1abed392e83c",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/diren.png",
+      "assetsRelativePath": "Art0/Texture/diren.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\diren.png",
+      "basename": "diren.png",
+      "extension": ".png",
+      "sizeBytes": 157416,
+      "sha256": "bc00fc4effbefc4ce1c002f017edfdf85cd4db4e12031d3cd1bf73eb2a5747f6",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dixing/shan.jpg",
+      "assetsRelativePath": "Art0/Texture/dixing/shan.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dixing\\shan.jpg",
+      "basename": "shan.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 90606,
+      "sha256": "b2f1530184674884729c176d74c37455cfa4ff19b874205431d9548274ff7e8f",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dixing/tudi-dixing-N.jpg",
+      "assetsRelativePath": "Art0/Texture/dixing/tudi-dixing-N.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dixing\\tudi-dixing-N.jpg",
+      "basename": "tudi-dixing-N.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 18079,
+      "sha256": "032cd4e545db0bcbc94669d95f87edda68728e89455f7bd5bf73c7751a49e3f5",
+      "classification": "special-texture",
+      "reasons": [
+        "文件名命中特殊纹理规则：-n."
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dixing/tudi-dixing.jpg",
+      "assetsRelativePath": "Art0/Texture/dixing/tudi-dixing.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dixing\\tudi-dixing.jpg",
+      "basename": "tudi-dixing.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 28489,
+      "sha256": "a923e927e56999169ed64461b2f54a5c1235c298cad65ff66bbed37e4317c0e3",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dixing/tudui-dixing-N.jpg",
+      "assetsRelativePath": "Art0/Texture/dixing/tudui-dixing-N.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dixing\\tudui-dixing-N.jpg",
+      "basename": "tudui-dixing-N.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 20264,
+      "sha256": "9f5d6064468bebf5ab538b04568eb7bc6162b7b8795bb19cfdc89773bb087a39",
+      "classification": "special-texture",
+      "reasons": [
+        "文件名命中特殊纹理规则：-n."
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/dixing/tudui-dixing.jpg",
+      "assetsRelativePath": "Art0/Texture/dixing/tudui-dixing.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\dixing\\tudui-dixing.jpg",
+      "basename": "tudui-dixing.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 30497,
+      "sha256": "6392c68bd9fb05cf4b34cd6607398f3e8f0dba58ec877b76192521d6cbd7ba1d",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/feixv-wj-N.jpg",
+      "assetsRelativePath": "Art0/Texture/feixv-wj-N.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\feixv-wj-N.jpg",
+      "basename": "feixv-wj-N.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 53556,
+      "sha256": "d8d5b954fda127d839d0f47edaaf63781f103c296f6d4abf265c35c092ecc6e2",
+      "classification": "special-texture",
+      "reasons": [
+        "文件名命中特殊纹理规则：-n."
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": false,
+        "pixelCount": 262144
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/feixv-wj.png",
+      "assetsRelativePath": "Art0/Texture/feixv-wj.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\feixv-wj.png",
+      "basename": "feixv-wj.png",
+      "extension": ".png",
+      "sizeBytes": 142375,
+      "sha256": "144756d54b2e6daf0627093533693b98bf4977eb3fb5582f7718aa30aa3e3b2b",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/feixvzawu/qiang-feixv.png",
+      "assetsRelativePath": "Art0/Texture/feixvzawu/qiang-feixv.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\feixvzawu\\qiang-feixv.png",
+      "basename": "qiang-feixv.png",
+      "extension": ".png",
+      "sizeBytes": 10352,
+      "sha256": "5b2601e58745dd863d0368634591622162fad4e7c659872d950934203a978737",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/feixvzawu/shikuai-feixv.jpg",
+      "assetsRelativePath": "Art0/Texture/feixvzawu/shikuai-feixv.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\feixvzawu\\shikuai-feixv.jpg",
+      "basename": "shikuai-feixv.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 11162,
+      "sha256": "7618535b5eeccb53b59e0caeb7a3434cd42ac140fe0b24a15e52260d1873cb62",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/huojiantong.jpg",
+      "assetsRelativePath": "Art0/Texture/huojiantong.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\huojiantong.jpg",
+      "basename": "huojiantong.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 20559,
+      "sha256": "62a2875fc8aee2f044c31261685ccd2aebfcf7222091412422b1d7e832f5bee6",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/jiatelin.png",
+      "assetsRelativePath": "Art0/Texture/jiatelin.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\jiatelin.png",
+      "basename": "jiatelin.png",
+      "extension": ".png",
+      "sizeBytes": 10415,
+      "sha256": "9329ad3c5418cba569c50c40a769f9adbdd20581850430bb6adbf626ae96fa5d",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/jiatelin/jiatelin.png",
+      "assetsRelativePath": "Art0/Texture/jiatelin/jiatelin.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\jiatelin\\jiatelin.png",
+      "basename": "jiatelin.png",
+      "extension": ".png",
+      "sizeBytes": 13062,
+      "sha256": "8496f752c2ac9fa27a299fa9869410b5f11f438b3c67cbe35c24e65c1400a11c",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/malu-bian.jpg",
+      "assetsRelativePath": "Art0/Texture/malu-bian.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\malu-bian.jpg",
+      "basename": "malu-bian.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 19124,
+      "sha256": "5d1858cb352cb5a9f06a00965745e8aa379d4734301499830c6d67e48e28942e",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/malu.jpg",
+      "assetsRelativePath": "Art0/Texture/malu.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\malu.jpg",
+      "basename": "malu.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 15038,
+      "sha256": "bfe28167e6255dc01fe40ed84cc938caab55446587bf79925f40544ea02ae001",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/shadai.png",
+      "assetsRelativePath": "Art0/Texture/shadai.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\shadai.png",
+      "basename": "shadai.png",
+      "extension": ".png",
+      "sizeBytes": 10217,
+      "sha256": "97401c7597f7bfb1c4e89f9d1be5d5c080e86a6d891d2547d7853ba0f2566808",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/shoulei.png",
+      "assetsRelativePath": "Art0/Texture/shoulei.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\shoulei.png",
+      "basename": "shoulei.png",
+      "extension": ".png",
+      "sizeBytes": 12799,
+      "sha256": "0ee443a99068c0aa68f4a22ced32299575f66b1b39b34849b2b671740ac5a78d",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/shouqiang.png",
+      "assetsRelativePath": "Art0/Texture/shouqiang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\shouqiang.png",
+      "basename": "shouqiang.png",
+      "extension": ".png",
+      "sizeBytes": 11042,
+      "sha256": "7749b96976c88027cde5e019e85520f1e35f422036c88951bae14ab1d6e43210",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/skybox-sphere.jpg",
+      "assetsRelativePath": "Art0/Texture/skybox-sphere.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\skybox-sphere.jpg",
+      "basename": "skybox-sphere.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 8719,
+      "sha256": "3f69a823056a36274398a2e48fe5dde4cc00412be4a7b9a5121942ee231fbc03",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/tanke.png",
+      "assetsRelativePath": "Art0/Texture/tanke.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\tanke.png",
+      "basename": "tanke.png",
+      "extension": ".png",
+      "sizeBytes": 44185,
+      "sha256": "a0015f414171c385a652e3ec62171278fdd84541f3f158f61330df3a5ed0a077",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/tiesiwang-wang.jpg",
+      "assetsRelativePath": "Art0/Texture/tiesiwang-wang.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\tiesiwang-wang.jpg",
+      "basename": "tiesiwang-wang.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 14765,
+      "sha256": "01c700c915e88952a38ecb045d47391debda9e2cf43b74ddfbe94f9e5b94eefe",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/tiesiwang.jpg",
+      "assetsRelativePath": "Art0/Texture/tiesiwang.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\tiesiwang.jpg",
+      "basename": "tiesiwang.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 24453,
+      "sha256": "f633354a6a778070173647e5dbba699bc80382252e7d087e801aa25a7714633d",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/weiqiang/weiqiang-dizuo.png",
+      "assetsRelativePath": "Art0/Texture/weiqiang/weiqiang-dizuo.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\weiqiang\\weiqiang-dizuo.png",
+      "basename": "weiqiang-dizuo.png",
+      "extension": ".png",
+      "sizeBytes": 33191,
+      "sha256": "871851dcba416d9da3d7f6c6ee95ab543c86ebd4d40271cd74ccd6aa35b4b40b",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/weiqiang/weiqiang-tiegan.jpg",
+      "assetsRelativePath": "Art0/Texture/weiqiang/weiqiang-tiegan.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\weiqiang\\weiqiang-tiegan.jpg",
+      "basename": "weiqiang-tiegan.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 10400,
+      "sha256": "e4abe2898a850db6b2d46a2f08d3a40a1492761e3bbe9aff9d9ec58ad18f65ef",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/weiqiang/weiqiang-wang.png",
+      "assetsRelativePath": "Art0/Texture/weiqiang/weiqiang-wang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\weiqiang\\weiqiang-wang.png",
+      "basename": "weiqiang-wang.png",
+      "extension": ".png",
+      "sizeBytes": 16282,
+      "sha256": "be59afde7864df7d4a316067b167a9fa23814d15b36e610edb8cf95fafb58009",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/wuji-malu.png",
+      "assetsRelativePath": "Art0/Texture/wuji-malu.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\wuji-malu.png",
+      "basename": "wuji-malu.png",
+      "extension": ".png",
+      "sizeBytes": 15482,
+      "sha256": "2a0f0cc0d1fa019240a33f2abbb88f1af63775d50c9b7bb8922c66838b7361ab",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/youtong.jpg",
+      "assetsRelativePath": "Art0/Texture/youtong.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\youtong.jpg",
+      "basename": "youtong.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 26128,
+      "sha256": "3b0ee6c22db07c7e7d6142f756ba493de224b08868b4e4a15573d5fb2ce9880a",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/yun.png",
+      "assetsRelativePath": "Art0/Texture/yun.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\yun.png",
+      "basename": "yun.png",
+      "extension": ".png",
+      "sizeBytes": 12022,
+      "sha256": "852d9c979f76e4348b18cfcb6b8048bc9cd5313349265ae48682b3901855f24e",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/zhishengji-boli.jpg",
+      "assetsRelativePath": "Art0/Texture/zhishengji-boli.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\zhishengji-boli.jpg",
+      "basename": "zhishengji-boli.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 8536,
+      "sha256": "6b7d73a6f197fda15766dac662b018e901fccf6ab2f5f7a72bda88058f967965",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 32,
+        "height": 32,
+        "hasAlpha": false,
+        "pixelCount": 1024
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/zhishengji.png",
+      "assetsRelativePath": "Art0/Texture/zhishengji.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\zhishengji.png",
+      "basename": "zhishengji.png",
+      "extension": ".png",
+      "sizeBytes": 38510,
+      "sha256": "7a7b2d0f1b1d798316fb22ba2afa60dcea41403e3144853ae1c4b1798bd3a9e0",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/Texture/zhujue-green.jpg",
+      "assetsRelativePath": "Art0/Texture/zhujue-green.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\Texture\\zhujue-green.jpg",
+      "basename": "zhujue-green.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 56519,
+      "sha256": "067a9fd0b697d6d6849097f46dd9abb047619e4dc9adc8786d86424afc843dcd",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/w3三选一升级射击切图/护盾生命血条/敌人biao.png",
+      "assetsRelativePath": "Art0/w3三选一升级射击切图/护盾生命血条/敌人biao.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\w3三选一升级射击切图\\护盾生命血条\\敌人biao.png",
+      "basename": "敌人biao.png",
+      "extension": ".png",
+      "sizeBytes": 4532,
+      "sha256": "6dafaef0d7421303be731424215495a17acf8e995f8de794bfc9e9df4c0c02e7",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 36,
+        "height": 35,
+        "hasAlpha": true,
+        "pixelCount": 1260
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/w3三选一升级射击切图/护盾生命血条/敌人血条_white.png",
+      "assetsRelativePath": "Art0/w3三选一升级射击切图/护盾生命血条/敌人血条_white.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\w3三选一升级射击切图\\护盾生命血条\\敌人血条_white.png",
+      "basename": "敌人血条_white.png",
+      "extension": ".png",
+      "sizeBytes": 1443,
+      "sha256": "57b16ce76f6b434c75cce7e8ef9b3c10205c58ea3d0947903408292efe824429",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 77,
+        "height": 10,
+        "hasAlpha": true,
+        "pixelCount": 770
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/w3三选一升级射击切图/护盾生命血条/敌人血条.png",
+      "assetsRelativePath": "Art0/w3三选一升级射击切图/护盾生命血条/敌人血条.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\w3三选一升级射击切图\\护盾生命血条\\敌人血条.png",
+      "basename": "敌人血条.png",
+      "extension": ".png",
+      "sizeBytes": 2973,
+      "sha256": "37b0594654ed3adb89d87d7119d5995ef9707071b71d40f33d70070b1b93b0f2",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 77,
+        "height": 10,
+        "hasAlpha": true,
+        "pixelCount": 770
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art0/w3三选一升级射击切图/护盾生命血条/敌人血条kuang.png",
+      "assetsRelativePath": "Art0/w3三选一升级射击切图/护盾生命血条/敌人血条kuang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art0\\w3三选一升级射击切图\\护盾生命血条\\敌人血条kuang.png",
+      "basename": "敌人血条kuang.png",
+      "extension": ".png",
+      "sizeBytes": 2870,
+      "sha256": "aa6c5063c73a0d065b6e51e1c3ae816976061fc1e55dde6198492a023d602da4",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 77,
+        "height": 10,
+        "hasAlpha": true,
+        "pixelCount": 770
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/enemyInfo/cross.png",
+      "assetsRelativePath": "Art1/enemyInfo/cross.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\enemyInfo\\cross.png",
+      "basename": "cross.png",
+      "extension": ".png",
+      "sizeBytes": 8084,
+      "sha256": "9f9ab220b612e46950352cc6a27b060dbd82a5c7fa3896ba321967790b024060",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 81,
+        "height": 80,
+        "hasAlpha": true,
+        "pixelCount": 6480
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/enemyInfo/enemy.png",
+      "assetsRelativePath": "Art1/enemyInfo/enemy.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\enemyInfo\\enemy.png",
+      "basename": "enemy.png",
+      "extension": ".png",
+      "sizeBytes": 8891,
+      "sha256": "360925d5c725943feade304073837c25d0d10a4086be0db3047f9988e27f0861",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 74,
+        "height": 62,
+        "hasAlpha": true,
+        "pixelCount": 4588
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/enemyInfo/helicopter.png",
+      "assetsRelativePath": "Art1/enemyInfo/helicopter.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\enemyInfo\\helicopter.png",
+      "basename": "helicopter.png",
+      "extension": ".png",
+      "sizeBytes": 15792,
+      "sha256": "2313cbd0e9da29980124029b0aab8401311bd80418bc9209bea42611be292b04",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 174,
+        "height": 67,
+        "hasAlpha": true,
+        "pixelCount": 11658
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/图层 36.png",
+      "assetsRelativePath": "Art1/ui灰枪改/图层 36.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\图层 36.png",
+      "basename": "图层 36.png",
+      "extension": ".png",
+      "sizeBytes": 8046,
+      "sha256": "5dabdbb3dd4551e51bb5c7f675925801fc9bcea4b4873b793a48e80d26292ca4",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 158,
+        "height": 31,
+        "hasAlpha": true,
+        "pixelCount": 4898
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/图层 38.png",
+      "assetsRelativePath": "Art1/ui灰枪改/图层 38.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\图层 38.png",
+      "basename": "图层 38.png",
+      "extension": ".png",
+      "sizeBytes": 7169,
+      "sha256": "02882a9745ba7ada956b9ad6fd5c8526c9b1f340e3cef0ce61258bbf780fd88b",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 77,
+        "height": 47,
+        "hasAlpha": true,
+        "pixelCount": 3619
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/图层 87 拷贝.png",
+      "assetsRelativePath": "Art1/ui灰枪改/图层 87 拷贝.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\图层 87 拷贝.png",
+      "basename": "图层 87 拷贝.png",
+      "extension": ".png",
+      "sizeBytes": 3210,
+      "sha256": "2b6c7af8302cf1c45fa0ffff6e936f14047181cd046d972a58553b9198f3b4c7",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 28,
+        "height": 10,
+        "hasAlpha": true,
+        "pixelCount": 280
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/图层 87.png",
+      "assetsRelativePath": "Art1/ui灰枪改/图层 87.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\图层 87.png",
+      "basename": "图层 87.png",
+      "extension": ".png",
+      "sizeBytes": 3247,
+      "sha256": "2d0a8cb3d6d370289940a6958fff3b435034a0d335656b1688e274706e1de82c",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 36,
+        "height": 9,
+        "hasAlpha": true,
+        "pixelCount": 324
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/图层 90.png",
+      "assetsRelativePath": "Art1/ui灰枪改/图层 90.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\图层 90.png",
+      "basename": "图层 90.png",
+      "extension": ".png",
+      "sizeBytes": 3101,
+      "sha256": "3cbd7770f5c63b235a51885519b1bcbbf78c0b298c96047476b7cfc4a2380cf7",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 21,
+        "height": 8,
+        "hasAlpha": true,
+        "pixelCount": 168
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/矩形 1 拷贝 2.png",
+      "assetsRelativePath": "Art1/ui灰枪改/矩形 1 拷贝 2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\矩形 1 拷贝 2.png",
+      "basename": "矩形 1 拷贝 2.png",
+      "extension": ".png",
+      "sizeBytes": 3053,
+      "sha256": "d61cdc82c38130569863915c6ef9c7d1452fc13592238ad2c107b967ec321e27",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 129,
+        "height": 61,
+        "hasAlpha": true,
+        "pixelCount": 7869
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/ui灰枪改/组 17.png",
+      "assetsRelativePath": "Art1/ui灰枪改/组 17.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\ui灰枪改\\组 17.png",
+      "basename": "组 17.png",
+      "extension": ".png",
+      "sizeBytes": 8847,
+      "sha256": "f6af6ea197dec95f206008c1b5fefe3870b730fe6a30d120d749fa4bbc66b6d0",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 80,
+        "height": 55,
+        "hasAlpha": true,
+        "pixelCount": 4400
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/circle_glow.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/circle_glow.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\circle_glow.png",
+      "basename": "circle_glow.png",
+      "extension": ".png",
+      "sizeBytes": 7307,
+      "sha256": "509b3a7fb482649542add813e893d2202e7ce966d26fda6d84e85d3b3714dbdb",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 119,
+        "height": 119,
+        "hasAlpha": true,
+        "pixelCount": 14161
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/nade_line.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/nade_line.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\nade_line.png",
+      "basename": "nade_line.png",
+      "extension": ".png",
+      "sizeBytes": 2475,
+      "sha256": "4e209baed45f7f4e389184ee7ff5da260c32a72395ae25f14a86ee683850308e",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 8,
+        "hasAlpha": true,
+        "pixelCount": 2048
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/nade_target.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/nade_target.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\nade_target.png",
+      "basename": "nade_target.png",
+      "extension": ".png",
+      "sizeBytes": 22410,
+      "sha256": "a2f9bc37fdaaf836e0db77489ef39b38df4ac7027c468788b9b3baf44b5e24d1",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/shengl.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/shengl.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\shengl.png",
+      "basename": "shengl.png",
+      "extension": ".png",
+      "sizeBytes": 45263,
+      "sha256": "ba98764a2846f00190b375426f1bf6a244a7a7318efe7cec02e42a733029eb04",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 382,
+        "height": 123,
+        "hasAlpha": true,
+        "pixelCount": 46986
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/shib.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/shib.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\shib.png",
+      "basename": "shib.png",
+      "extension": ".png",
+      "sizeBytes": 39538,
+      "sha256": "1d2504fd62d657ea06a96414e696133697498a26f94cd7b06fefa34ca53b6269",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 381,
+        "height": 122,
+        "hasAlpha": true,
+        "pixelCount": 46482
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/shoulei.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/shoulei.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\shoulei.png",
+      "basename": "shoulei.png",
+      "extension": ".png",
+      "sizeBytes": 16462,
+      "sha256": "4ebaa4279e96da3e09bc79fa3f0d9b903b8d331fe677a13f6b93f8678985241c",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 75,
+        "height": 76,
+        "hasAlpha": true,
+        "pixelCount": 5700
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/srpg.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/srpg.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\srpg.png",
+      "basename": "srpg.png",
+      "extension": ".png",
+      "sizeBytes": 11766,
+      "sha256": "cf2fca8f2463d5187a5177c00e9bb5ac44a86fd3c61164cf78ec38b2ef690cda",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 80,
+        "height": 85,
+        "hasAlpha": true,
+        "pixelCount": 6800
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/yshou.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/yshou.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\yshou.png",
+      "basename": "yshou.png",
+      "extension": ".png",
+      "sizeBytes": 20883,
+      "sha256": "a73d0baf60bb2b3207adb0ac012999081eb3369747550c2afed6b63f4d3bd66d",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 133,
+        "height": 196,
+        "hasAlpha": true,
+        "pixelCount": 26068
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/yuan.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/yuan.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\yuan.png",
+      "basename": "yuan.png",
+      "extension": ".png",
+      "sizeBytes": 15116,
+      "sha256": "9caea0959c153cc8e1105014c0fef9780f2f92a10271beb5f40e47dd46ad0988",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 288,
+        "height": 288,
+        "hasAlpha": true,
+        "pixelCount": 82944
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/yuankuang.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/yuankuang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\yuankuang.png",
+      "basename": "yuankuang.png",
+      "extension": ".png",
+      "sizeBytes": 8299,
+      "sha256": "1bde7d3dcf2d1d38340ac430413293dfa7b2bf80720ef232dd424fb8cc6e459b",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 107,
+        "height": 107,
+        "hasAlpha": true,
+        "pixelCount": 11449
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/zhunxingw.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/zhunxingw.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\zhunxingw.png",
+      "basename": "zhunxingw.png",
+      "extension": ".png",
+      "sizeBytes": 3601,
+      "sha256": "d5b2dd5bec781ffc965cf2084196fc1e709fec4ec658ecebfb777ae09e060a09",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 68,
+        "height": 68,
+        "hasAlpha": true,
+        "pixelCount": 4624
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/Ammo.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/Ammo.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\Ammo.png",
+      "basename": "Ammo.png",
+      "extension": ".png",
+      "sizeBytes": 104731,
+      "sha256": "8b8684fee7a3aea5ebc36ce768ddae36c33f4b959b59841ca8822e5505ca3654",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 327,
+        "hasAlpha": true,
+        "pixelCount": 65400
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/Damage.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/Damage.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\Damage.png",
+      "basename": "Damage.png",
+      "extension": ".png",
+      "sizeBytes": 105861,
+      "sha256": "b36fcbf5dc9e1014880717c014ac93080e25a3b12f657c637d0a186c5bf277de",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 328,
+        "hasAlpha": true,
+        "pixelCount": 65600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/guang.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/guang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\guang.png",
+      "basename": "guang.png",
+      "extension": ".png",
+      "sizeBytes": 5090,
+      "sha256": "ace829d80298400dfe7761bdc27a05346fc4a7db867120f51eefda7597d30421",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 328,
+        "hasAlpha": true,
+        "pixelCount": 65600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/Heal.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/Heal.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\Heal.png",
+      "basename": "Heal.png",
+      "extension": ".png",
+      "sizeBytes": 103637,
+      "sha256": "70cdaffd70f7d8dcb3ea1b8a7ecae3b42447bf8169001593a7f229bb2121d3a3",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 328,
+        "hasAlpha": true,
+        "pixelCount": 65600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/Shield.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/Shield.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\Shield.png",
+      "basename": "Shield.png",
+      "extension": ".png",
+      "sizeBytes": 102773,
+      "sha256": "97514cea1c646fdcc60abdb633308b6b6c076679c37fa64b9d15f70b88b68378",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 329,
+        "hasAlpha": true,
+        "pixelCount": 65800
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/Weapon_1.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/Weapon_1.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\Weapon_1.png",
+      "basename": "Weapon_1.png",
+      "extension": ".png",
+      "sizeBytes": 101574,
+      "sha256": "29ad10907b648f226a9c796340f1af10bc976b7cb9783e210c080e408fd3625b",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 328,
+        "hasAlpha": true,
+        "pixelCount": 65600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/卡牌/Weapon_2.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/卡牌/Weapon_2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\卡牌\\Weapon_2.png",
+      "basename": "Weapon_2.png",
+      "extension": ".png",
+      "sizeBytes": 105611,
+      "sha256": "0a44d8202642eedeafb05654988eccaa076c5c51ede0a8ce246f9bcb3d0428b9",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 200,
+        "height": 328,
+        "hasAlpha": true,
+        "pixelCount": 65600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/sbei.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/sbei.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\sbei.png",
+      "basename": "sbei.png",
+      "extension": ".png",
+      "sizeBytes": 3172,
+      "sha256": "9b860ce65c2c46e21d471e6e8026c76dc5e3feb6794693b0a03fd02dbb6447d5",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 44,
+        "height": 44,
+        "hasAlpha": true,
+        "pixelCount": 1936
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/sdiban.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/sdiban.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\sdiban.png",
+      "basename": "sdiban.png",
+      "extension": ".png",
+      "sizeBytes": 2903,
+      "sha256": "5e7b0217db5c889b5250b565845141338c8f06f389b2efcc8b60e4e7b22a7c7b",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 324,
+        "height": 23,
+        "hasAlpha": true,
+        "pixelCount": 7452
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/sxueui.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/sxueui.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\sxueui.png",
+      "basename": "sxueui.png",
+      "extension": ".png",
+      "sizeBytes": 3533,
+      "sha256": "c91b00ad2ee291d89b87df19e1b7eb27fc8c537d3f0d43860c6da41a1888211e",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 24,
+        "height": 21,
+        "hasAlpha": true,
+        "pixelCount": 504
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/s护盾ui.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/s护盾ui.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\s护盾ui.png",
+      "basename": "s护盾ui.png",
+      "extension": ".png",
+      "sizeBytes": 3828,
+      "sha256": "71e9138c84d1b7a4f5c7a6dd74a4ba62844e1e60696cd3c9b02a2d05df17381c",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 21,
+        "height": 29,
+        "hasAlpha": true,
+        "pixelCount": 609
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/s护盾条 58.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/s护盾条 58.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\s护盾条 58.png",
+      "basename": "s护盾条 58.png",
+      "extension": ".png",
+      "sizeBytes": 3337,
+      "sha256": "8476e40d9e26996daefd7869942c090b2130909cae3541880cd5569af30be915",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 322,
+        "height": 21,
+        "hasAlpha": true,
+        "pixelCount": 6762
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/s血条-white.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/s血条-white.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\s血条-white.png",
+      "basename": "s血条-white.png",
+      "extension": ".png",
+      "sizeBytes": 1477,
+      "sha256": "81a9f640525756efeb235262452ee7bb0f65fa8096f30998ac57dece97977d4b",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 322,
+        "height": 21,
+        "hasAlpha": true,
+        "pixelCount": 6762
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/s血条.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/s血条.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\s血条.png",
+      "basename": "s血条.png",
+      "extension": ".png",
+      "sizeBytes": 3071,
+      "sha256": "7c29c31f44c00eae1e8be5b18a0594f6ca7c7fc1b71af49a20da2b17199d348e",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 322,
+        "height": 21,
+        "hasAlpha": true,
+        "pixelCount": 6762
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/经验条.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/经验条.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\经验条.png",
+      "basename": "经验条.png",
+      "extension": ".png",
+      "sizeBytes": 4976,
+      "sha256": "f0e9342a92bd317e950a2c5e945a88fea22643180b2d1f7d527d04cba428f5a3",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 23,
+        "height": 129,
+        "hasAlpha": true,
+        "pixelCount": 2967
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/经验条di.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/经验条di.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\经验条di.png",
+      "basename": "经验条di.png",
+      "extension": ".png",
+      "sizeBytes": 2972,
+      "sha256": "9b5999cc95bf42ce1b71ec221b238acb3b159de2af8d736c65cbd94cf3dcf3d7",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 29,
+        "height": 134,
+        "hasAlpha": true,
+        "pixelCount": 3886
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/护盾生命血条/经验条shine.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/护盾生命血条/经验条shine.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\护盾生命血条\\经验条shine.png",
+      "basename": "经验条shine.png",
+      "extension": ".png",
+      "sizeBytes": 2479,
+      "sha256": "d84bfda4ac501474cd3d48392cb02fcfd964076b66b1406c43b2719cde7818a7",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 63,
+        "height": 169,
+        "hasAlpha": true,
+        "pixelCount": 10647
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/枪ui/awm.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/枪ui/awm.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\枪ui\\awm.png",
+      "basename": "awm.png",
+      "extension": ".png",
+      "sizeBytes": 9961,
+      "sha256": "f3822d3a303524c0f53a4af4582f84685966e1f5eb195fbf954d52a7d3d88408",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 158,
+        "height": 32,
+        "hasAlpha": true,
+        "pixelCount": 5056
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/枪ui/shouqiang.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/枪ui/shouqiang.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\枪ui\\shouqiang.png",
+      "basename": "shouqiang.png",
+      "extension": ".png",
+      "sizeBytes": 8596,
+      "sha256": "d671d19c55d1f7882f1ae26b6042fa99fb62ad7a892c2c06b1ca7e0d791df953",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 77,
+        "height": 47,
+        "hasAlpha": true,
+        "pixelCount": 3619
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/枪ui/uzi.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/枪ui/uzi.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\枪ui\\uzi.png",
+      "basename": "uzi.png",
+      "extension": ".png",
+      "sizeBytes": 10225,
+      "sha256": "06408387ee54c75ddc35d53b6b757d0b92b0bc8390bc996a016b76cbb04c7e6d",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 80,
+        "height": 55,
+        "hasAlpha": true,
+        "pixelCount": 4400
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/狙击镜/狙击镜4.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/狙击镜/狙击镜4.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\狙击镜\\狙击镜4.png",
+      "basename": "狙击镜4.png",
+      "extension": ".png",
+      "sizeBytes": 124507,
+      "sha256": "e3a03c8b6d183be1ed0e5b89d63a26f994b96b39f158bc66844a1052840fb055",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 704,
+        "height": 720,
+        "hasAlpha": true,
+        "pixelCount": 506880
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/绿地.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/绿地.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\绿地.png",
+      "basename": "绿地.png",
+      "extension": ".png",
+      "sizeBytes": 139170,
+      "sha256": "67f8a8cc26946936ae5ce7812c5266830f76dd9c24531f48ac70dfb03ea64655",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 398,
+        "height": 165,
+        "hasAlpha": true,
+        "pixelCount": 65670
+      }
+    },
+    {
+      "projectRelativePath": "assets/Art1/w3三选一升级射击切图/雪地.png",
+      "assetsRelativePath": "Art1/w3三选一升级射击切图/雪地.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Art1\\w3三选一升级射击切图\\雪地.png",
+      "basename": "雪地.png",
+      "extension": ".png",
+      "sizeBytes": 143744,
+      "sha256": "7695fe6a91982b793a52e4434949139220f4f1330c38e2c2b066cd1e8098d449",
+      "classification": "atlas",
+      "reasons": [
+        "位于自动图集目录：assets/Art1/w3三选一升级射击切图/auto-atlas.pac"
+      ],
+      "atlasConfigPath": "assets/Art1/w3三选一升级射击切图/auto-atlas.pac",
+      "metadata": {
+        "format": "png",
+        "width": 398,
+        "height": 165,
+        "hasAlpha": true,
+        "pixelCount": 65670
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/ammosign.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/ammosign.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\09回血特效\\受击\\回血特效\\ammosign.png",
+      "basename": "ammosign.png",
+      "extension": ".png",
+      "sizeBytes": 6440,
+      "sha256": "5c3dac97d459ca85e40027c836d857d6565f91b457902464f504d57a19b4cf04",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/damagesign.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/damagesign.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\09回血特效\\受击\\回血特效\\damagesign.png",
+      "basename": "damagesign.png",
+      "extension": ".png",
+      "sizeBytes": 5668,
+      "sha256": "062ed32726326c3e8a011accfc2c7689901656625758bd76e186737635f95073",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/healsign.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/healsign.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\09回血特效\\受击\\回血特效\\healsign.png",
+      "basename": "healsign.png",
+      "extension": ".png",
+      "sizeBytes": 6894,
+      "sha256": "8ba3a02eb478658fac96e0367d4eb9fa8fc3f84c2961c4923b1fc60252590641",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/shield.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/shield.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\09回血特效\\受击\\回血特效\\shield.png",
+      "basename": "shield.png",
+      "extension": ".png",
+      "sizeBytes": 7126,
+      "sha256": "0c53aef0c8d6c59b2a2659a04469d9627aec22844875966273e3a2b5b6a03976",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/光圈.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/光圈.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\09回血特效\\受击\\回血特效\\光圈.png",
+      "basename": "光圈.png",
+      "extension": ".png",
+      "sizeBytes": 8502,
+      "sha256": "ac87092dd81d6b448244bdb84796763734e24543a30c5d1d6c4fe0217b165f1d",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 148,
+        "height": 148,
+        "hasAlpha": true,
+        "pixelCount": 21904
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/09回血特效/受击/回血特效/光点.png",
+      "assetsRelativePath": "Effect/09回血特效/受击/回血特效/光点.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\09回血特效\\受击\\回血特效\\光点.png",
+      "basename": "光点.png",
+      "extension": ".png",
+      "sizeBytes": 55378,
+      "sha256": "36b8ad10f611b32da982f4095265285e88b701e6c8071ad63acbf56f0890b783",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": true,
+        "pixelCount": 262144
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/01l.png",
+      "assetsRelativePath": "Effect/Tex/01l.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\01l.png",
+      "basename": "01l.png",
+      "extension": ".png",
+      "sizeBytes": 19450,
+      "sha256": "429737a98a80c70284730e51bdfbdd9803d24564b75c6a5a1a96ab3817556d9e",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/boom_3.png",
+      "assetsRelativePath": "Effect/Tex/boom_3.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\boom_3.png",
+      "basename": "boom_3.png",
+      "extension": ".png",
+      "sizeBytes": 7217,
+      "sha256": "8860d8d80a2c3505acadfdfc19abe0b719855631bfe94c7ce591feb5c4cf64b5",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_fire_256x256_a_039.png",
+      "assetsRelativePath": "Effect/Tex/eff_fire_256x256_a_039.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\eff_fire_256x256_a_039.png",
+      "basename": "eff_fire_256x256_a_039.png",
+      "extension": ".png",
+      "sizeBytes": 21519,
+      "sha256": "ae0606e32c57428384edb8fb421e20877d99942f923f6960b7ad563554626700",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_fire_512x512_a_020.png",
+      "assetsRelativePath": "Effect/Tex/eff_fire_512x512_a_020.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\eff_fire_512x512_a_020.png",
+      "basename": "eff_fire_512x512_a_020.png",
+      "extension": ".png",
+      "sizeBytes": 20614,
+      "sha256": "9b8bfa6ae7663a6edb36d042a23733eb3ce4b3499c79212bbb178481a0ca1fea",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_flare_256x256_a_011.png",
+      "assetsRelativePath": "Effect/Tex/eff_flare_256x256_a_011.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\eff_flare_256x256_a_011.png",
+      "basename": "eff_flare_256x256_a_011.png",
+      "extension": ".png",
+      "sizeBytes": 4261,
+      "sha256": "97869aaf0fd8baf5e9cd0c31b7f88f8d919fa058b9bdf859e2cd1dfc4d3e66cf",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/eff_object_64x64_a_010.png",
+      "assetsRelativePath": "Effect/Tex/eff_object_64x64_a_010.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\eff_object_64x64_a_010.png",
+      "basename": "eff_object_64x64_a_010.png",
+      "extension": ".png",
+      "sizeBytes": 23698,
+      "sha256": "8cfdbafb923b82e366936ea9cdfd54bef4e138604a2ec4c588150c1abecde192",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/FX_T_CityAction_assassin_w06.png",
+      "assetsRelativePath": "Effect/Tex/FX_T_CityAction_assassin_w06.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\FX_T_CityAction_assassin_w06.png",
+      "basename": "FX_T_CityAction_assassin_w06.png",
+      "extension": ".png",
+      "sizeBytes": 18343,
+      "sha256": "eec4fa828df1de597f5ca50d1646fb416f9ea31712f20c57b33ed3ef9fef9a93",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/K2_04_Glow_4007.png",
+      "assetsRelativePath": "Effect/Tex/K2_04_Glow_4007.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\K2_04_Glow_4007.png",
+      "basename": "K2_04_Glow_4007.png",
+      "extension": ".png",
+      "sizeBytes": 19242,
+      "sha256": "e051d1e99df0add252b3fcb157f4a65b37da07954fcf755f378994b5ca59ff17",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/Lujq_sequence_004.png",
+      "assetsRelativePath": "Effect/Tex/Lujq_sequence_004.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\Lujq_sequence_004.png",
+      "basename": "Lujq_sequence_004.png",
+      "extension": ".png",
+      "sizeBytes": 24612,
+      "sha256": "fc556fdb9ac23b9f57d51657daf10a8e703c01f259b7c754efbec0161783429c",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/T_Flash21.png",
+      "assetsRelativePath": "Effect/Tex/T_Flash21.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\T_Flash21.png",
+      "basename": "T_Flash21.png",
+      "extension": ".png",
+      "sizeBytes": 8531,
+      "sha256": "e58e18cec45babca27c650cc358a8c7aa2b4e01c4ae1169a7d029fab1a9c823c",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/T_Smoke_110_NA_C.png",
+      "assetsRelativePath": "Effect/Tex/T_Smoke_110_NA_C.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\T_Smoke_110_NA_C.png",
+      "basename": "T_Smoke_110_NA_C.png",
+      "extension": ".png",
+      "sizeBytes": 20560,
+      "sha256": "101e46002985f9111dff222f4333b6f984acb0294cc8f8d98fe252e2ccbc2717",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/tuowei01.png",
+      "assetsRelativePath": "Effect/Tex/tuowei01.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\tuowei01.png",
+      "basename": "tuowei01.png",
+      "extension": ".png",
+      "sizeBytes": 16531,
+      "sha256": "90eca5baee0f346e047e9e2253666d0cd5ad8dd1b84acd0291a08976996c4c79",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/枪口01.png",
+      "assetsRelativePath": "Effect/Tex/枪口01.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\枪口01.png",
+      "basename": "枪口01.png",
+      "extension": ".png",
+      "sizeBytes": 23217,
+      "sha256": "0204e5b6b3f397f3328c8e8cfeb6fe2358f8e05711731e282357d0a52b57959b",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/Tex/烟写实.png",
+      "assetsRelativePath": "Effect/Tex/烟写实.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\Tex\\烟写实.png",
+      "basename": "烟写实.png",
+      "extension": ".png",
+      "sizeBytes": 72035,
+      "sha256": "8cbd230990cfd47e3a65a308a38f528b4bca9f401d331cfd2ec33ce03b95d072",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/baodian5.png",
+      "assetsRelativePath": "Effect/三选一升级射击/baodian5.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\三选一升级射击\\baodian5.png",
+      "basename": "baodian5.png",
+      "extension": ".png",
+      "sizeBytes": 4120,
+      "sha256": "a62bcedb7d37a50696c6d65f3e6a11aa86e854e736310df3b9106a4936b4821f",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/ef_glow020.png",
+      "assetsRelativePath": "Effect/三选一升级射击/ef_glow020.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\三选一升级射击\\ef_glow020.png",
+      "basename": "ef_glow020.png",
+      "extension": ".png",
+      "sizeBytes": 11934,
+      "sha256": "da6860e6aeb9ef3491b6b832f636e9cfeb7ca9275e725cc949dc10c43984e48d",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/eff_ring_256x256_a_003_2.png",
+      "assetsRelativePath": "Effect/三选一升级射击/eff_ring_256x256_a_003_2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\三选一升级射击\\eff_ring_256x256_a_003_2.png",
+      "basename": "eff_ring_256x256_a_003_2.png",
+      "extension": ".png",
+      "sizeBytes": 35692,
+      "sha256": "15dc32b4398d5831d72ebba8eac15b1481f63df65ef6b6c53ee61431ce16fb5d",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/三选一升级射击/血滴2.png",
+      "assetsRelativePath": "Effect/三选一升级射击/血滴2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\三选一升级射击\\血滴2.png",
+      "basename": "血滴2.png",
+      "extension": ".png",
+      "sizeBytes": 4041,
+      "sha256": "dca4d08586abd13598bcbb64b4de8a30e16797baa32d1576e01db069caf29f1a",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/奖励特效/01.png",
+      "assetsRelativePath": "Effect/奖励特效/01.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\奖励特效\\01.png",
+      "basename": "01.png",
+      "extension": ".png",
+      "sizeBytes": 11481,
+      "sha256": "3542d3fe6c0691174e97b9a5ad30c2ad7cb62dc20d14c0bf962cc6f2813fc3c0",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/奖励特效/05.png",
+      "assetsRelativePath": "Effect/奖励特效/05.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\奖励特效\\05.png",
+      "basename": "05.png",
+      "extension": ".png",
+      "sizeBytes": 3585,
+      "sha256": "c099cea9accb4d77001a95780df3c99e67dfb498c85049b3e3d00b071fd44d39",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/奖励特效/55.png",
+      "assetsRelativePath": "Effect/奖励特效/55.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\奖励特效\\55.png",
+      "basename": "55.png",
+      "extension": ".png",
+      "sizeBytes": 29885,
+      "sha256": "37433fae830443e9a11691944b104ce28df8d03feb10a2af8d56831befed0255",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/射击密集伞兵_升级/Eff_tex_glow_daodanbaozha_02.png",
+      "assetsRelativePath": "Effect/射击密集伞兵_升级/Eff_tex_glow_daodanbaozha_02.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\射击密集伞兵_升级\\Eff_tex_glow_daodanbaozha_02.png",
+      "basename": "Eff_tex_glow_daodanbaozha_02.png",
+      "extension": ".png",
+      "sizeBytes": 1998,
+      "sha256": "29bdb03dd53d5b90c9ee1aa1266c7d7169c1048d30f03b78301c4156393043fe",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节",
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/射击密集伞兵_升级/白圆.png",
+      "assetsRelativePath": "Effect/射击密集伞兵_升级/白圆.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\射击密集伞兵_升级\\白圆.png",
+      "basename": "白圆.png",
+      "extension": ".png",
+      "sizeBytes": 2528,
+      "sha256": "f8f5e824bf24ab05962843d3568340de8a7ea9148a2b8597a1ae348bf5aadc70",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 40,
+        "height": 40,
+        "hasAlpha": true,
+        "pixelCount": 1600
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_爆炸/ef_ani_fire07.png",
+      "assetsRelativePath": "Effect/战争射击_爆炸/ef_ani_fire07.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\战争射击_爆炸\\ef_ani_fire07.png",
+      "basename": "ef_ani_fire07.png",
+      "extension": ".png",
+      "sizeBytes": 15904,
+      "sha256": "2c1aa35436ac790961a87be571ea41d740ba1182501005ba6294ab0f1a334bd9",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_爆炸/eff_fire_256x256_a_039.png",
+      "assetsRelativePath": "Effect/战争射击_爆炸/eff_fire_256x256_a_039.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\战争射击_爆炸\\eff_fire_256x256_a_039.png",
+      "basename": "eff_fire_256x256_a_039.png",
+      "extension": ".png",
+      "sizeBytes": 8800,
+      "sha256": "0053ddb72713134a47bfe5c24a8de9484b193a882636e3f21a917b6f44744687",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_破损黑烟/02.png",
+      "assetsRelativePath": "Effect/战争射击_破损黑烟/02.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\战争射击_破损黑烟\\02.png",
+      "basename": "02.png",
+      "extension": ".png",
+      "sizeBytes": 16991,
+      "sha256": "3455fc9a464823659530f367b5112619b49753780c3e87369ff1fac9f9748fe7",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 235,
+        "height": 241,
+        "hasAlpha": true,
+        "pixelCount": 56635
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/战争射击_破损黑烟/ef_smoke_06hmm.png",
+      "assetsRelativePath": "Effect/战争射击_破损黑烟/ef_smoke_06hmm.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\战争射击_破损黑烟\\ef_smoke_06hmm.png",
+      "basename": "ef_smoke_06hmm.png",
+      "extension": ".png",
+      "sizeBytes": 80509,
+      "sha256": "96fa7bc3c99135e85ef991b28047ee9bcd910b4bbcbc1eb88e79119e3a2de306",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/掉血/烟雾5.png",
+      "assetsRelativePath": "Effect/掉血/烟雾5.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\掉血\\烟雾5.png",
+      "basename": "烟雾5.png",
+      "extension": ".png",
+      "sizeBytes": 3037,
+      "sha256": "a0205f46b08c63c8579429056e06c7bc25e7d22bcc3e3df642801a029ab5b859",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": true,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/掉血/血渍8.png",
+      "assetsRelativePath": "Effect/掉血/血渍8.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\掉血\\血渍8.png",
+      "basename": "血渍8.png",
+      "extension": ".png",
+      "sizeBytes": 15252,
+      "sha256": "e422e00919c887bcde50dfaac0155a7db3564b536c37842317c19dae85af2d23",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/掉血/血滴2.png",
+      "assetsRelativePath": "Effect/掉血/血滴2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\掉血\\血滴2.png",
+      "basename": "血滴2.png",
+      "extension": ".png",
+      "sizeBytes": 9885,
+      "sha256": "bfdcbac064316a821d1bd455694ed6f11aa1f77b64b929eab1857bdfe2cd3cd7",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/敌人枪口/K2_04_Glow_4007.png",
+      "assetsRelativePath": "Effect/敌人枪口/K2_04_Glow_4007.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\敌人枪口\\K2_04_Glow_4007.png",
+      "basename": "K2_04_Glow_4007.png",
+      "extension": ".png",
+      "sizeBytes": 7170,
+      "sha256": "c666d69e7eed82359028b93acb4bdd82ab3f859117f082d598e1ca4cd6628b0f",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/敌人枪口/K9_03_smoke_4002.png",
+      "assetsRelativePath": "Effect/敌人枪口/K9_03_smoke_4002.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\敌人枪口\\K9_03_smoke_4002.png",
+      "basename": "K9_03_smoke_4002.png",
+      "extension": ".png",
+      "sizeBytes": 7161,
+      "sha256": "51d9bcdb43da20b79f279163d47fed8af7a4444c73082cad96ee28b43508f6f1",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/铲斗升级/VFX/升级特效/Eff_tex__lizi_03.png",
+      "assetsRelativePath": "Effect/铲斗升级/VFX/升级特效/Eff_tex__lizi_03.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\铲斗升级\\VFX\\升级特效\\Eff_tex__lizi_03.png",
+      "basename": "Eff_tex__lizi_03.png",
+      "extension": ".png",
+      "sizeBytes": 1831,
+      "sha256": "eef4fc939085c377248487fa545f7439f6e378b20935f0c1ad7eddd65b3e9100",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节",
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": false,
+        "pixelCount": 65536
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/铲斗升级/VFX/升级特效/Eff_tex_line_01.png",
+      "assetsRelativePath": "Effect/铲斗升级/VFX/升级特效/Eff_tex_line_01.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\铲斗升级\\VFX\\升级特效\\Eff_tex_line_01.png",
+      "basename": "Eff_tex_line_01.png",
+      "extension": ".png",
+      "sizeBytes": 376,
+      "sha256": "e321cb8b6878c7089e43c8293a7a2476a6b57675e506a0e7a043917014cc37b8",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节",
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 32,
+        "hasAlpha": true,
+        "pixelCount": 2048
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/铲斗升级/VFX/升级特效/Eff_tex_path_13.png",
+      "assetsRelativePath": "Effect/铲斗升级/VFX/升级特效/Eff_tex_path_13.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\铲斗升级\\VFX\\升级特效\\Eff_tex_path_13.png",
+      "basename": "Eff_tex_path_13.png",
+      "extension": ".png",
+      "sizeBytes": 746,
+      "sha256": "66e526a454238cc8902a8b65d4545071ab89cf0a8d9cc820a7df1e753b54ad47",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节",
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": false,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/Effect/铲斗升级/VFX/升级特效/Eff_ui_tex_glow_127_jnsf.png",
+      "assetsRelativePath": "Effect/铲斗升级/VFX/升级特效/Eff_ui_tex_glow_127_jnsf.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\Effect\\铲斗升级\\VFX\\升级特效\\Eff_ui_tex_glow_127_jnsf.png",
+      "basename": "Eff_ui_tex_glow_127_jnsf.png",
+      "extension": ".png",
+      "sizeBytes": 3021,
+      "sha256": "a5ac2a9a581fa6c0a160ebae45aa1a986e746958e8e943bb38f56668b4c8bb5d",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effect"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/effects/propellers/propeller.png",
+      "assetsRelativePath": "effects/propellers/propeller.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\effects\\propellers\\propeller.png",
+      "basename": "propeller.png",
+      "extension": ".png",
+      "sizeBytes": 4639,
+      "sha256": "9f3dbf5c4ad55cf91e08ef19b94603639710d402e9237b9bc64de8ac0916b3e0",
+      "classification": "manual-review",
+      "reasons": [
+        "路径命中人工检查目录：effects"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 64,
+        "height": 64,
+        "hasAlpha": true,
+        "pixelCount": 4096
+      }
+    },
+    {
+      "projectRelativePath": "assets/effects/Tail/trail-001.png",
+      "assetsRelativePath": "effects/Tail/trail-001.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\effects\\Tail\\trail-001.png",
+      "basename": "trail-001.png",
+      "extension": ".png",
+      "sizeBytes": 1856,
+      "sha256": "ed493412625fb250e52ebfa7bd2d344bac62302633d235e78124082ecf7e22cd",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节",
+        "路径命中人工检查目录：effects"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 128,
+        "height": 38,
+        "hasAlpha": true,
+        "pixelCount": 4864
+      }
+    },
+    {
+      "projectRelativePath": "assets/EP/ui/UIGame/logo.png",
+      "assetsRelativePath": "EP/ui/UIGame/logo.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\EP\\ui\\UIGame\\logo.png",
+      "basename": "logo.png",
+      "extension": ".png",
+      "sizeBytes": 27067,
+      "sha256": "15c7336ed8862d0b47183735d56cc5a184774e61dfbe95856c32d26bf54c6d75",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 493,
+        "height": 135,
+        "hasAlpha": true,
+        "pixelCount": 66555
+      }
+    },
+    {
+      "projectRelativePath": "assets/EP/ui/UIGame/按钮-蓝.png",
+      "assetsRelativePath": "EP/ui/UIGame/按钮-蓝.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\EP\\ui\\UIGame\\按钮-蓝.png",
+      "basename": "按钮-蓝.png",
+      "extension": ".png",
+      "sizeBytes": 847,
+      "sha256": "e949a8209d2ce3b2caee4604713a260e5fc3f89af77201414043b5cb3a63c1e0",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 168,
+        "height": 49,
+        "hasAlpha": true,
+        "pixelCount": 8232
+      }
+    },
+    {
+      "projectRelativePath": "assets/EP/ui/UIGame/按钮.png",
+      "assetsRelativePath": "EP/ui/UIGame/按钮.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\EP\\ui\\UIGame\\按钮.png",
+      "basename": "按钮.png",
+      "extension": ".png",
+      "sizeBytes": 937,
+      "sha256": "2ec7c7fa56daf78d0ba137b0abf72835d758968852fbdea7c029f7a861813df3",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 168,
+        "height": 49,
+        "hasAlpha": true,
+        "pixelCount": 8232
+      }
+    },
+    {
+      "projectRelativePath": "assets/EP/ui/闪红2.png",
+      "assetsRelativePath": "EP/ui/闪红2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\EP\\ui\\闪红2.png",
+      "basename": "闪红2.png",
+      "extension": ".png",
+      "sizeBytes": 51234,
+      "sha256": "7ba608ad4a995bd527e2992ac10ad344bc884d10c2a7037df54f555fef743034",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 720,
+        "height": 1280,
+        "hasAlpha": true,
+        "pixelCount": 921600
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/1.png",
+      "assetsRelativePath": "google_dot/images/click/1.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\1.png",
+      "basename": "1.png",
+      "extension": ".png",
+      "sizeBytes": 712,
+      "sha256": "dad8f91c8ab5b3ddb8caebd96543739dc61c5cb97fa76551e79033e9cca5dcc7",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/2.png",
+      "assetsRelativePath": "google_dot/images/click/2.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\2.png",
+      "basename": "2.png",
+      "extension": ".png",
+      "sizeBytes": 1350,
+      "sha256": "8508ba22f31d65dcc05baf9578a0bb84822f357b14288f5a103399eb05fb0b71",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/3.png",
+      "assetsRelativePath": "google_dot/images/click/3.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\3.png",
+      "basename": "3.png",
+      "extension": ".png",
+      "sizeBytes": 1607,
+      "sha256": "65f4b124d4041bfcb8fb5f52ddc71d73597d7d1089f9822434d75298dbadb202",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/4.png",
+      "assetsRelativePath": "google_dot/images/click/4.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\4.png",
+      "basename": "4.png",
+      "extension": ".png",
+      "sizeBytes": 1794,
+      "sha256": "4a63738ccd707e0ad9ac25764b013b5793b65a8fcf74e334ffe893900e0c5684",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/5.png",
+      "assetsRelativePath": "google_dot/images/click/5.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\5.png",
+      "basename": "5.png",
+      "extension": ".png",
+      "sizeBytes": 1770,
+      "sha256": "126e6e8257e0d3213b1baf34e53dcdfff69565698b96f3dcc82a50ed06b60910",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/6.png",
+      "assetsRelativePath": "google_dot/images/click/6.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\6.png",
+      "basename": "6.png",
+      "extension": ".png",
+      "sizeBytes": 1524,
+      "sha256": "7048cb406caa629669d4fac5b39f7d2fa18f3ece77c9f29f875b3f5c0a73e9ff",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/7.png",
+      "assetsRelativePath": "google_dot/images/click/7.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\7.png",
+      "basename": "7.png",
+      "extension": ".png",
+      "sizeBytes": 1323,
+      "sha256": "38eaddf4e5f931abbec1cd38a1c80a863f50041e29b4a69f16e6be29b7b4d99b",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/8.png",
+      "assetsRelativePath": "google_dot/images/click/8.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\8.png",
+      "basename": "8.png",
+      "extension": ".png",
+      "sizeBytes": 781,
+      "sha256": "270a2c4ca8c36f89728e32622e6e73f8c6d452976dbbef35c4d75c6f1237e76c",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/google_dot/images/click/9.png",
+      "assetsRelativePath": "google_dot/images/click/9.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\google_dot\\images\\click\\9.png",
+      "basename": "9.png",
+      "extension": ".png",
+      "sizeBytes": 590,
+      "sha256": "f26472b9c766032f0ac2aee82afc4e5179ab7b564355e375c50f5145c911d8ce",
+      "classification": "too-small",
+      "reasons": [
+        "文件小于最小处理体积 2048 字节"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 138,
+        "height": 139,
+        "hasAlpha": true,
+        "pixelCount": 19182
+      }
+    },
+    {
+      "projectRelativePath": "assets/prefabs/weapon/武器贴图/RPG/HuoJianTong.jpg",
+      "assetsRelativePath": "prefabs/weapon/武器贴图/RPG/HuoJianTong.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\prefabs\\weapon\\武器贴图\\RPG\\HuoJianTong.jpg",
+      "basename": "HuoJianTong.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 5899,
+      "sha256": "a25d4f257b1ad21a0472fae08e4629f932513aa02facb319ef23d8f778c09275",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 128,
+        "height": 128,
+        "hasAlpha": false,
+        "pixelCount": 16384
+      }
+    },
+    {
+      "projectRelativePath": "assets/prefabs/受击飙血/白圆.png",
+      "assetsRelativePath": "prefabs/受击飙血/白圆.png",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\prefabs\\受击飙血\\白圆.png",
+      "basename": "白圆.png",
+      "extension": ".png",
+      "sizeBytes": 2528,
+      "sha256": "f8f5e824bf24ab05962843d3568340de8a7ea9148a2b8597a1ae348bf5aadc70",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "png",
+        "width": 40,
+        "height": 40,
+        "hasAlpha": true,
+        "pixelCount": 1600
+      }
+    },
+    {
+      "projectRelativePath": "assets/texture-1/misc/17px.jpg",
+      "assetsRelativePath": "texture-1/misc/17px.jpg",
+      "absolutePath": "D:\\Projects\\game141_TriChoiceShooter\\assets\\texture-1\\misc\\17px.jpg",
+      "basename": "17px.jpg",
+      "extension": ".jpg",
+      "sizeBytes": 3534,
+      "sha256": "32f2d2fec5acbdd4caa0f4c0dac71d3b10bff5aeffb928d5307e64e6f2283577",
+      "classification": "safe",
+      "reasons": [
+        "未命中自动图集、特殊纹理、人工检查或小文件规则"
+      ],
+      "atlasConfigPath": null,
+      "metadata": {
+        "format": "jpeg",
+        "width": 17,
+        "height": 17,
+        "hasAlpha": false,
+        "pixelCount": 289
+      }
+    }
+  ],
+  "notes": [
+    "分析器只读取源资源，没有修改 Cocos Creator 工程。",
+    "检测到 1 个自动图集配置。",
+    "candidates.json 只包含 classification 为 safe 的图片。",
+    "atlas 图片暂不进行源文件 TinyPNG 压缩，留待构建后处理最终图集。",
+    "manual-review 图片需要人工确认后再加入后续 approved.json。",
+    "special-texture 默认禁止有损压缩。",
+    "too-small 图片默认不消耗 TinyPNG API 请求。",
+    "相同 SHA-256 的文件后续应共享一次 TinyPNG 压缩结果。"
+  ]
+}

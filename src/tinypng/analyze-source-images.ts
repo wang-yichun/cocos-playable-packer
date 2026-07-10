@@ -20,6 +20,10 @@ import {
     inspectSourceImageFiles,
 } from "./image-inspector.js";
 
+import {
+    writeSourceImageAnalysisOutputs,
+} from "./report-writer.js";
+
 import type {
     ClassifiedSourceImageFile,
     InspectedSourceImageFile,
@@ -492,6 +496,43 @@ async function main(): Promise<void> {
         "atlas",
         "自动图集源图片",
         15,
+    );
+
+    
+    console.log();
+    console.log("正在写入分析报告……");
+
+    const output =
+        await writeSourceImageAnalysisOutputs(
+            config,
+            files,
+            atlasDirectories,
+        );
+
+    console.log();
+    console.log("分析文件已生成");
+    console.log("----------------");
+
+    console.log(
+        `完整报告：${output.reportPath}`,
+    );
+
+    console.log(
+        `候选清单：${output.candidatesPath}`,
+    );
+
+    console.log(
+        `安全候选文件：${output.candidateFileCount}`,
+    );
+
+    console.log(
+        `唯一候选内容：` +
+        `${output.uniqueCandidateContentCount}`,
+    );
+
+    console.log(
+        `预计首次最多消耗 API 次数：` +
+        `${output.uniqueCandidateContentCount}`,
     );
 }
 

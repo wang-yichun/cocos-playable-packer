@@ -385,3 +385,67 @@ export interface ClassifiedSourceImageFile
      */
     atlasConfigPath: string | null;
 }
+
+/**
+ * candidates.json 中记录的安全候选。
+ *
+ * 不写入 absolutePath，避免清单与当前电脑的盘符强绑定。
+ */
+export interface SourceImageCandidateItem {
+    projectRelativePath: string;
+    assetsRelativePath: string;
+
+    basename: string;
+    extension: string;
+
+    sizeBytes: number;
+    sha256: string;
+
+    classification: "safe";
+    metadata: SourceImageMetadata;
+}
+
+export interface SourceImageCandidateManifestSummary {
+    /**
+     * 需要替换结果的文件数量。
+     */
+    candidateFileCount: number;
+
+    /**
+     * 按 SHA-256 去重后的内容数量。
+     *
+     * 在没有缓存的情况下，这才接近真实 API 请求次数。
+     */
+    uniqueSourceCount: number;
+
+    /**
+     * 可以通过同一份压缩结果复用的重复文件数量。
+     */
+    duplicateReusableCount: number;
+
+    totalSourceBytes: number;
+}
+
+export interface SourceImageCandidateManifest {
+    generatedAt: string;
+    schemaVersion: number;
+    generatorVersion: string;
+
+    projectName: string;
+    configFilePath: string;
+    projectRoot: string;
+    assetsDirectory: string;
+
+    summary: SourceImageCandidateManifestSummary;
+    files: SourceImageCandidateItem[];
+
+    notes: string[];
+}
+
+export interface WrittenSourceImageAnalysisOutputs {
+    reportPath: string;
+    candidatesPath: string;
+
+    candidateFileCount: number;
+    uniqueCandidateContentCount: number;
+}
