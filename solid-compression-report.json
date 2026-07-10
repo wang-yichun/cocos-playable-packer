@@ -1,0 +1,132 @@
+{
+  "generatedAt": "2026-07-10T05:40:36.841Z",
+  "root": "D:\\Projects\\cocos-playable-packer\\web-mobile",
+  "fileCount": 405,
+  "archiveFileCount": 403,
+  "shellFileCount": 2,
+  "originalBytes": 19143247,
+  "originalSize": "18.26 MB",
+  "archiveRawBytes": 19139781,
+  "archiveRawSize": "18.25 MB",
+  "shellBytes": 3466,
+  "shellSize": "3.38 KB",
+  "groups": [
+    {
+      "group": "compressed",
+      "fileCount": 219,
+      "rawBytes": 15353676,
+      "rawSize": "14.64 MB",
+      "percentage": 80.22
+    },
+    {
+      "group": "stored",
+      "fileCount": 184,
+      "rawBytes": 3786105,
+      "rawSize": "3.61 MB",
+      "percentage": 19.78
+    }
+  ],
+  "methods": [
+    {
+      "name": "原始逐文件 Base64",
+      "description": "不压缩，每个文件单独 Base64，接近当前调试版 VFS。",
+      "compressionUnitCount": 0,
+      "compressedPayloadBytes": 0,
+      "storedPayloadBytes": 19139781,
+      "manifestBytes": 41592,
+      "shellBytes": 3466,
+      "binaryTotalBytes": 19181373,
+      "base64PayloadBytes": 25520116,
+      "estimatedEmbeddedBytes": 25565174,
+      "estimatedEmbeddedSize": "24.38 MB",
+      "ratioToOriginal": 133.55,
+      "savedPercentage": -33.55,
+      "compressionTimeMs": 0
+    },
+    {
+      "name": "逐文件 Brotli Q11",
+      "description": "每个文件独立 Brotli，便于按需解压，但无法利用跨文件重复数据。",
+      "compressionUnitCount": 403,
+      "compressedPayloadBytes": 6107427,
+      "storedPayloadBytes": 0,
+      "manifestBytes": 49904,
+      "shellBytes": 3466,
+      "binaryTotalBytes": 6157331,
+      "base64PayloadBytes": 8143236,
+      "estimatedEmbeddedBytes": 8196606,
+      "estimatedEmbeddedSize": "7.82 MB",
+      "ratioToOriginal": 42.82,
+      "savedPercentage": 57.18,
+      "compressionTimeMs": 21683.99
+    },
+    {
+      "name": "全部 Solid Brotli Q11",
+      "description": "全部归档资源拼接后一次 Brotli。体积通常最小，但启动时需要解压整个资源块。",
+      "compressionUnitCount": 1,
+      "compressedPayloadBytes": 5703615,
+      "storedPayloadBytes": 0,
+      "manifestBytes": 46734,
+      "shellBytes": 3466,
+      "binaryTotalBytes": 5750349,
+      "base64PayloadBytes": 7604820,
+      "estimatedEmbeddedBytes": 7655020,
+      "estimatedEmbeddedSize": "7.30 MB",
+      "ratioToOriginal": 39.99,
+      "savedPercentage": 60.01,
+      "compressionTimeMs": 22816.23
+    },
+    {
+      "name": "分组 Solid Brotli Q11",
+      "description": "JS/JSON/BIN/CCONB/WASM/字体整体 Brotli；图片、音频和压缩纹理保持原样。",
+      "compressionUnitCount": 1,
+      "compressedPayloadBytes": 2421337,
+      "storedPayloadBytes": 3786105,
+      "manifestBytes": 49741,
+      "shellBytes": 3466,
+      "binaryTotalBytes": 6257183,
+      "base64PayloadBytes": 8276592,
+      "estimatedEmbeddedBytes": 8329799,
+      "estimatedEmbeddedSize": "7.94 MB",
+      "ratioToOriginal": 43.51,
+      "savedPercentage": 56.49,
+      "compressionTimeMs": 15196.07
+    },
+    {
+      "name": "分组 Solid Gzip L9",
+      "description": "可压缩资源整体 Gzip；媒体资源保持原样。运行时解压兼容性通常更容易处理。",
+      "compressionUnitCount": 1,
+      "compressedPayloadBytes": 4002847,
+      "storedPayloadBytes": 3786105,
+      "manifestBytes": 49741,
+      "shellBytes": 3466,
+      "binaryTotalBytes": 7838693,
+      "base64PayloadBytes": 10385272,
+      "estimatedEmbeddedBytes": 10438479,
+      "estimatedEmbeddedSize": "9.95 MB",
+      "ratioToOriginal": 54.53,
+      "savedPercentage": 45.47,
+      "compressionTimeMs": 439.31
+    },
+    {
+      "name": "分组 Solid Deflate Raw L9",
+      "description": "可压缩资源整体 Raw Deflate；媒体资源保持原样。没有 Gzip 文件头和校验尾。",
+      "compressionUnitCount": 1,
+      "compressedPayloadBytes": 4002829,
+      "storedPayloadBytes": 3786105,
+      "manifestBytes": 49741,
+      "shellBytes": 3466,
+      "binaryTotalBytes": 7838675,
+      "base64PayloadBytes": 10385248,
+      "estimatedEmbeddedBytes": 10438455,
+      "estimatedEmbeddedSize": "9.95 MB",
+      "ratioToOriginal": 54.53,
+      "savedPercentage": 45.47,
+      "compressionTimeMs": 424
+    }
+  ],
+  "bestMethod": {
+    "name": "全部 Solid Brotli Q11",
+    "estimatedEmbeddedBytes": 7655020,
+    "estimatedEmbeddedSize": "7.30 MB"
+  }
+}
