@@ -86,6 +86,7 @@ export type BuildImageAction =
     | "already-compressed"
     | "cache-replaced"
     | "negative-cache-hit"
+    | "skipped-below-min-bytes"
     | "api-compressed"
     | "api-no-benefit"
     | "skipped-api-limit"
@@ -122,6 +123,7 @@ export interface BuildImageOptimizationSummary {
     apiCompressedAndReplaced: number;
     apiNoBenefit: number;
 
+    skippedByMinBytes: number;
     skippedByApiLimit: number;
     skippedAfterApiFailure: number;
 
@@ -148,6 +150,8 @@ export interface BuildImageOptimizationReport {
         | { type: "all" }
         | { type: "limit"; limit: number };
 
+    minimumSourceBytes: number;
+
     tinyPngCompressionCountStart: number | null;
     tinyPngCompressionCountEnd: number | null;
 
@@ -158,4 +162,5 @@ export interface BuildImageOptimizationReport {
 export interface BuildImageCliOptions {
     buildDirectoryArgument: string;
     apiRequestLimit: number | null;
+    minimumSourceBytes: number;
 }

@@ -51,6 +51,8 @@ import {
     validateCocosBuildDirectory,
 } from "./validate-cocos-build.js";
 
+const DEFAULT_MINIMUM_SOURCE_BYTES = 4096;
+
 function formatBytes(bytes: number): string {
     if (bytes < 1024) {
         return `${bytes} B`;
@@ -93,6 +95,8 @@ function parseCliOptions(
 
     let all = false;
     let apiRequestLimit: number | null = null;
+    let minimumSourceBytes =
+        DEFAULT_MINIMUM_SOURCE_BYTES;
 
     for (let index = 0; index < argv.length; index += 1) {
         const argument = argv[index];
@@ -138,6 +142,37 @@ function parseCliOptions(
             continue;
         }
 
+        if (argument.startsWith("--min-bytes=")) {
+            minimumSourceBytes =
+                parseNonNegativeInteger(
+                    argument.slice(
+                        "--min-bytes=".length,
+                    ),
+                    "--min-bytes",
+                );
+
+            continue;
+        }
+
+        if (argument === "--min-bytes") {
+            const value = argv[index + 1];
+
+            if (value === undefined) {
+                throw new Error(
+                    "--min-bytes 后缺少数值。",
+                );
+            }
+
+            minimumSourceBytes =
+                parseNonNegativeInteger(
+                    value,
+                    "--min-bytes",
+                );
+
+            index += 1;
+            continue;
+        }
+
         if (argument.startsWith("-")) {
             throw new Error(
                 `无法识别的参数：${argument}`,
@@ -155,6 +190,7 @@ function parseCliOptions(
                 "示例：",
                 "npm run tinypng:build -- -- \"./web-mobile\" --limit=5",
                 "npm run tinypng:build -- -- \"./web-mobile\" --all",
+                "npm run tinypng:build -- -- \"./web-mobile\" --all --min-bytes=0",
             ].join("\n"),
         );
     }
@@ -178,6 +214,7 @@ function parseCliOptions(
             all
                 ? null
                 : apiRequestLimit,
+        minimumSourceBytes,
     };
 }
 
@@ -261,6 +298,7 @@ function createEmptySummary():
         apiRequests: 0,
         apiCompressedAndReplaced: 0,
         apiNoBenefit: 0,
+        skippedByMinBytes: 0,
         skippedByApiLimit: 0,
         skippedAfterApiFailure: 0,
         cacheInvalid: 0,
@@ -389,6 +427,14 @@ async function main(): Promise<void> {
         options.apiRequestLimit === null
             ? "API 模式：--all"
             : `API 模式：--limit=${options.apiRequestLimit}`,
+    );
+    console.log(
+        `最小原图尺寸：${options.minimumSourceBytes} B` +
+        (
+            options.minimumSourceBytes === 0
+                ? "（不按尺寸跳过）"
+                : ""
+        ),
     );
     console.log("");
 
@@ -660,6 +706,37 @@ async function main(): Promise<void> {
                 files.length,
                 file,
                 "负缓存命中：",
+            );
+
+            continue;
+        }
+
+        if (
+            sourceBytes <
+            options.minimumSourceBytes
+        ) {
+            summary.skippedByMinBytes += 1;
+
+            addReportItem(
+                reportItems,
+                summary,
+                {
+                    ...commonReportFields,
+                    finalBytes: sourceBytes,
+                    savedBytes: 0,
+                    action:
+                        "skipped-below-min-bytes",
+                    message:
+                        `原图 ${sourceBytes} B，小于最小处理尺寸 ` +
+                        `${options.minimumSourceBytes} B。`,
+                },
+            );
+
+            printProgress(
+                index,
+                files.length,
+                file,
+                "跳过：低于最小尺寸",
             );
 
             continue;
@@ -991,6 +1068,8 @@ async function main(): Promise<void> {
                     limit:
                         options.apiRequestLimit,
                 },
+        minimumSourceBytes:
+            options.minimumSourceBytes,
         tinyPngCompressionCountStart:
             compressionCountStart,
         tinyPngCompressionCountEnd:
@@ -1014,6 +1093,7 @@ async function main(): Promise<void> {
     console.log(`API 压缩并替换数量：${summary.apiCompressedAndReplaced}`);
     console.log(`替换数量：${summary.replacedImages}`);
     console.log(`无收益数量：${summary.apiNoBenefit}`);
+    console.log(`低于最小尺寸跳过：${summary.skippedByMinBytes}`);
     console.log(`缓存无效数量：${summary.cacheInvalid}`);
     console.log(`达到 API 上限跳过：${summary.skippedByApiLimit}`);
     console.log(`API 失败后跳过：${summary.skippedAfterApiFailure}`);
