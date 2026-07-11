@@ -95,6 +95,7 @@ if ((jpegQualitySpecified || pngQualitySpecified) && imageMode !== "squoosh") {
 
 if (
   usedLegacyPngQuality &&
+  environmentJpegQuality === undefined &&
   process.env[SUPPRESS_LEGACY_PNG_WARNING_ENV] !== "1"
 ) {
   console.warn("警告：--quality 已弃用，请改用 --png-quality。");
