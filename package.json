@@ -14,6 +14,7 @@
     "playable:build": "tsx src/pipeline/build-playable.ts",
     "serve": "http-server ./dist -p 8080 -c-1",
     "analyze:encoding": "tsx src/analyze-text-encoding.ts",
+    "encoding:base91": "tsx src/encoding/reencode-brotli-html.ts",
     "typecheck": "tsc --noEmit",
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
     "tinypng:build": "node --env-file=.env --import tsx src/tinypng-build/compress-build-images.ts",
