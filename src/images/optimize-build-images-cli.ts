@@ -38,6 +38,10 @@ const buildDirectory = forwardedArguments.find(
   (argument) => !argument.startsWith("-"),
 );
 
+if (jpegQualitySpecified && imageMode !== "squoosh") {
+  throw new Error("--jpeg-quality 只适用于 Squoosh 模式。");
+}
+
 process.argv.splice(
   2,
   process.argv.length - 2,
