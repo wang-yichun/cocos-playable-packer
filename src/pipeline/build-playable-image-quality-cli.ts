@@ -15,6 +15,7 @@ type JsonObject = Record<string, unknown>;
 
 export interface ImageQualityPipelineOptions {
   passthroughArgs: string[];
+  imageMode: string | null;
   pngQuality: number;
   jpegQuality: number;
   outputFile: string | null;
@@ -112,21 +113,23 @@ export function parseImageQualityPipelineArguments(
   }
 
   const imageMode = imageModeFromArguments(passthroughArgs);
-  if ((pngQualitySpecified || jpegQualitySpecified) && imageMode !== "squoosh") {
-    throw new Error(
-      "--png-quality、--jpeg-quality 与兼容参数 --quality 只适用于 Squoosh 模式。",
-    );
-  }
 
   if (helpRequested) {
     return {
       passthroughArgs,
+      imageMode,
       pngQuality,
       jpegQuality,
       outputFile: null,
       helpRequested,
       usedLegacyPngQuality,
     };
+  }
+
+  if ((pngQualitySpecified || jpegQualitySpecified) && imageMode !== "squoosh") {
+    throw new Error(
+      "--png-quality、--jpeg-quality 与兼容参数 --quality 只适用于 Squoosh 模式。",
+    );
   }
 
   if (positional.length !== 2) {
@@ -140,6 +143,7 @@ export function parseImageQualityPipelineArguments(
 
   return {
     passthroughArgs,
+    imageMode,
     pngQuality,
     jpegQuality,
     outputFile,
@@ -296,13 +300,27 @@ async function runExistingPipeline(
 async function main(): Promise<void> {
   const options = parseImageQualityPipelineArguments(process.argv.slice(2));
 
+  if (options.helpRequested) {
+    console.log([
+      "",
+      "图片质量参数：",
+      "  --png-quality=80   PNG 调色板量化质量，范围 0-100",
+      "  --jpeg-quality=80  MozJPEG 质量，范围 1-100",
+      "  --quality=80       --png-quality 的兼容别名",
+    ].join("\n"));
+  }
+
   if (options.usedLegacyPngQuality) {
     console.warn("警告：--quality 已弃用，请改用 --png-quality。");
   }
 
   await runExistingPipeline(options.passthroughArgs, options.jpegQuality);
 
-  if (!options.helpRequested && options.outputFile !== null) {
+  if (
+    !options.helpRequested &&
+    options.imageMode === "squoosh" &&
+    options.outputFile !== null
+  ) {
     await updateReports(
       options.outputFile,
       options.pngQuality,
