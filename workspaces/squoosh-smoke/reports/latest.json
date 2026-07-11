@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "tool": "squoosh-test-one",
+  "startedAt": "2026-07-11T08:35:09.376Z",
+  "completedAt": "2026-07-11T08:35:12.116Z",
+  "inputPath": "D:\\Projects\\cocos-playable-packer\\web-mobile\\assets\\resources\\native\\1d\\1d2fe10d0.png",
+  "outputPath": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-smoke\\output\\1d2fe10d0.squoosh.png",
+  "codec": "oxipng",
+  "options": {
+    "jpegQuality": 80,
+    "oxiPngLevel": 3
+  },
+  "input": {
+    "format": "png",
+    "width": 1023,
+    "height": 1022,
+    "bytes": 733996,
+    "sha256": "d9d72725382d3e61338867f634881320d47efc69efd8d3ff22de54e4a547a00d"
+  },
+  "output": {
+    "format": "png",
+    "width": 1023,
+    "height": 1022,
+    "bytes": 612978,
+    "sha256": "9846fc6f9525c6aa16587f12ce9160fa62f9634eb74014d28c89d2eb8c045086"
+  },
+  "savedBytes": 121018,
+  "savedPercent": 16.48755579049477,
+  "isSmaller": true,
+  "elapsedMs": 2733.7061
+}

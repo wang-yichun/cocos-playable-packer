@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "tool": "squoosh-png-quantization-benchmark",
+  "startedAt": "2026-07-11T08:54:21.146Z",
+  "completedAt": "2026-07-11T08:54:30.030Z",
+  "inputPath": "D:\\Projects\\cocos-playable-packer\\web-mobile\\assets\\resources\\native\\1d\\1d2fe10d0.png",
+  "outputDirectory": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0",
+  "options": {
+    "oxiPngLevel": 3,
+    "tinyPngCacheDirectory": "D:\\Projects\\cocos-playable-packer\\.tinypng-cache\\build-images",
+    "compareTinyPng": true
+  },
+  "input": {
+    "bytes": 733996,
+    "sha256": "d9d72725382d3e61338867f634881320d47efc69efd8d3ff22de54e4a547a00d",
+    "png": {
+      "width": 1023,
+      "height": 1022,
+      "bitDepth": 8,
+      "colorType": 6,
+      "colorTypeName": "真彩色 RGBA",
+      "hasPalette": false,
+      "hasTransparencyChunk": false
+    }
+  },
+  "oxiPngOnly": {
+    "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\baseline.oxipng.png",
+    "bytes": 612978,
+    "sha256": "9846fc6f9525c6aa16587f12ce9160fa62f9634eb74014d28c89d2eb8c045086",
+    "savedBytes": 121018,
+    "savedPercent": 16.48755579049477,
+    "elapsedMs": 2578.8046000000004,
+    "png": {
+      "width": 1023,
+      "height": 1022,
+      "bitDepth": 8,
+      "colorType": 6,
+      "colorTypeName": "真彩色 RGBA",
+      "hasPalette": false,
+      "hasTransparencyChunk": false
+    },
+    "visualDifference": {
+      "differentPixelPercent": 0,
+      "maxChannelError": 0,
+      "alphaRmse": 0,
+      "blackBackgroundRmse": 0,
+      "blackBackgroundPsnr": null,
+      "whiteBackgroundRmse": 0,
+      "whiteBackgroundPsnr": null
+    }
+  },
+  "tinyPngReference": {
+    "available": true,
+    "reason": null,
+    "sourceSha256": "d9d72725382d3e61338867f634881320d47efc69efd8d3ff22de54e4a547a00d",
+    "cacheIndexPath": "D:\\Projects\\cocos-playable-packer\\.tinypng-cache\\build-images\\index.json",
+    "output": {
+      "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\reference.tinypng.png",
+      "bytes": 139770,
+      "sha256": "3ef3505b1b065f4f75347bedbc5f99bb9be42c41c86769f4e5ab601b74556a8b",
+      "savedBytes": 594226,
+      "savedPercent": 80.95766189461523,
+      "elapsedMs": 0,
+      "png": {
+        "width": 1023,
+        "height": 1022,
+        "bitDepth": 8,
+        "colorType": 3,
+        "colorTypeName": "索引色",
+        "hasPalette": true,
+        "hasTransparencyChunk": true
+      },
+      "visualDifference": {
+        "differentPixelPercent": 38.28242018697166,
+        "maxChannelError": 255,
+        "alphaRmse": 2.193541262755539,
+        "blackBackgroundRmse": 2.813175457359603,
+        "blackBackgroundPsnr": 39.1468672107591,
+        "whiteBackgroundRmse": 2.9454735737518103,
+        "whiteBackgroundPsnr": 38.74770099509661
+      }
+    }
+  },
+  "candidates": [
+    {
+      "profile": {
+        "id": "q90-d1",
+        "label": "质量 90，抖动 1.0",
+        "quality": 90,
+        "colours": 256,
+        "effort": 10,
+        "dither": 1
+      },
+      "quantized": {
+        "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q90-d1.quantized.png",
+        "bytes": 190706,
+        "sha256": "870538fc85dea43624167a634d59a8c918fb39c1c757f0133577f7470138a764",
+        "savedBytes": 543290,
+        "savedPercent": 74.01811454013372,
+        "elapsedMs": 764.8859000000002,
+        "png": {
+          "width": 1023,
+          "height": 1022,
+          "bitDepth": 8,
+          "colorType": 3,
+          "colorTypeName": "索引色",
+          "hasPalette": true,
+          "hasTransparencyChunk": true
+        },
+        "visualDifference": {
+          "differentPixelPercent": 58.41831610722463,
+          "maxChannelError": 219,
+          "alphaRmse": 1.996755397264839,
+          "blackBackgroundRmse": 2.8632312180619586,
+          "blackBackgroundPsnr": 38.99367519750471,
+          "whiteBackgroundRmse": 2.870799080984048,
+          "whiteBackgroundPsnr": 38.97074763804773
+        }
+      },
+      "quantizedThenOxiPng": {
+        "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q90-d1.quantized-oxipng.png",
+        "bytes": 135398,
+        "sha256": "9257219d0c5292c1b5278313e5f0dd929f4779c1305366c9d9ee768d234df4f4",
+        "savedBytes": 598598,
+        "savedPercent": 81.55330546760473,
+        "elapsedMs": 1988.3388,
+        "png": {
+          "width": 1023,
+          "height": 1022,
+          "bitDepth": 8,
+          "colorType": 3,
+          "colorTypeName": "索引色",
+          "hasPalette": true,
+          "hasTransparencyChunk": true
+        },
+        "visualDifference": {
+          "differentPixelPercent": 58.41831610722463,
+          "maxChannelError": 219,
+          "alphaRmse": 1.996755397264839,
+          "blackBackgroundRmse": 2.8632312180619586,
+          "blackBackgroundPsnr": 38.99367519750471,
+          "whiteBackgroundRmse": 2.870799080984048,
+          "whiteBackgroundPsnr": 38.97074763804773
+        }
+      }
+    },
+    {
+      "profile": {
+        "id": "q80-d1",
+        "label": "质量 80，抖动 1.0",
+        "quality": 80,
+        "colours": 256,
+        "effort": 10,
+        "dither": 1
+      },
+      "quantized": {
+        "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q80-d1.quantized.png",
+        "bytes": 190706,
+        "sha256": "870538fc85dea43624167a634d59a8c918fb39c1c757f0133577f7470138a764",
+        "savedBytes": 543290,
+        "savedPercent": 74.01811454013372,
+        "elapsedMs": 763.4805999999999,
+        "png": {
+          "width": 1023,
+          "height": 1022,
+          "bitDepth": 8,
+          "colorType": 3,
+          "colorTypeName": "索引色",
+          "hasPalette": true,
+          "hasTransparencyChunk": true
+        },
+        "visualDifference": {
+          "differentPixelPercent": 58.41831610722463,
+          "maxChannelError": 219,
+          "alphaRmse": 1.996755397264839,
+          "blackBackgroundRmse": 2.8632312180619586,
+          "blackBackgroundPsnr": 38.99367519750471,
+          "whiteBackgroundRmse": 2.870799080984048,
+          "whiteBackgroundPsnr": 38.97074763804773
+        }
+      },
+      "quantizedThenOxiPng": {
+        "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q80-d1.quantized-oxipng.png",
+        "bytes": 135398,
+        "sha256": "9257219d0c5292c1b5278313e5f0dd929f4779c1305366c9d9ee768d234df4f4",
+        "savedBytes": 598598,
+        "savedPercent": 81.55330546760473,
+        "elapsedMs": 1979.7105000000001,
+        "png": {
+          "width": 1023,
+          "height": 1022,
+          "bitDepth": 8,
+          "colorType": 3,
+          "colorTypeName": "索引色",
+          "hasPalette": true,
+          "hasTransparencyChunk": true
+        },
+        "visualDifference": {
+          "differentPixelPercent": 58.41831610722463,
+          "maxChannelError": 219,
+          "alphaRmse": 1.996755397264839,
+          "blackBackgroundRmse": 2.8632312180619586,
+          "blackBackgroundPsnr": 38.99367519750471,
+          "whiteBackgroundRmse": 2.870799080984048,
+          "whiteBackgroundPsnr": 38.97074763804773
+        }
+      }
+    },
+    {
+      "profile": {
+        "id": "q80-d05",
+        "label": "质量 80，抖动 0.5",
+        "quality": 80,
+        "colours": 256,
+        "effort": 10,
+        "dither": 0.5
+      },
+      "quantized": {
+        "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q80-d05.quantized.png",
+        "bytes": 184135,
+        "sha256": "33c100c5b3889a53363fd404d423ec21d7cda49e761f6f11e8bc75c2f796f75c",
+        "savedBytes": 549861,
+        "savedPercent": 74.91335102643612,
+        "elapsedMs": 789.6166000000003,
+        "png": {
+          "width": 1023,
+          "height": 1022,
+          "bitDepth": 8,
+          "colorType": 3,
+          "colorTypeName": "索引色",
+          "hasPalette": true,
+          "hasTransparencyChunk": true
+        },
+        "visualDifference": {
+          "differentPixelPercent": 58.41764657495988,
+          "maxChannelError": 188,
+          "alphaRmse": 1.958508149257432,
+          "blackBackgroundRmse": 2.832853167828906,
+          "blackBackgroundPsnr": 39.08632231279392,
+          "whiteBackgroundRmse": 2.8352790528869907,
+          "whiteBackgroundPsnr": 39.07888742230259
+        }
+      },
+      "quantizedThenOxiPng": {
+        "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q80-d05.quantized-oxipng.png",
+        "bytes": 131809,
+        "sha256": "f784fb560bb393bf2e588cc564677c867663628b011c1c57cb5fad2bc118afb3",
+        "savedBytes": 602187,
+        "savedPercent": 82.04227270993303,
+        "elapsedMs": 1969.7639,
+        "png": {
+          "width": 1023,
+          "height": 1022,
+          "bitDepth": 8,
+          "colorType": 3,
+          "colorTypeName": "索引色",
+          "hasPalette": true,
+          "hasTransparencyChunk": true
+        },
+        "visualDifference": {
+          "differentPixelPercent": 58.41764657495988,
+          "maxChannelError": 188,
+          "alphaRmse": 1.958508149257432,
+          "blackBackgroundRmse": 2.832853167828906,
+          "blackBackgroundPsnr": 39.08632231279392,
+          "whiteBackgroundRmse": 2.8352790528869907,
+          "whiteBackgroundPsnr": 39.07888742230259
+        }
+      }
+    }
+  ],
+  "smallestLocalResult": {
+    "profileId": "q80-d05",
+    "stage": "quantized-then-oxipng",
+    "bytes": 131809,
+    "path": "D:\\Projects\\cocos-playable-packer\\workspaces\\squoosh-png-benchmark\\1d2fe10d0\\q80-d05.quantized-oxipng.png"
+  }
+}
