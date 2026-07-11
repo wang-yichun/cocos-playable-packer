@@ -28,30 +28,28 @@ eval 初始化原有 brotli-compress 解码器
 
 这不会改变资源归档算法，也不会更换实际 Brotli 解码逻辑。
 
-## 当前自动化测量
+## 真实游戏验证结果
 
-针对项目当前安装的 `brotli-compress@1.3.3`：
-
-```text
-原始回退脚本：155,294 B
-gzip 数据：      67,732 B
-Base64 + Loader：91,560 B
-HTML 减少：      63,734 B
-```
-
-按此前 4,691,714 B 的 Base64 HTML 估算，可减少约 1.36%。
-
-测试环境中的解码器展开耗时约 16 ms；真实 Chrome、Android WebView 和渠道容器结果以实机报告为准。
-
-## 兼容性约束
-
-该研究模式要求浏览器支持：
+在当前 14.06 MB 解压后归档样本中：
 
 ```text
-DecompressionStream('gzip')
+原始回退脚本：155,296 B
+gzip 数据：      67,736 B
+Base64 + Loader：91,564 B
+HTML 减少：      63,732 B
+最终 HTML：       4,627,982 B
+最终减少：        1.36%
 ```
 
-因此第一阶段仅作为独立后处理和实机研究，不直接替换正式 Pipeline 默认模式。
+Chrome/Edge 实测：
+
+```text
+回退解码器展开：7.00 ms
+Brotli 解压：    99.00 ms
+游戏完整试玩：   正常
+```
+
+原始 JavaScript 回退版本的 Brotli 解压约为 95.80 ms，因此 gzip-packed JS 增加的主要成本是一次约 7 ms 的 gzip 展开，整体仍与原方案处于同一性能档位。
 
 浏览器运行后可读取：
 
@@ -59,20 +57,71 @@ DecompressionStream('gzip')
 window.__PACK_BROTLI_FALLBACK_METRICS__
 ```
 
-## 使用
+## Pipeline 接入方式
 
-先生成现有基线 HTML：
+`playable:build` 现在支持显式参数：
+
+```text
+--brotli-fallback=raw-js
+--brotli-fallback=gzip-packed-js
+```
+
+默认仍为：
+
+```text
+raw-js
+```
+
+这样不会在未验证的渠道环境中改变现有兼容性行为。
+
+### Base64
 
 ```powershell
 npm run playable:build -- `
   "D:\Projects\Cocos\game141\build\web-mobile" `
-  "./dist/game-base64.html" `
+  "./dist/game-base64-gzip-fallback.html" `
   --image-mode=squoosh `
   --payload-encoding=base64 `
+  --brotli-fallback=gzip-packed-js `
   --project=game141
 ```
 
-再优化回退解码器：
+### Base91
+
+```powershell
+npm run playable:build -- `
+  "D:\Projects\Cocos\game141\build\web-mobile" `
+  "./dist/game-base91-gzip-fallback.html" `
+  --image-mode=squoosh `
+  --payload-encoding=base91 `
+  --brotli-fallback=gzip-packed-js `
+  --project=game141
+```
+
+### HTML7
+
+```powershell
+npm run playable:build -- `
+  "D:\Projects\Cocos\game141\build\web-mobile" `
+  "./dist/game-html7-gzip-fallback.html" `
+  --image-mode=squoosh `
+  --payload-encoding=html7 `
+  --brotli-fallback=gzip-packed-js `
+  --project=game141
+```
+
+最终 `.report.json` 会增加：
+
+```text
+brotliFallback.mode
+brotliFallback.rawDecoderBytes
+brotliFallback.gzipDecoderBytes
+brotliFallback.loaderBytes
+brotliFallback.savedBytes
+brotliFallback.roundTrip
+```
+
+原有独立后处理命令仍保留，便于比较既有 HTML：
 
 ```powershell
 npm run brotli:fallback:optimize -- `
@@ -80,30 +129,22 @@ npm run brotli:fallback:optimize -- `
   "./dist/game-base64-gzip-fallback.html"
 ```
 
-输出报告：
+## 兼容性约束
+
+`gzip-packed-js` 要求浏览器支持：
 
 ```text
-dist/game-base64-gzip-fallback.brotli-decoder-report.json
+DecompressionStream('gzip')
 ```
 
-启动静态服务：
-
-```powershell
-npm run serve
-```
-
-比较：
-
-```text
-http://127.0.0.1:8080/game-base64.html
-http://127.0.0.1:8080/game-base64-gzip-fallback.html
-```
+因此当前仍采用显式开关，不替换默认 `raw-js`。正式渠道发布前应在目标 Android WebView、广告容器或 WKWebView 中验证。
 
 ## 自动化测试
 
 ```powershell
 npm run typecheck
 npm run test:brotli-fallback
+npm run test:brotli-fallback-pipeline
 ```
 
 测试覆盖：
@@ -115,7 +156,10 @@ npm run test:brotli-fallback
 - 原有 Brotli JavaScript 解码器初始化；
 - Brotli 测试数据完整解压；
 - SHA/输出报告和原子替换；
-- 重复优化和无目标脚本的错误保护。
+- 重复优化和无目标脚本的错误保护；
+- Pipeline 参数默认值、显式模式和非法参数；
+- Base64、Base91、HTML7 参数透传；
+- 最终报告合并与输出信息覆盖。
 
 ## 其它候选
 
@@ -123,13 +167,13 @@ npm run test:brotli-fallback
 
 解码专用、无运行依赖，许可证为 MIT 或 Apache-2.0。上游说明其 gzip 后的发布文件合计约 70.6 KiB。
 
-但单 HTML 仍需要内嵌 WASM、初始化代码和文本编码。若直接 Base64 嵌入原始 WASM，未必比当前 gzip-packed JS 更小；如果再次 gzip 包装 WASM，同样依赖 `DecompressionStream('gzip')`。
+但单 HTML 仍需要内嵌 WASM、初始化代码和文本编码。若直接 Base64 嵌入原始 WASM，未必比当前 91.6 KB 的 gzip-packed JS 更小；如果再次 gzip 包装 WASM，同样依赖 `DecompressionStream('gzip')`。
 
-第一阶段先验证改动最小、实际解码逻辑不变的 gzip-packed JS。若实机兼容性或速度不达标，再进入 WASM 对比。
+鉴于当前方案已在真实游戏中达到 7 ms 展开和 99 ms Brotli 解压，WASM 替换暂不具备足够明确的净收益。
 
 ### brotli-dec-wasm
 
-解码专用且性能较高，但上游标称约 200 KB，直接内嵌对当前 155 KB JavaScript 回退没有明确体积优势。
+解码专用且性能较高，但上游标称约 200 KB，直接内嵌对当前方案没有体积优势。
 
 ### brotli-wasm
 
@@ -137,12 +181,11 @@ npm run test:brotli-fallback
 
 ## 合并标准
 
-只有同时满足以下条件，才考虑集成到正式 Pipeline：
+只有同时满足以下条件，才考虑将 `gzip-packed-js` 改为正式默认模式：
 
-- 真实游戏完整试玩通过；
+- Base64、Base91、HTML7 均通过真实游戏完整试玩；
 - Chrome/Edge 中正常回退；
 - 目标 Android WebView 或渠道容器支持 gzip `DecompressionStream`；
 - 解码器展开和 Brotli 解压总耗时可接受；
 - 控制台无异常；
-- 最终 HTML 净减少达到预期；
-- Base64、Base91、HTML7 路线均未被破坏。
+- 最终 HTML 净减少达到预期。
