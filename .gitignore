@@ -18,6 +18,7 @@ entry-report.json
 *.log
 
 .tinypng-cache/
+.squoosh-cache/
 workspaces/*/preview/
 
 workspaces/*/backups/
