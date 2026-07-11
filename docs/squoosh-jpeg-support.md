@@ -16,7 +16,8 @@
 `images:optimize --mode=squoosh` 现在按顺序执行：
 
 1. 原有 PNG quantization + OxiPNG 流程；
-2. 新增 JPG/JPEG MozJPEG 流程。
+2. JPEG MozJPEG 基准与缓存；
+3. 按最低收益策略应用 JPG/JPEG 缓存。
 
 PNG 流程及其缓存格式保持不变。
 
@@ -26,14 +27,33 @@ JPEG 流程会：
 - 按 SHA-256 去重，同内容只编码一次；
 - 使用 MozJPEG 重新编码；
 - 校验压缩前后格式、宽度和高度；
-- 仅当输出更小时才替换；
 - 保留原文件扩展名和引用路径；
 - 缓存压缩成功和无收益结果；
 - 识别已应用的同质量输出，避免重复有损压缩；
 - 检测其他 JPEG 质量配置的历史输出并拒绝二次压缩；
 - 检测 TinyPNG 缓存输出并要求重新生成干净构建；
 - 应用前备份文件，写入失败时回滚已替换文件；
-- 生成 JSON 报告。
+- 生成基准报告和应用清单。
+
+## 有损压缩最低收益策略
+
+JPEG 重新编码是有损操作。即使输出只小几个字节，也不应为了无意义的体积收益替换原图。
+
+默认只有同时满足以下条件才应用 MozJPEG 输出：
+
+```text
+至少减少 128 B
+至少减少 1%
+```
+
+例如一张 `10,400 B` 的图片只减少 `22 B（0.21%）` 时，会保留原图。
+
+独立 JPEG 命令可覆盖门槛：
+
+```text
+--min-savings-bytes=128
+--min-savings-percent=1
+```
 
 ## 参数
 
@@ -63,12 +83,18 @@ npm run images:optimize -- `
   --preview
 ```
 
-预览会建立 PNG/JPEG 缓存和报告，但不会替换构建目录中的图片。
+预览会建立 PNG/JPEG 缓存、基准报告和应用计划，但不会替换构建目录中的图片。
 
-JPEG 报告：
+JPEG 基准报告：
 
 ```text
 .squoosh-cache/build-jpegs/q80/reports/latest.json
+```
+
+JPEG 应用计划：
+
+```text
+.squoosh-cache/build-jpegs/q80/manifests/latest.json
 ```
 
 ## 应用
@@ -104,6 +130,17 @@ npm run squoosh:optimize-build-jpegs -- `
 npm run squoosh:optimize-build-jpegs -- `
   "D:\Projects\Cocos\game141\build\web-mobile" `
   --quality=80 `
+  --confirm
+```
+
+自定义最低收益：
+
+```powershell
+npm run squoosh:optimize-build-jpegs -- `
+  "D:\Projects\Cocos\game141\build\web-mobile" `
+  --quality=80 `
+  --min-savings-bytes=256 `
+  --min-savings-percent=2 `
   --confirm
 ```
 
