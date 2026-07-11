@@ -13,11 +13,12 @@
 
 ## 新流程
 
-`images:optimize --mode=squoosh` 现在按顺序执行：
+`images:optimize --mode=squoosh` 和 `playable:build --image-mode=squoosh` 现在按顺序执行：
 
 1. 原有 PNG quantization + OxiPNG 流程；
 2. JPEG MozJPEG 基准与缓存；
-3. 按最低收益策略应用 JPG/JPEG 缓存。
+3. 按最低收益策略应用 JPG/JPEG 缓存；
+4. 继续 Brotli、Payload 编码和回退解码器处理。
 
 PNG 流程及其缓存格式保持不变。
 
@@ -55,30 +56,50 @@ JPEG 重新编码是有损操作。即使输出只小几个字节，也不应为
 --min-savings-percent=1
 ```
 
-## 参数
+## PNG 与 JPEG 质量参数
 
-默认 JPEG 质量：
-
-```text
-80
-```
-
-统一构建命令可以使用：
+正式参数：
 
 ```text
+--png-quality=80
 --jpeg-quality=80
 ```
 
-范围为 `1` 到 `100`。
+范围：
 
-PNG 原有 `--quality` 参数与 JPEG 的 `--jpeg-quality` 相互独立。
+```text
+PNG：0 到 100
+JPEG：1 到 100
+```
 
-## 预览
+PNG 参数控制 Sharp 调色板量化质量。JPEG 参数控制 MozJPEG 的亮度与色度质量。
+
+旧参数仍可使用：
+
+```text
+--quality=80
+```
+
+它是 `--png-quality=80` 的兼容别名，执行时会输出弃用警告。`--quality` 与 `--png-quality` 不能同时指定。
+
+PNG 还可单独设置：
+
+```text
+--colours=256
+--effort=10
+--dither=0.5
+--oxipng-level=3
+```
+
+其中 `--oxipng-level` 是无损优化等级，不是画质参数。
+
+## 统一图片预览
 
 ```powershell
 npm run images:optimize -- `
   "D:\Projects\Cocos\game141\build\web-mobile" `
   --mode=squoosh `
+  --png-quality=80 `
   --jpeg-quality=80 `
   --preview
 ```
@@ -97,7 +118,7 @@ JPEG 应用计划：
 .squoosh-cache/build-jpegs/q80/manifests/latest.json
 ```
 
-## 应用
+## 统一图片应用
 
 必须使用干净的 Cocos Creator `web-mobile` 构建目录：
 
@@ -105,6 +126,7 @@ JPEG 应用计划：
 npm run images:optimize -- `
   "D:\Projects\Cocos\game141\build\web-mobile" `
   --mode=squoosh `
+  --png-quality=80 `
   --jpeg-quality=80
 ```
 
@@ -112,6 +134,29 @@ JPEG 备份目录：
 
 ```text
 .squoosh-cache/build-jpegs/q80/backups/<时间戳>/
+```
+
+## 正式 Playable Pipeline
+
+```powershell
+npm run playable:build -- `
+  "D:\Projects\Cocos\game141\build\web-mobile" `
+  "./dist/game-html7.html" `
+  --image-mode=squoosh `
+  --png-quality=80 `
+  --jpeg-quality=80 `
+  --payload-encoding=html7 `
+  --brotli-fallback=gzip-packed-js `
+  --project=game141
+```
+
+Pipeline 会在工作区副本中依次处理 PNG 和 JPEG，不会修改输入构建目录。最终 `.report.json` 的 `imageOptimization.settings` 会记录：
+
+```json
+{
+  "pngQuality": 80,
+  "jpegQuality": 80
+}
 ```
 
 ## 独立运行 JPEG
@@ -149,11 +194,12 @@ npm run squoosh:optimize-build-jpegs -- `
 ```powershell
 npm run typecheck
 npm run test:squoosh-jpeg
+npm run test:image-quality-pipeline
 ```
 
 ## 真实游戏验收
 
-应用后重点检查：
+应用或 Pipeline 完成后重点检查：
 
 - JPG/JPEG 扫描数量是否与构建目录一致；
 - 输出文件是否仍为原来的 `.jpg` 或 `.jpeg` 路径；
@@ -162,6 +208,7 @@ npm run test:squoosh-jpeg
 - 背景、照片类纹理和大面积渐变是否出现色带或块状失真；
 - UI、图集、透明 PNG 是否不受影响；
 - 浏览器控制台是否无新增异常；
-- 最终 Brotli HTML 是否进一步减小。
+- 最终 Brotli HTML 是否进一步减小；
+- 最终报告中的 PNG/JPEG 质量是否与命令一致。
 
 功能通过真实游戏验证前，不合并到 `master`。
