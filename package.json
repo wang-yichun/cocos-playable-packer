@@ -23,7 +23,9 @@
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
     "squoosh:benchmark-build-pngs": "tsx src/squoosh/benchmark-build-pngs.ts",
     "squoosh:apply-build-pngs": "tsx src/squoosh/apply-build-png-cache.ts",
-    "images:optimize": "tsx src/images/optimize-build-images-cli.ts"
+    "images:optimize": "tsx src/images/optimize-build-images-cli.ts",
+    "compression:lzma": "tsx src/compression/lzma-benchmark.ts",
+    "test:lzma": "tsx src/compression/lzma-benchmark-self-test.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
