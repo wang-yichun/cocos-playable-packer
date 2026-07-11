@@ -42,41 +42,26 @@ if (jpegQualitySpecified && imageMode !== "squoosh") {
   throw new Error("--jpeg-quality 只适用于 Squoosh 模式。");
 }
 
-process.argv.splice(
-  2,
-  process.argv.length - 2,
-  ...forwardedArguments,
-);
-
-await import("./optimize-build-images.js");
-
-if (imageMode === "squoosh") {
-  if (buildDirectory === undefined) {
-    throw new Error("Squoosh JPEG 优化缺少构建目录。");
-  }
-
+async function runTypeScript(
+  relativeScript: string,
+  argumentsList: readonly string[],
+  description: string,
+): Promise<void> {
   const scriptPath = path.join(
     process.cwd(),
-    "src",
-    "squoosh",
-    "optimize-build-jpegs-cli.ts",
+    ...relativeScript.split("/"),
   );
-  const childArguments = [
-    "--import",
-    "tsx",
-    scriptPath,
-    buildDirectory,
-    `--quality=${jpegQuality}`,
-    preview ? "--preview" : "--confirm",
-  ];
-
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, childArguments, {
-      cwd: process.cwd(),
-      env: process.env,
-      stdio: "inherit",
-      windowsHide: false,
-    });
+    const child = spawn(
+      process.execPath,
+      ["--import", "tsx", scriptPath, ...argumentsList],
+      {
+        cwd: process.cwd(),
+        env: process.env,
+        stdio: "inherit",
+        windowsHide: false,
+      },
+    );
 
     child.once("error", reject);
     child.once("exit", (code, signal) => {
@@ -87,10 +72,32 @@ if (imageMode === "squoosh") {
       reject(
         new Error(
           signal === null
-            ? `Squoosh JPEG 优化退出码：${String(code)}`
-            : `Squoosh JPEG 优化被信号 ${signal} 终止。`,
+            ? `${description} 退出码：${String(code)}`
+            : `${description} 被信号 ${signal} 终止。`,
         ),
       );
     });
   });
+}
+
+await runTypeScript(
+  "src/images/optimize-build-images.ts",
+  forwardedArguments,
+  "构建图片 PNG/TinyPNG 流程",
+);
+
+if (imageMode === "squoosh") {
+  if (buildDirectory === undefined) {
+    throw new Error("Squoosh JPEG 优化缺少构建目录。");
+  }
+
+  await runTypeScript(
+    "src/squoosh/optimize-build-jpegs-cli.ts",
+    [
+      buildDirectory,
+      `--quality=${jpegQuality}`,
+      preview ? "--preview" : "--confirm",
+    ],
+    "Squoosh JPEG 优化",
+  );
 }
