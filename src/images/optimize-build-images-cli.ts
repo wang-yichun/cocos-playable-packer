@@ -59,7 +59,7 @@ if (imageMode === "squoosh") {
     process.cwd(),
     "src",
     "squoosh",
-    "optimize-build-jpegs.ts",
+    "optimize-build-jpegs-cli.ts",
   );
   const childArguments = [
     "--import",
