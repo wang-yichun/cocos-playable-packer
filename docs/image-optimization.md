@@ -104,7 +104,7 @@ npm run images:optimize -- -- `
 
 如果同一构建目录同时包含已应用输出和新增/未知 PNG，命令会停止，不会再次量化已有输出。此时应先在 Cocos Creator 中重新生成干净的 `web-mobile` 构建。
 
-`apply-build-png-cache.ts` 还会校验当前 PNG 路径集合与报告完全一致，防止旧报告漏处理新资源。
+统一入口还会校验当前 PNG 路径集合与报告完全一致，并识别当前构建中已经应用的 TinyPNG 缓存输出，防止旧报告遗漏资源或把有损结果再次交给 Squoosh。
 
 ## 打包
 
