@@ -213,6 +213,8 @@ async function promotePair(
   const reportBackup = `${reportFile}.previous-${token}`;
   let outputBackedUp = false;
   let reportBackedUp = false;
+  let outputPromoted = false;
+  let reportPromoted = false;
 
   try {
     if (await exists(outputFile)) {
@@ -224,12 +226,18 @@ async function promotePair(
       reportBackedUp = true;
     }
     await rename(tempOutput, outputFile);
+    outputPromoted = true;
     await rename(tempReport, reportFile);
+    reportPromoted = true;
     await rm(outputBackup, { force: true });
     await rm(reportBackup, { force: true });
   } catch (error) {
-    await rm(outputFile, { force: true }).catch(() => undefined);
-    await rm(reportFile, { force: true }).catch(() => undefined);
+    if (reportPromoted) {
+      await rm(reportFile, { force: true }).catch(() => undefined);
+    }
+    if (outputPromoted) {
+      await rm(outputFile, { force: true }).catch(() => undefined);
+    }
     if (outputBackedUp) {
       await rename(outputBackup, outputFile).catch(() => undefined);
     }
