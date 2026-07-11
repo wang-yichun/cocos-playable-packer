@@ -23,7 +23,9 @@
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
     "squoosh:benchmark-build-pngs": "tsx src/squoosh/benchmark-build-pngs.ts",
     "squoosh:apply-build-pngs": "tsx src/squoosh/apply-build-png-cache.ts",
-    "images:optimize": "tsx src/images/optimize-build-images-cli.ts"
+    "images:optimize": "tsx src/images/optimize-build-images-cli.ts",
+    "brotli:fallback:optimize": "tsx src/compression/optimize-brotli-fallback.ts",
+    "test:brotli-fallback": "tsx src/compression/optimize-brotli-fallback-self-test.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
