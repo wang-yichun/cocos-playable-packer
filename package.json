@@ -10,7 +10,7 @@
     "analyze-modules": "tsx src/analyze-modules.ts",
     "analyze:solid": "tsx src/analyze-solid-compression.ts",
     "pack:raw": "tsx src/pack-uncompressed.ts",
-    "pack:br": "tsx src/pack-compressed.ts",
+    "pack:br": "tsx src/pack-compressed-cli.ts",
     "serve": "http-server ./dist -p 8080 -c-1",
     "analyze:encoding": "tsx src/analyze-text-encoding.ts",
     "typecheck": "tsc --noEmit",
