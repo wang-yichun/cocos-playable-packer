@@ -73,6 +73,18 @@ window.__PACK_BOOT__={"base":"https://playable.local/","runtime":[],"modules":[]
 }
 
 async function main(): Promise<void> {
+  const defaults = parseArguments(["input.html", "output.html"]);
+  assert.equal(defaults.iterations, 3);
+  assert.equal(defaults.lzmaLevel, 9);
+  assert.throws(
+    () => parseArguments(["input.html", "output.html", "--iterations=0"]),
+    /--iterations/,
+  );
+  assert.throws(
+    () => parseArguments(["same.html", "same.html"]),
+    /不能是同一个文件/,
+  );
+
   const parsed = parseArguments([
     "--",
     "input.html",
@@ -97,7 +109,7 @@ async function main(): Promise<void> {
       inputFile,
       outputFile,
       iterations: 2,
-      lzmaLevel: 7,
+      lzmaLevel: 9,
     });
 
     const outputHtml = await readFile(outputFile, "utf8");
