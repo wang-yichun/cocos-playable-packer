@@ -19,6 +19,8 @@ entry-report.json
 
 .tinypng-cache/
 .squoosh-cache/
+workspaces/*/runs/
+workspaces/*/reports/
 workspaces/*/preview/
 
 workspaces/*/backups/
