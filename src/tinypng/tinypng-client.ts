@@ -1,9 +1,15 @@
 import tinify from "tinify";
 
-import type {
-    TinyPngClientOptions,
-    TinyPngCompressionResult,
-} from "./types.js";
+export interface TinyPngClientOptions {
+    apiKey: string;
+    appIdentifier?: string;
+    proxy?: string;
+}
+
+export interface TinyPngCompressionResult {
+    compressedBuffer: Buffer;
+    compressionCount: number | null;
+}
 
 const DEFAULT_APP_IDENTIFIER =
     "cocos-playable-packer/0.1.0";
@@ -12,10 +18,7 @@ function normalizeOptionalString(
     value: string | undefined,
 ): string | undefined {
     const normalized = value?.trim();
-
-    return normalized
-        ? normalized
-        : undefined;
+    return normalized ? normalized : undefined;
 }
 
 function describeTinyPngError(
@@ -23,8 +26,8 @@ function describeTinyPngError(
 ): string {
     if (error instanceof tinify.AccountError) {
         return (
-            "TinyPNG 账户错误：请检查 API Key、" +
-            `账户额度或请求频率。${error.message}`
+            "TinyPNG 账户错误：请检查 API Key、账户额度或请求频率。" +
+            error.message
         );
     }
 
@@ -36,10 +39,7 @@ function describeTinyPngError(
     }
 
     if (error instanceof tinify.ServerError) {
-        return (
-            "TinyPNG 服务暂时不可用。" +
-            error.message
-        );
+        return "TinyPNG 服务暂时不可用。" + error.message;
     }
 
     if (error instanceof tinify.ConnectionError) {
@@ -49,21 +49,11 @@ function describeTinyPngError(
         );
     }
 
-    if (error instanceof Error) {
-        return error.message;
-    }
-
-    return String(error);
+    return error instanceof Error
+        ? error.message
+        : String(error);
 }
 
-/**
- * TinyPNG API 的轻量封装。
- *
- * 当前只负责原格式压缩：
- * - 不转换格式；
- * - 不缩放尺寸；
- * - 不保留 EXIF 等额外元数据。
- */
 export class TinyPngClient {
     public constructor(
         options: TinyPngClientOptions,
@@ -71,13 +61,10 @@ export class TinyPngClient {
         const apiKey = options.apiKey.trim();
 
         if (!apiKey) {
-            throw new Error(
-                "TinyPNG API Key 不能为空。",
-            );
+            throw new Error("TinyPNG API Key 不能为空。");
         }
 
         tinify.key = apiKey;
-
         tinify.appIdentifier =
             options.appIdentifier ??
             DEFAULT_APP_IDENTIFIER;
@@ -91,46 +78,33 @@ export class TinyPngClient {
         sourceBuffer: Buffer,
     ): Promise<TinyPngCompressionResult> {
         if (sourceBuffer.length === 0) {
-            throw new Error(
-                "不能压缩空图片数据。",
-            );
+            throw new Error("不能压缩空图片数据。");
         }
 
         try {
-            const result =
-                await tinify
-                    .fromBuffer(sourceBuffer)
-                    .toBuffer();
+            const result = await tinify
+                .fromBuffer(sourceBuffer)
+                .toBuffer();
 
             return {
-                compressedBuffer:
-                    Buffer.from(result),
-
+                compressedBuffer: Buffer.from(result),
                 compressionCount:
-                    tinify.compressionCount ??
-                    null,
+                    tinify.compressionCount ?? null,
             };
         } catch (error) {
             throw new Error(
                 describeTinyPngError(error),
-                {
-                    cause: error,
-                },
+                { cause: error },
             );
         }
     }
 }
 
-/**
- * API Key 不进入 JSON 配置或源码，
- * 只从当前进程环境变量读取。
- */
 export function createTinyPngClientFromEnvironment():
     TinyPngClient {
-    const apiKey =
-        normalizeOptionalString(
-            process.env.TINYPNG_API_KEY,
-        );
+    const apiKey = normalizeOptionalString(
+        process.env.TINYPNG_API_KEY,
+    );
 
     if (!apiKey) {
         throw new Error(
@@ -138,19 +112,17 @@ export function createTinyPngClientFromEnvironment():
                 "未设置环境变量 TINYPNG_API_KEY。",
                 "",
                 "PowerShell 设置方式：",
-                '$env:TINYPNG_API_KEY = ' +
-                'Read-Host "TinyPNG API Key"',
+                '$env:TINYPNG_API_KEY = Read-Host "TinyPNG API Key"',
             ].join("\n"),
         );
     }
 
-    const proxy =
-        normalizeOptionalString(
-            process.env.TINYPNG_PROXY,
-        );
+    const proxy = normalizeOptionalString(
+        process.env.TINYPNG_PROXY,
+    );
 
     return new TinyPngClient({
         apiKey,
-        proxy,
+        ...(proxy !== undefined ? { proxy } : {}),
     });
 }
