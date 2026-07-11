@@ -26,7 +26,8 @@
     "squoosh:test-one": "tsx src/squoosh/test-one.ts",
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
     "squoosh:benchmark-build-pngs": "tsx src/squoosh/benchmark-build-pngs.ts",
-    "squoosh:apply-build-pngs": "tsx src/squoosh/apply-build-png-cache.ts"
+    "squoosh:apply-build-pngs": "tsx src/squoosh/apply-build-png-cache.ts",
+    "images:optimize": "tsx src/images/optimize-build-images.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
