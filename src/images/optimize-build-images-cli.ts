@@ -2,6 +2,8 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 
 const JPEG_QUALITY_ENV = "PLAYABLE_PACKER_JPEG_QUALITY";
+const SUPPRESS_LEGACY_PNG_WARNING_ENV =
+  "PLAYABLE_PACKER_SUPPRESS_LEGACY_PNG_QUALITY_WARNING";
 
 function integer(
   value: string,
@@ -91,7 +93,10 @@ if ((jpegQualitySpecified || pngQualitySpecified) && imageMode !== "squoosh") {
   );
 }
 
-if (usedLegacyPngQuality) {
+if (
+  usedLegacyPngQuality &&
+  process.env[SUPPRESS_LEGACY_PNG_WARNING_ENV] !== "1"
+) {
   console.warn("警告：--quality 已弃用，请改用 --png-quality。");
 }
 
