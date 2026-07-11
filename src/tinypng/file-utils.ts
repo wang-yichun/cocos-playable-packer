@@ -1,3 +1,9 @@
+import path from "node:path";
+
+export function toPortablePath(filePath: string): string {
+    return filePath.split(path.sep).join("/");
+}
+
 export {
     isNodeError,
     isRecord,
