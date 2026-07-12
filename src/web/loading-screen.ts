@@ -287,8 +287,8 @@ export function injectLoadingScreen(
   if (html.includes(`${LOADING_SCREEN_MARKER}=`)) {
     throw new Error("HTML 已包含 Cocos Playable Packer 加载界面。");
   }
-  const withStyle = insertIntoHead(html, createLoadingScreenStyle());
-  return insertIntoBody(withStyle, createLoadingScreenMarkup(config.logoDataUrl));
+  const withMarkup = insertIntoBody(html, createLoadingScreenMarkup(config.logoDataUrl));
+  return insertIntoHead(withMarkup, createLoadingScreenStyle());
 }
 
 function sha256(value: Buffer | string): string {
