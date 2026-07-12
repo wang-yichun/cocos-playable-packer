@@ -46,9 +46,47 @@ Payload：HTML7
 Brotli 回退：raw-js
 ```
 
-音频压缩默认关闭，因此最小流程不要求系统安装 FFmpeg。后续配置面板可让用户主动开启音频压缩；启用时服务器必须能够执行 `ffmpeg`，或配置明确的 FFmpeg 可执行文件路径。
+音频压缩默认关闭，因此最小流程不要求系统安装 FFmpeg。后续配置面板可让用户主动开启音频压缩；启用时服务器必须能够执行 `ffmpeg`。
 
 网页暂时不展示配置面板，但创建任务接口已经接受 `config` 对象，后续可以在不修改上传流程的情况下加入参数控件。
+
+## FFmpeg 与 Web MVP
+
+FFmpeg 是外部程序，不会由 `npm ci` 或 `npm install` 自动安装。
+
+以下情况不需要 FFmpeg：
+
+- 使用当前默认配置；
+- `audioBitrateKbps` 为 `null`；
+- 只执行图片优化、Brotli 打包和 Payload 编码。
+
+将 `audioBitrateKbps` 设置为 `8-320` 后，启动 Web MVP 的 Node.js 进程必须能从 Windows `Path` 中找到 `ffmpeg`。
+
+启动服务前建议验证：
+
+```powershell
+where.exe ffmpeg
+ffmpeg -version
+ffmpeg -encoders | Select-String libmp3lame
+```
+
+典型缺失错误：
+
+```text
+无法启动 FFmpeg（ffmpeg）：spawn ffmpeg ENOENT
+```
+
+该错误表示运行 Web MVP 的进程找不到 `ffmpeg.exe`，通常不是 npm 包缺失。
+
+如果刚安装 FFmpeg 或修改了 `Path`：
+
+1. 在运行 `npm run web:mvp` 的窗口按 `Ctrl+C`；
+2. 关闭当前 PowerShell 或 VS Code 终端；
+3. 重新打开终端；
+4. 确认 `ffmpeg -version` 成功；
+5. 重新执行 `npm run web:mvp`。
+
+当前 Web MVP 配置接口尚未开放自定义 `ffmpegPath`，因此启用音频压缩时应通过系统 `Path` 提供 FFmpeg。完整安装与排查步骤见 [FFmpeg 安装说明](ffmpeg-installation.md)。
 
 ## API
 
