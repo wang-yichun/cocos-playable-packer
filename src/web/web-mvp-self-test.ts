@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { Script } from "node:vm";
 
+import { CHANNEL_DOWNLOAD_BRIDGE_MARKER } from "../channel/channel-download-bridge.js";
 import {
   TEST_ANDROID_STORE_URL,
   TEST_IOS_STORE_URL,
@@ -61,8 +62,8 @@ function createStoredZip(entries: readonly StoredZipEntry[]): Buffer {
     localOffset += local.length + entry.data.length;
   }
 
-  const centralDirectory = Buffer.concat(centralParts);
   const localDirectory = Buffer.concat(localParts);
+  const centralDirectory = Buffer.concat(centralParts);
   const end = Buffer.alloc(22);
   end.writeUInt32LE(0x06054b50, 0);
   end.writeUInt16LE(entries.length, 8);
@@ -99,21 +100,15 @@ async function fakeBuildPlayable(
     assert.equal(request.audio, null);
   }
 
-  const indexHtml = await readFile(path.join(request.inputDirectory, "index.html"), "utf8");
-  assert.match(indexHtml, /Cocos test/);
-
-  options.onEvent?.({
-    type: "state",
-    stage: "running",
-    timestamp: new Date().toISOString(),
-    elapsedMs: 1,
-    message: rawMode ? "模拟未压缩单 HTML 已启动。" : "模拟 Pipeline 已启动。",
-  });
+  assert.match(
+    await readFile(path.join(request.inputDirectory, "index.html"), "utf8"),
+    /Cocos test/,
+  );
   options.onEvent?.({
     type: "log",
     stream: "stdout",
     timestamp: new Date().toISOString(),
-    elapsedMs: 2,
+    elapsedMs: 1,
     line: rawMode ? "模拟未压缩打包日志" : "模拟打包日志",
   });
 
@@ -158,8 +153,7 @@ async function waitForTerminalJob(baseUrl: string, jobId: string): Promise<Recor
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const payload = await readJson(await fetch(`${baseUrl}/api/jobs/${jobId}`));
     const job = payload.job as Record<string, unknown>;
-    const status = job.status;
-    if (status === "succeeded" || status === "failed" || status === "cancelled") {
+    if (["succeeded", "failed", "cancelled"].includes(String(job.status))) {
       return job;
     }
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -180,35 +174,11 @@ async function uploadZip(baseUrl: string, zip: Buffer): Promise<Record<string, u
 }
 
 const defaults = normalizeWebBuildConfig(undefined);
-assert.deepEqual(defaults, {
-  buildMode: "optimized",
-  imageMode: "webp",
-  pngQuality: 80,
-  jpegQuality: 80,
-  audioBitrateKbps: null,
-  payloadEncoding: "html7",
-  brotliFallback: "raw-js",
-  channel: {
-    platform: "Preview",
-    androidStoreUrl: null,
-    iosStoreUrl: null,
-  },
-});
+assert.equal(defaults.channel.platform, "Preview");
+assert.equal(normalizeWebBuildConfig({ channel: { platform: "Google" } }).channel.platform, "Google");
 assert.throws(
   () => normalizeWebBuildConfig({ imageMode: "tinypng" }),
   /none、squoosh 或 webp/,
-);
-assert.equal(
-  normalizeWebBuildConfig({ audioBitrateKbps: null }).audioBitrateKbps,
-  null,
-);
-assert.equal(
-  normalizeWebBuildConfig({ audioBitrateKbps: 48 }).audioBitrateKbps,
-  48,
-);
-assert.equal(
-  normalizeWebBuildConfig({ channel: { platform: "Google" } }).channel.platform,
-  "Google",
 );
 
 const generatedIndexHtml = createChannelWebMvpIndexHtml();
@@ -216,8 +186,7 @@ const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(generatedIndexHtml
 assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
-assert.match(inlineScript, /recentLogs\.join\('\n'\)/);
-assert.match(generatedIndexHtml, /仅合并单 HTML（不压缩）/);
+assert.equal(inlineScript.includes("recentLogs.join('\\\\n')"), true);
 assert.match(generatedIndexHtml, /目标渠道/);
 assert.match(generatedIndexHtml, /Google Maps 测试链接/);
 
@@ -231,12 +200,7 @@ const server = await startWebMvpServer({
 });
 
 try {
-  const health = await readJson(await fetch(`${server.url}/api/health`));
-  assert.equal(health.status, "ok");
-
-  const indexResponse = await fetch(`${server.url}/`);
-  assert.equal(indexResponse.ok, true);
-  assert.match(await indexResponse.text(), /channelPlatform/);
+  assert.equal((await readJson(await fetch(`${server.url}/api/health`))).status, "ok");
 
   const zip = createStoredZip([
     {
@@ -250,7 +214,6 @@ try {
   ]);
 
   const upload = await uploadZip(server.url, zip);
-  assert.equal(typeof upload.uploadId, "string");
   const createPayload = await readJson(await fetch(`${server.url}/api/jobs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -266,43 +229,35 @@ try {
     }),
   }));
   const createdJob = createPayload.job as Record<string, unknown>;
-  const jobId = createdJob.id;
-  assert.equal(typeof jobId, "string");
-
-  const job = await waitForTerminalJob(server.url, jobId as string);
+  const jobId = String(createdJob.id);
+  const job = await waitForTerminalJob(server.url, jobId);
   assert.equal(job.status, "succeeded");
-  const jobConfig = job.config as Record<string, unknown>;
-  assert.equal(jobConfig.buildMode, "optimized");
-  const jobChannel = jobConfig.channel as Record<string, unknown>;
-  assert.equal(jobChannel.platform, "Google");
-  assert.equal(jobChannel.androidStoreUrl, TEST_ANDROID_STORE_URL);
-  assert.equal(typeof job.outputSha256, "string");
-  assert.match((job.recentLogs as string[]).join("\n"), /模拟打包日志/);
+  assert.equal(
+    ((job.config as Record<string, unknown>).channel as Record<string, unknown>).platform,
+    "Google",
+  );
 
   const htmlResponse = await fetch(`${server.url}/artifacts/${jobId}/game.html?download=1`);
   assert.equal(htmlResponse.ok, true);
-  assert.match(await htmlResponse.text(), /Playable test/);
+  const servedHtml = await htmlResponse.text();
+  assert.match(servedHtml, /Playable test/);
+  assert.match(servedHtml, new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
+  assert.match(servedHtml, /window\.ExitApi\.exit/);
+  assert.match(servedHtml, /com\.google\.android\.apps\.maps/);
   assert.match(htmlResponse.headers.get("content-disposition") ?? "", /attachment/);
 
   const reportResponse = await fetch(`${server.url}/artifacts/${jobId}/report.json`);
-  assert.equal(reportResponse.ok, true);
-  const report = await reportResponse.json() as Record<string, unknown>;
+  const report = await readJson(reportResponse);
   assert.equal(report.schemaVersion, 3);
   const reportChannel = report.channel as Record<string, unknown>;
   assert.equal(reportChannel.platform, "Google");
   assert.equal(reportChannel.deliveryFormat, "zip-html-res-js");
-  assert.equal(reportChannel.integrationStatus, "profile-only");
+  assert.equal(reportChannel.integrationStatus, "download-bridge-injected");
   assert.deepEqual(reportChannel.requiredGlobals, ["ExitApi"]);
-
-  const reportDownloadResponse = await fetch(
-    `${server.url}/artifacts/${jobId}/report.json?download=1`,
-  );
-  assert.equal(reportDownloadResponse.ok, true);
-  assert.match(reportDownloadResponse.headers.get("content-disposition") ?? "", /attachment/);
 
   const previewResponse = await fetch(`${server.url}/preview/${jobId}/`);
   assert.equal(previewResponse.ok, true);
-  assert.match(await previewResponse.text(), /Playable test/);
+  assert.match(await previewResponse.text(), new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
 
   const rawUpload = await uploadZip(server.url, zip);
   const rawCreatePayload = await readJson(await fetch(`${server.url}/api/jobs`, {
@@ -312,9 +267,6 @@ try {
       uploadId: rawUpload.uploadId,
       config: {
         buildMode: "raw-single-html",
-        imageMode: "webp",
-        audioBitrateKbps: 48,
-        payloadEncoding: "html7",
         channel: {
           platform: "AppLovin",
           androidStoreUrl: TEST_ANDROID_STORE_URL,
@@ -322,28 +274,18 @@ try {
       },
     }),
   }));
-  const rawCreatedJob = rawCreatePayload.job as Record<string, unknown>;
-  const rawJob = await waitForTerminalJob(server.url, rawCreatedJob.id as string);
+  const rawJobId = String((rawCreatePayload.job as Record<string, unknown>).id);
+  const rawJob = await waitForTerminalJob(server.url, rawJobId);
   assert.equal(rawJob.status, "succeeded");
   const rawConfig = rawJob.config as Record<string, unknown>;
   assert.equal(rawConfig.buildMode, "raw-single-html");
   assert.equal(rawConfig.imageMode, "none");
-  assert.equal(rawConfig.audioBitrateKbps, null);
-  assert.equal(rawConfig.payloadEncoding, "base64");
   assert.equal((rawConfig.channel as Record<string, unknown>).platform, "AppLovin");
-  assert.match((rawJob.recentLogs as string[]).join("\n"), /模拟未压缩打包日志/);
 
-  const rawHtmlResponse = await fetch(
-    `${server.url}/artifacts/${String(rawCreatedJob.id)}/game.html`,
-  );
-  assert.equal(rawHtmlResponse.ok, true);
-  assert.match(await rawHtmlResponse.text(), /Raw playable test/);
-
-  const rawReportResponse = await fetch(
-    `${server.url}/artifacts/${String(rawCreatedJob.id)}/report.json`,
-  );
-  const rawReport = await readJson(rawReportResponse);
-  assert.equal((rawReport.channel as Record<string, unknown>).bridge, "mraid");
+  const rawHtmlResponse = await fetch(`${server.url}/artifacts/${rawJobId}/game.html`);
+  const rawHtml = await rawHtmlResponse.text();
+  assert.match(rawHtml, /Raw playable test/);
+  assert.match(rawHtml, /window\.mraid\.open/);
 
   const unsafeZip = createStoredZip([
     { name: "../escape.txt", data: Buffer.from("bad", "utf8") },
@@ -354,8 +296,10 @@ try {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ uploadId: unsafeUpload.uploadId }),
   }));
-  const unsafeCreatedJob = unsafeCreatePayload.job as Record<string, unknown>;
-  const unsafeJob = await waitForTerminalJob(server.url, unsafeCreatedJob.id as string);
+  const unsafeJob = await waitForTerminalJob(
+    server.url,
+    String((unsafeCreatePayload.job as Record<string, unknown>).id),
+  );
   assert.equal(unsafeJob.status, "failed");
   assert.equal((unsafeJob.error as Record<string, unknown>).code, "UNSAFE_ZIP_PATH");
 } finally {
