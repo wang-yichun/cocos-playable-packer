@@ -14,7 +14,7 @@ import {
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
-type ImageMode = "none" | "tinypng" | "squoosh";
+type ImageMode = "none" | "tinypng" | "squoosh" | "webp";
 type TinyPngScope = { type: "all" } | { type: "limit"; limit: number };
 
 interface Options {
@@ -30,6 +30,8 @@ interface Options {
   effort: number;
   dither: number;
   oxipngLevel: number;
+  pngWebpQuality: number;
+  jpegWebpQuality: number;
   audioBitrateKbps: number | null;
   ffmpegPath: string;
 }
@@ -73,6 +75,12 @@ interface BuildReport {
     afterBytes: number;
     savedBytes: number;
     savedPercent: number;
+    settings?: {
+      pngWebpQuality: number;
+      jpegWebpQuality: number;
+      alphaQuality: 100;
+      preserveLogicalPaths: true;
+    };
   };
   audioOptimization: {
     enabled: boolean;
@@ -108,6 +116,7 @@ function usage(): string {
     "npm run playable:build -- <web-mobile目录> <输出HTML> --image-mode=squoosh",
     "npm run playable:build -- <web-mobile目录> <输出HTML> --image-mode=none",
     "npm run playable:build -- <web-mobile目录> <输出HTML> --image-mode=tinypng --all",
+    "npm run playable:build -- <web-mobile目录> <输出HTML> --image-mode=webp --png-webp-quality=80 --jpeg-webp-quality=80",
     "",
     "通用参数：",
     "  --project=<项目名>       显式指定 workspaces 下的项目名",
@@ -121,6 +130,9 @@ function usage(): string {
     "Squoosh 参数：",
     "  --quality=80 --colours=256 --effort=10",
     "  --dither=0.5 --oxipng-level=3 --min-bytes=0",
+    "",
+    "WebP 参数：",
+    "  --png-webp-quality=80 --jpeg-webp-quality=80",
   ].join("\n");
 }
 
@@ -151,7 +163,7 @@ function parseDecimal(
 }
 
 function parseImageMode(value: string): ImageMode {
-  if (value !== "none" && value !== "tinypng" && value !== "squoosh") {
+  if (value !== "none" && value !== "tinypng" && value !== "squoosh" && value !== "webp") {
     throw new Error(`无效图片压缩模式：${value}`);
   }
   return value;
@@ -171,6 +183,10 @@ function parseArguments(argv: readonly string[]): Options {
   let effort = 10;
   let dither = 0.5;
   let oxipngLevel = 3;
+  let pngWebpQuality = 80;
+  let jpegWebpQuality = 80;
+  let pngWebpQualitySpecified = false;
+  let jpegWebpQualitySpecified = false;
   let audioBitrateKbps: number | null = null;
   let ffmpegPath = "ffmpeg";
 
@@ -307,6 +323,34 @@ function parseArguments(argv: readonly string[]): Options {
       continue;
     }
 
+    if (argument.startsWith("--png-webp-quality=")) {
+      if (pngWebpQualitySpecified) {
+        throw new Error("--png-webp-quality 只能指定一次。");
+      }
+      pngWebpQuality = parseInteger(
+        argument.slice("--png-webp-quality=".length),
+        "--png-webp-quality",
+        1,
+        100,
+      );
+      pngWebpQualitySpecified = true;
+      continue;
+    }
+
+    if (argument.startsWith("--jpeg-webp-quality=")) {
+      if (jpegWebpQualitySpecified) {
+        throw new Error("--jpeg-webp-quality 只能指定一次。");
+      }
+      jpegWebpQuality = parseInteger(
+        argument.slice("--jpeg-webp-quality=".length),
+        "--jpeg-webp-quality",
+        1,
+        100,
+      );
+      jpegWebpQualitySpecified = true;
+      continue;
+    }
+
     if (argument.startsWith("--ffmpeg=")) {
       ffmpegPath = argument.slice("--ffmpeg=".length).trim();
       if (ffmpegPath.length === 0) {
@@ -340,6 +384,10 @@ function parseArguments(argv: readonly string[]): Options {
     throw new Error("Squoosh 生产流程要求 --min-bytes=0。");
   }
 
+  if ((pngWebpQualitySpecified || jpegWebpQualitySpecified) && imageMode !== "webp") {
+    throw new Error("--png-webp-quality 和 --jpeg-webp-quality 只适用于 WebP 模式。");
+  }
+
   return {
     inputDirectory: path.resolve(positional[0] ?? ""),
     outputFile: path.resolve(positional[1] ?? ""),
@@ -353,6 +401,8 @@ function parseArguments(argv: readonly string[]): Options {
     effort,
     dither,
     oxipngLevel,
+    pngWebpQuality,
+    jpegWebpQuality,
     audioBitrateKbps,
     ffmpegPath,
   };
@@ -568,6 +618,20 @@ function createAudioArguments(
   ];
 }
 
+function createWebpArguments(
+  options: Options,
+  buildDirectory: string,
+  reportFile: string,
+): string[] {
+  return [
+    buildDirectory,
+    `--png-quality=${options.pngWebpQuality}`,
+    `--jpeg-quality=${options.jpegWebpQuality}`,
+    "--confirm",
+    `--report=${reportFile}`,
+  ];
+}
+
 function reportPathForOutput(outputFile: string): string {
   return outputFile.replace(/\.html$/i, ".report.json");
 }
@@ -641,6 +705,10 @@ async function main(): Promise<void> {
     runDirectory,
     "audio-optimization.json",
   );
+  const webpOptimizationReportFile = path.join(
+    runDirectory,
+    "webp-optimization.json",
+  );
   const outputReportFile = reportPathForOutput(options.outputFile);
   const tempOutputFile = `${options.outputFile}.tmp-${process.pid}-${timestamp}`;
 
@@ -650,6 +718,9 @@ async function main(): Promise<void> {
   console.log(`输入：${options.inputDirectory}`);
   console.log(`工作区：${workspaceBuildDirectory}`);
   console.log(`图片压缩模式：${options.imageMode}`);
+  if (options.imageMode === "webp") {
+    console.log(`WebP 质量：PNG ${options.pngWebpQuality}，JPEG ${options.jpegWebpQuality}`);
+  }
   console.log(`音频压缩：${options.audioBitrateKbps === null ? "关闭" : `${options.audioBitrateKbps} kbps（保持声道）`}`);
   console.log(`输出：${options.outputFile}`);
   console.log("");
@@ -672,11 +743,23 @@ async function main(): Promise<void> {
     copyMs = performance.now() - copyStart;
 
     const imageStart = performance.now();
-    await runTypeScript(
-      projectRoot,
-      "src/images/optimize-build-images-cli.ts",
-      createImageArguments(options, workspaceBuildDirectory),
-    );
+    if (options.imageMode === "webp") {
+      await runTypeScript(
+        projectRoot,
+        "src/webp/optimize-build-webp.ts",
+        createWebpArguments(
+          options,
+          workspaceBuildDirectory,
+          webpOptimizationReportFile,
+        ),
+      );
+    } else {
+      await runTypeScript(
+        projectRoot,
+        "src/images/optimize-build-images-cli.ts",
+        createImageArguments(options, workspaceBuildDirectory),
+      );
+    }
     imageOptimizationMs = performance.now() - imageStart;
 
     const afterImageStats = await collectDirectoryStats(workspaceBuildDirectory);
@@ -757,6 +840,16 @@ async function main(): Promise<void> {
         afterBytes: optimizedStats.imageBytes,
         savedBytes,
         savedPercent,
+        ...(options.imageMode === "webp"
+          ? {
+              settings: {
+                pngWebpQuality: options.pngWebpQuality,
+                jpegWebpQuality: options.jpegWebpQuality,
+                alphaQuality: 100 as const,
+                preserveLogicalPaths: true as const,
+              },
+            }
+          : {}),
       },
       audioOptimization: {
         enabled: options.audioBitrateKbps !== null,
@@ -826,6 +919,8 @@ async function main(): Promise<void> {
       outputFile: options.outputFile,
       runDirectory,
       imageMode: options.imageMode,
+      pngWebpQuality: options.imageMode === "webp" ? options.pngWebpQuality : null,
+      jpegWebpQuality: options.imageMode === "webp" ? options.jpegWebpQuality : null,
       audioBitrateKbps: options.audioBitrateKbps,
       error: error instanceof Error ? error.stack ?? error.message : String(error),
     };
