@@ -4,8 +4,10 @@ import type {
   PlayablePayloadEncoding,
 } from "../service/build-playable-types.js";
 import {
+  CHANNEL_PLATFORMS,
   normalizeChannelBuildConfig,
   type ChannelBuildConfig,
+  type ChannelPlatform,
 } from "../channel/channel-profile.js";
 
 export type WebBuildMode = "optimized" | "raw-single-html";
@@ -19,7 +21,13 @@ export interface WebBuildConfig {
   audioBitrateKbps?: number | null;
   payloadEncoding?: PlayablePayloadEncoding;
   brotliFallback?: PlayableBrotliFallbackMode;
-  channel?: Partial<ChannelBuildConfig>;
+  channel?: Partial<ChannelBuildConfig> & {
+    platforms?: readonly ChannelPlatform[];
+  };
+}
+
+export interface NormalizedChannelBuildConfig extends ChannelBuildConfig {
+  platforms: readonly ChannelPlatform[];
 }
 
 export interface NormalizedWebBuildConfig {
@@ -30,11 +38,12 @@ export interface NormalizedWebBuildConfig {
   audioBitrateKbps: number | null;
   payloadEncoding: PlayablePayloadEncoding;
   brotliFallback: PlayableBrotliFallbackMode;
-  channel: ChannelBuildConfig;
+  channel: NormalizedChannelBuildConfig;
 }
 
-const DEFAULT_CHANNEL_CONFIG: ChannelBuildConfig = {
+const DEFAULT_CHANNEL_CONFIG: NormalizedChannelBuildConfig = {
   platform: "Preview",
+  platforms: ["Preview"],
   androidStoreUrl: null,
   iosStoreUrl: null,
 };
@@ -47,7 +56,7 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
-  channel: { ...DEFAULT_CHANNEL_CONFIG },
+  channel: { ...DEFAULT_CHANNEL_CONFIG, platforms: [...DEFAULT_CHANNEL_CONFIG.platforms] },
 };
 
 export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
@@ -58,7 +67,7 @@ export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = 
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
-  channel: { ...DEFAULT_CHANNEL_CONFIG },
+  channel: { ...DEFAULT_CHANNEL_CONFIG, platforms: [...DEFAULT_CHANNEL_CONFIG.platforms] },
 };
 
 export const RAW_SINGLE_HTML_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
@@ -69,7 +78,7 @@ export const RAW_SINGLE_HTML_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig
   audioBitrateKbps: null,
   payloadEncoding: "base64",
   brotliFallback: "raw-js",
-  channel: { ...DEFAULT_CHANNEL_CONFIG },
+  channel: { ...DEFAULT_CHANNEL_CONFIG, platforms: [...DEFAULT_CHANNEL_CONFIG.platforms] },
 };
 
 function integerInRange(
@@ -124,11 +133,56 @@ function normalizeBrotliFallback(value: unknown): PlayableBrotliFallbackMode {
   return value;
 }
 
+function normalizeChannelPlatforms(
+  value: unknown,
+  fallback: ChannelPlatform,
+): readonly ChannelPlatform[] {
+  if (value === undefined || value === null) {
+    return [fallback];
+  }
+  if (!Array.isArray(value)) {
+    throw new Error("channel.platforms 必须是渠道数组。");
+  }
+
+  const selected = new Set<ChannelPlatform>();
+  for (const item of value) {
+    if (typeof item !== "string" || !CHANNEL_PLATFORMS.includes(item as ChannelPlatform)) {
+      throw new Error(`channel.platforms 只支持：${CHANNEL_PLATFORMS.join("、")}。`);
+    }
+    selected.add(item as ChannelPlatform);
+  }
+  if (selected.size === 0) {
+    throw new Error("至少需要选择一个目标渠道。");
+  }
+
+  return CHANNEL_PLATFORMS.filter((platform) => selected.has(platform));
+}
+
+function normalizeMultiChannelConfig(value: unknown): NormalizedChannelBuildConfig {
+  const base = normalizeChannelBuildConfig(value);
+  const source = typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  const platforms = normalizeChannelPlatforms(source.platforms, base.platform);
+  const platform = platforms.includes(base.platform) ? base.platform : platforms[0];
+  if (platform === undefined) {
+    throw new Error("至少需要选择一个目标渠道。");
+  }
+  return {
+    ...base,
+    platform,
+    platforms,
+  };
+}
+
 export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfig {
   if (value === undefined || value === null) {
     return {
       ...DEFAULT_WEB_BUILD_CONFIG,
-      channel: { ...DEFAULT_WEB_BUILD_CONFIG.channel },
+      channel: {
+        ...DEFAULT_WEB_BUILD_CONFIG.channel,
+        platforms: [...DEFAULT_WEB_BUILD_CONFIG.channel.platforms],
+      },
     };
   }
   if (typeof value !== "object" || Array.isArray(value)) {
@@ -136,7 +190,7 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
   }
 
   const source = value as Record<string, unknown>;
-  const channel = normalizeChannelBuildConfig(source.channel);
+  const channel = normalizeMultiChannelConfig(source.channel);
   const buildMode = normalizeBuildMode(source.buildMode);
   if (buildMode === "raw-single-html") {
     return {
