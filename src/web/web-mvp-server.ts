@@ -242,34 +242,36 @@ async function sendChannelReport(
 
   const baseChannel = createChannelReport(job.config.channel);
   const report = parsed as Record<string, unknown>;
-  const isLiftoff = job.config.channel.platform === "Liftoff";
+  const platform = job.config.channel.platform;
+  const isPackagedChannel = platform === "Liftoff" || platform === "Facebook";
   const isMraid = baseChannel.bridge === "mraid";
-  const integrationStatus = isLiftoff
+  const integrationStatus = isPackagedChannel
     ? "channel-delivery-ready"
     : isMraid
       ? "mraid-lifecycle-injected"
       : "download-bridge-injected";
 
+  let primaryWarning: string;
+  if (platform === "Liftoff") {
+    primaryWarning = "已生成根目录仅含 index.html 的 Liftoff ZIP；正式投放前仍需通过目标渠道 Validator。";
+  } else if (platform === "Facebook") {
+    primaryWarning = "已生成包含 index.html 与 res.js 的 Facebook ZIP；正式投放前仍需通过 Meta Validator。";
+  } else if (isMraid) {
+    primaryWarning = "已注入 MRAID 生命周期和下载桥；渠道专用交付容器按 Profile 状态处理。";
+  } else {
+    primaryWarning = "已向下载和在线试玩的 HTML 注入渠道下载桥；渠道专用交付容器按 Profile 状态处理。";
+  }
+
   report.channel = {
     ...baseChannel,
     integrationStatus,
-    warnings: isLiftoff
-      ? [
-        "已生成根目录仅含 index.html 的 Liftoff ZIP；正式投放前仍需通过目标渠道 Validator。",
-        ...baseChannel.warnings,
-      ]
-      : [
-        isMraid
-          ? "已注入 MRAID 生命周期和下载桥；渠道专用交付容器按 Profile 状态处理。"
-          : "已向下载和在线试玩的 HTML 注入渠道下载桥；渠道专用交付容器按 Profile 状态处理。",
-        ...baseChannel.warnings,
-      ],
+    warnings: [primaryWarning, ...baseChannel.warnings],
   };
 
-  if (isLiftoff) {
+  if (isPackagedChannel) {
     const htmlFile = manager.getArtifactPath(jobId, "html");
     if (htmlFile === null) {
-      requestError(response, 404, "ARTIFACT_NOT_FOUND", "Liftoff HTML 产物不存在。");
+      requestError(response, 404, "ARTIFACT_NOT_FOUND", "渠道 HTML 产物不存在。");
       return;
     }
     const sourceHtml = await readFile(htmlFile, "utf8");
@@ -279,6 +281,7 @@ async function sendChannelReport(
       fileName: artifact.fileName,
       mediaType: artifact.contentType,
       entries: [...artifact.entries],
+      entryBytes: { ...artifact.entryBytes },
       bytes: artifact.body.length,
       sha256: artifact.sha256,
       htmlBytes: artifact.htmlBytes,
