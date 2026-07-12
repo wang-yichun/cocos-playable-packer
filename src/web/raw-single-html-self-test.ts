@@ -54,6 +54,7 @@ try {
   const inputDirectory = path.join(temporaryRoot, "web-mobile");
   const sourceDirectory = path.join(inputDirectory, "src");
   const outputFile = path.join(temporaryRoot, "dist", "game-raw.html");
+  const indexSource = "console.log('raw single html test');\n";
   await mkdir(sourceDirectory, { recursive: true });
 
   await writeFile(
@@ -83,11 +84,7 @@ try {
     "window.System=window.System||{import:async function(){}};\n",
     "utf8",
   );
-  await writeFile(
-    path.join(inputDirectory, "index.js"),
-    "console.log('raw single html test');\n",
-    "utf8",
-  );
+  await writeFile(path.join(inputDirectory, "index.js"), indexSource, "utf8");
 
   const execution = await runRawSingleHtml(inputDirectory, outputFile);
   assert.match(execution.stdout, /未压缩单 HTML 已生成/);
@@ -97,7 +94,10 @@ try {
   const html = await readFile(outputFile, "utf8");
   assert.match(html, /window\.__PACK_FILES__/);
   assert.match(html, /window\.__PACK_BOOT__/);
-  assert.match(html, /raw single html test/);
+  assert.ok(
+    html.includes(Buffer.from(indexSource, "utf8").toString("base64")),
+    "未找到 index.js 的 Base64 内嵌数据。",
+  );
 
   const reportFile = outputFile.replace(/\.html$/i, ".report.json");
   const report = JSON.parse(await readFile(reportFile, "utf8")) as {
