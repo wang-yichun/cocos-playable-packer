@@ -59,6 +59,20 @@ function main(): void {
   assert.deepEqual(strings, ["Play Now", "立即游玩"]);
   assert.ok(!strings.join("").includes("playnow"));
   assert.ok(!strings.join("").includes("DO_NOT_INCLUDE"));
+
+  const alternateSource = [
+    "// window.locales = { ignored: 'COMMENT_VALUE' };",
+    "window['locales'] = {",
+    "  en: { message: 'Line\\nBreak' },",
+    "  zh: { escaped: '\\u4e2d' },",
+    "  dynamic: { message: `Hello ${playerName}!` },",
+    "};",
+  ].join("\n");
+  assert.deepEqual(
+    extractLocalizedStrings(alternateSource, "alternate.ts"),
+    ["Line\nBreak", "中", "Hello !"],
+  );
+
   assert.ok(DEFAULT_SAFE_CHARACTERS.includes("0"));
   assert.ok(DEFAULT_SAFE_CHARACTERS.includes("%"));
 
