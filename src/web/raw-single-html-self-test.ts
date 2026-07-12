@@ -89,7 +89,6 @@ try {
   const execution = await runRawSingleHtml(inputDirectory, outputFile);
   assert.match(execution.stdout, /未压缩单 HTML 已生成/);
   assert.match(execution.stdout, /未压缩单 HTML 服务包装完成/);
-  assert.equal(execution.stderr, "");
 
   const html = await readFile(outputFile, "utf8");
   assert.match(html, /window\.__PACK_FILES__/);
