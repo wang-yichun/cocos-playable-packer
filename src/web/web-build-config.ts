@@ -28,7 +28,7 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
-  audioBitrateKbps: 48,
+  audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
 };
