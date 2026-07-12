@@ -29,6 +29,9 @@ assert.equal(CHANNEL_PROFILES.AppLovin.startupPolicy, "mraid-viewable");
 assert.equal(CHANNEL_PROFILES.Google.deliveryFormat, "zip-html-res-js");
 assert.deepEqual(CHANNEL_PROFILES.Google.requiredGlobals, ["ExitApi"]);
 assert.equal(CHANNEL_PROFILES.Facebook.bridge, "facebook-cta");
+assert.equal(CHANNEL_PROFILES.Facebook.deliveryFormat, "zip-html-res-js");
+assert.equal(CHANNEL_PROFILES.Facebook.startupPolicy, "window-load");
+assert.deepEqual(CHANNEL_PROFILES.Facebook.requiredGlobals, ["FbPlayableAd"]);
 assert.equal(CHANNEL_PROFILES.Liftoff.deliveryFormat, "zip-single-html");
 assert.equal(CHANNEL_PROFILES.Unity.externalScripts[0], "mraid.js");
 
@@ -62,6 +65,15 @@ assert.equal(report.platform, "Google");
 assert.equal(report.integrationStatus, "profile-only");
 assert.equal(report.deliveryFormat, "zip-html-res-js");
 assert.ok(report.warnings.some((warning) => warning.includes("尚未")));
+
+const facebookReport = createChannelReport({
+  platform: "Facebook",
+  androidStoreUrl: TEST_ANDROID_STORE_URL,
+  iosStoreUrl: TEST_IOS_STORE_URL,
+});
+assert.equal(facebookReport.bridge, "facebook-cta");
+assert.equal(facebookReport.deliveryFormat, "zip-html-res-js");
+assert.ok(facebookReport.warnings.some((warning) => warning.includes("index.html + res.js")));
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "channel-profile-test-"));
 try {
