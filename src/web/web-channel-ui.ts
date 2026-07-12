@@ -168,6 +168,19 @@ export function createChannelWebMvpIndexHtml(): string {
 
   html = replaceOnce(
     html,
+    "      applyConfig(recommendedConfig);",
+    `      applyConfig({
+        ...recommendedConfig,
+        channel: {
+          platform: channelPlatformInput.value,
+          androidStoreUrl: androidStoreUrlInput.value.trim() || null,
+          iosStoreUrl: iosStoreUrlInput.value.trim() || null,
+        },
+      });`,
+  );
+
+  html = replaceOnce(
+    html,
     "    recommendedPresetButton.addEventListener('click', () => {",
     `    testStoreUrlsButton.addEventListener('click', () => {
       androidStoreUrlInput.value = testAndroidStoreUrl;
