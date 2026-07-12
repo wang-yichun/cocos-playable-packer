@@ -63,6 +63,18 @@ expectThrow(
   /只能指定一个/,
 );
 
+const webp = parseImageQualityPipelineArguments([
+  "./web-mobile",
+  "./dist/game.html",
+  "--image-mode=webp",
+  "--png-webp-quality=74",
+  "--jpeg-webp-quality=81",
+  "--audio-bitrate=48",
+]);
+assert.equal(webp.imageMode, "webp");
+assert.equal(webp.passthroughArgs.includes("--png-webp-quality=74"), true);
+assert.equal(webp.passthroughArgs.includes("--jpeg-webp-quality=81"), true);
+
 expectThrow(
   () => parseImageQualityPipelineArguments([
     "./web-mobile",
