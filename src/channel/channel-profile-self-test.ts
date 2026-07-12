@@ -28,12 +28,19 @@ assert.equal(CHANNEL_PROFILES.AppLovin.bridge, "mraid");
 assert.equal(CHANNEL_PROFILES.AppLovin.startupPolicy, "mraid-viewable");
 assert.equal(CHANNEL_PROFILES.Google.deliveryFormat, "zip-html-res-js");
 assert.deepEqual(CHANNEL_PROFILES.Google.requiredGlobals, ["ExitApi"]);
+assert.match(CHANNEL_PROFILES.Google.externalScripts[0] ?? "", /exitapi\.js$/);
 assert.equal(CHANNEL_PROFILES.Facebook.bridge, "facebook-cta");
 assert.equal(CHANNEL_PROFILES.Facebook.deliveryFormat, "zip-html-res-js");
 assert.equal(CHANNEL_PROFILES.Facebook.startupPolicy, "window-load");
 assert.deepEqual(CHANNEL_PROFILES.Facebook.requiredGlobals, ["FbPlayableAd"]);
 assert.equal(CHANNEL_PROFILES.Liftoff.deliveryFormat, "zip-single-html");
-assert.equal(CHANNEL_PROFILES.Unity.externalScripts[0], "mraid.js");
+assert.equal(CHANNEL_PROFILES.IronSource.deliveryFormat, "single-html");
+assert.equal(CHANNEL_PROFILES.IronSource.startupPolicy, "mraid-viewable");
+assert.equal(CHANNEL_PROFILES.Unity.externalScripts[0], "mraid.js (host-provided)");
+assert.equal(CHANNEL_PROFILES.Unity.bridge, "mraid");
+assert.equal(CHANNEL_PROFILES.Moloco.deliveryFormat, "single-html");
+assert.equal(CHANNEL_PROFILES.Moloco.bridge, "facebook-cta");
+assert.equal(CHANNEL_PROFILES.Moloco.analyticsAdapter, "none");
 
 const defaults = normalizeChannelBuildConfig(undefined);
 assert.deepEqual(defaults, {
@@ -64,7 +71,7 @@ const report = createChannelReport(google);
 assert.equal(report.platform, "Google");
 assert.equal(report.integrationStatus, "profile-only");
 assert.equal(report.deliveryFormat, "zip-html-res-js");
-assert.ok(report.warnings.some((warning) => warning.includes("尚未")));
+assert.ok(report.warnings.some((warning) => warning.includes("index.html + res.js")));
 
 const facebookReport = createChannelReport({
   platform: "Facebook",
@@ -74,6 +81,16 @@ const facebookReport = createChannelReport({
 assert.equal(facebookReport.bridge, "facebook-cta");
 assert.equal(facebookReport.deliveryFormat, "zip-html-res-js");
 assert.ok(facebookReport.warnings.some((warning) => warning.includes("index.html + res.js")));
+
+for (const platform of ["IronSource", "Unity", "Moloco"] as const) {
+  const channelReport = createChannelReport({
+    platform,
+    androidStoreUrl: TEST_ANDROID_STORE_URL,
+    iosStoreUrl: TEST_IOS_STORE_URL,
+  });
+  assert.equal(channelReport.deliveryFormat, "single-html");
+  assert.ok(channelReport.warnings.length > 0);
+}
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "channel-profile-test-"));
 try {
