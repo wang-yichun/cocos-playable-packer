@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { Script } from "node:vm";
 
+import { CHANNEL_PLATFORMS } from "../channel/channel-profile.js";
 import {
   createWebBuildRequest,
   DEFAULT_WEB_BUILD_CONFIG,
@@ -117,7 +118,18 @@ for (const id of [
   assert.match(html, new RegExp(`id=["']${id}["']`));
 }
 
-assert.equal((html.match(/name="channelPlatform"/g) ?? []).length, 8);
+const channelCheckboxTags = html.match(
+  /<input\b(?=[^>]*\btype="checkbox")(?=[^>]*\bname="channelPlatform")[^>]*>/g,
+) ?? [];
+assert.equal(channelCheckboxTags.length, CHANNEL_PLATFORMS.length);
+for (const platform of CHANNEL_PLATFORMS) {
+  assert.ok(
+    channelCheckboxTags.some(
+      (tag) => tag.includes(`value="${platform}"`) && /\bchecked\b/.test(tag),
+    ),
+    `${platform} 渠道复选框缺失或未默认勾选。`,
+  );
+}
 assert.match(html, /目标渠道（可多选）/);
 assert.match(html, /默认全选/);
 assert.match(html, /下载渠道合集 ZIP/);
