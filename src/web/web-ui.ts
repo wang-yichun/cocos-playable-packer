@@ -36,7 +36,7 @@ export function createWebMvpIndexHtml(): string {
         <button id="buildButton" type="button">上传并构建</button>
         <button id="cancelButton" type="button" disabled>取消任务</button>
       </div>
-      <div class="preset">当前默认方案：WebP 80 / 音频 48 kbps / HTML7 / Brotli raw-js。后续配置面板将复用同一任务 API。</div>
+      <div class="preset">当前默认方案：WebP 80 / 不处理音频 / HTML7 / Brotli raw-js。音频压缩后续通过配置面板主动开启，并需要 FFmpeg。</div>
       <div id="status" class="status">等待上传。</div>
       <progress id="progress" max="100" value="0"></progress>
       <pre id="logs">尚未开始。</pre>
