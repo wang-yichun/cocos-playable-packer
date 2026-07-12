@@ -6,6 +6,7 @@
 
 node_modules/
 dist/
+.packer-web/
 
 # 本地测试用的 Cocos 构建产物
 web-mobile/
