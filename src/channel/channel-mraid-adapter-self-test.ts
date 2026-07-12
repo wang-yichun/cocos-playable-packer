@@ -59,10 +59,13 @@ assert.match(gatedRuntime, /playable-game-started/);
 
 for (const packerFile of ["src/pack-compressed.ts", "src/pack-uncompressed.ts"]) {
   const packerSource = await readFile(path.resolve(packerFile), "utf8");
-  const gatedPackerSource = installRuntimeStartGate(packerSource);
+  // Git 在 Windows 工作树中可能把源文件检出为 CRLF；运行时模板字符串则使用 LF。
+  // 这里先归一化换行，避免自测把平台换行差异误判为门控注入失败。
+  const normalizedPackerSource = packerSource.replace(/\r\n?/g, "\n");
+  const gatedPackerSource = installRuntimeStartGate(normalizedPackerSource);
   assert.notEqual(
     gatedPackerSource,
-    packerSource,
+    normalizedPackerSource,
     `${packerFile} 中没有匹配到运行时 boot() 调用。`,
   );
   assert.match(gatedPackerSource, new RegExp(CHANNEL_RUNTIME_GATE_MARKER));
