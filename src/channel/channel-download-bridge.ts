@@ -3,7 +3,11 @@ import type { ChannelBuildConfig, ChannelPlatform } from "./channel-profile.js";
 export const CHANNEL_DOWNLOAD_BRIDGE_MARKER = "data-cocos-playable-channel-download-bridge";
 
 function safeJson(value: unknown): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
+  const json = JSON.stringify(value);
+  if (json === undefined) {
+    throw new Error("无法序列化渠道下载桥配置。");
+  }
+  return json.replace(/</g, "\\u003c");
 }
 
 function usesMraid(platform: ChannelPlatform): boolean {
