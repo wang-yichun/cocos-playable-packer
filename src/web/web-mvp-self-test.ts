@@ -5,14 +5,18 @@ import os from "node:os";
 import path from "node:path";
 import { Script } from "node:vm";
 
+import {
+  TEST_ANDROID_STORE_URL,
+  TEST_IOS_STORE_URL,
+} from "../channel/channel-profile.js";
 import type {
   BuildPlayableRequest,
   BuildPlayableResult,
   BuildPlayableServiceOptions,
 } from "../service/build-playable-types.js";
 import { normalizeWebBuildConfig } from "./web-build-config.js";
+import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
 import { startWebMvpServer } from "./web-mvp-server.js";
-import { createWebMvpIndexHtml } from "./web-ui.js";
 import { calculateCrc32 } from "./zip-extractor.js";
 
 interface StoredZipEntry {
@@ -184,6 +188,11 @@ assert.deepEqual(defaults, {
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
+  channel: {
+    platform: "Preview",
+    androidStoreUrl: null,
+    iosStoreUrl: null,
+  },
 });
 assert.throws(
   () => normalizeWebBuildConfig({ imageMode: "tinypng" }),
@@ -197,14 +206,20 @@ assert.equal(
   normalizeWebBuildConfig({ audioBitrateKbps: 48 }).audioBitrateKbps,
   48,
 );
+assert.equal(
+  normalizeWebBuildConfig({ channel: { platform: "Google" } }).channel.platform,
+  "Google",
+);
 
-const generatedIndexHtml = createWebMvpIndexHtml();
+const generatedIndexHtml = createChannelWebMvpIndexHtml();
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(generatedIndexHtml);
 assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
-assert.match(inlineScript, /recentLogs\.join\('\\n'\)/);
+assert.match(inlineScript, /recentLogs\.join\('\n'\)/);
 assert.match(generatedIndexHtml, /仅合并单 HTML（不压缩）/);
+assert.match(generatedIndexHtml, /目标渠道/);
+assert.match(generatedIndexHtml, /Google Maps 测试链接/);
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "playable-web-mvp-"));
 const server = await startWebMvpServer({
@@ -218,6 +233,10 @@ const server = await startWebMvpServer({
 try {
   const health = await readJson(await fetch(`${server.url}/api/health`));
   assert.equal(health.status, "ok");
+
+  const indexResponse = await fetch(`${server.url}/`);
+  assert.equal(indexResponse.ok, true);
+  assert.match(await indexResponse.text(), /channelPlatform/);
 
   const zip = createStoredZip([
     {
@@ -235,7 +254,16 @@ try {
   const createPayload = await readJson(await fetch(`${server.url}/api/jobs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uploadId: upload.uploadId }),
+    body: JSON.stringify({
+      uploadId: upload.uploadId,
+      config: {
+        channel: {
+          platform: "Google",
+          androidStoreUrl: TEST_ANDROID_STORE_URL,
+          iosStoreUrl: TEST_IOS_STORE_URL,
+        },
+      },
+    }),
   }));
   const createdJob = createPayload.job as Record<string, unknown>;
   const jobId = createdJob.id;
@@ -243,7 +271,11 @@ try {
 
   const job = await waitForTerminalJob(server.url, jobId as string);
   assert.equal(job.status, "succeeded");
-  assert.equal((job.config as Record<string, unknown>).buildMode, "optimized");
+  const jobConfig = job.config as Record<string, unknown>;
+  assert.equal(jobConfig.buildMode, "optimized");
+  const jobChannel = jobConfig.channel as Record<string, unknown>;
+  assert.equal(jobChannel.platform, "Google");
+  assert.equal(jobChannel.androidStoreUrl, TEST_ANDROID_STORE_URL);
   assert.equal(typeof job.outputSha256, "string");
   assert.match((job.recentLogs as string[]).join("\n"), /模拟打包日志/);
 
@@ -256,6 +288,17 @@ try {
   assert.equal(reportResponse.ok, true);
   const report = await reportResponse.json() as Record<string, unknown>;
   assert.equal(report.schemaVersion, 3);
+  const reportChannel = report.channel as Record<string, unknown>;
+  assert.equal(reportChannel.platform, "Google");
+  assert.equal(reportChannel.deliveryFormat, "zip-html-res-js");
+  assert.equal(reportChannel.integrationStatus, "profile-only");
+  assert.deepEqual(reportChannel.requiredGlobals, ["ExitApi"]);
+
+  const reportDownloadResponse = await fetch(
+    `${server.url}/artifacts/${jobId}/report.json?download=1`,
+  );
+  assert.equal(reportDownloadResponse.ok, true);
+  assert.match(reportDownloadResponse.headers.get("content-disposition") ?? "", /attachment/);
 
   const previewResponse = await fetch(`${server.url}/preview/${jobId}/`);
   assert.equal(previewResponse.ok, true);
@@ -272,6 +315,10 @@ try {
         imageMode: "webp",
         audioBitrateKbps: 48,
         payloadEncoding: "html7",
+        channel: {
+          platform: "AppLovin",
+          androidStoreUrl: TEST_ANDROID_STORE_URL,
+        },
       },
     }),
   }));
@@ -283,6 +330,7 @@ try {
   assert.equal(rawConfig.imageMode, "none");
   assert.equal(rawConfig.audioBitrateKbps, null);
   assert.equal(rawConfig.payloadEncoding, "base64");
+  assert.equal((rawConfig.channel as Record<string, unknown>).platform, "AppLovin");
   assert.match((rawJob.recentLogs as string[]).join("\n"), /模拟未压缩打包日志/);
 
   const rawHtmlResponse = await fetch(
@@ -290,6 +338,12 @@ try {
   );
   assert.equal(rawHtmlResponse.ok, true);
   assert.match(await rawHtmlResponse.text(), /Raw playable test/);
+
+  const rawReportResponse = await fetch(
+    `${server.url}/artifacts/${String(rawCreatedJob.id)}/report.json`,
+  );
+  const rawReport = await readJson(rawReportResponse);
+  assert.equal((rawReport.channel as Record<string, unknown>).bridge, "mraid");
 
   const unsafeZip = createStoredZip([
     { name: "../escape.txt", data: Buffer.from("bad", "utf8") },
