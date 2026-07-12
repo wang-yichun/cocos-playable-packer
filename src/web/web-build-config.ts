@@ -4,9 +4,11 @@ import type {
   PlayablePayloadEncoding,
 } from "../service/build-playable-types.js";
 
+export type WebBuildMode = "optimized" | "raw-single-html";
 export type WebImageMode = "none" | "squoosh" | "webp";
 
 export interface WebBuildConfig {
+  buildMode?: WebBuildMode;
   imageMode?: WebImageMode;
   pngQuality?: number;
   jpegQuality?: number;
@@ -16,6 +18,7 @@ export interface WebBuildConfig {
 }
 
 export interface NormalizedWebBuildConfig {
+  buildMode: WebBuildMode;
   imageMode: WebImageMode;
   pngQuality: number;
   jpegQuality: number;
@@ -25,6 +28,7 @@ export interface NormalizedWebBuildConfig {
 }
 
 export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
+  buildMode: "optimized",
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
@@ -34,11 +38,22 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
 };
 
 export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
+  buildMode: "optimized",
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
+  brotliFallback: "raw-js",
+};
+
+export const RAW_SINGLE_HTML_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
+  buildMode: "raw-single-html",
+  imageMode: "none",
+  pngQuality: 80,
+  jpegQuality: 80,
+  audioBitrateKbps: null,
+  payloadEncoding: "base64",
   brotliFallback: "raw-js",
 };
 
@@ -52,6 +67,16 @@ function integerInRange(
     throw new Error(`${name} 必须是 ${minimum} 到 ${maximum} 之间的整数。`);
   }
   return value as number;
+}
+
+function normalizeBuildMode(value: unknown): WebBuildMode {
+  if (value === undefined) {
+    return DEFAULT_WEB_BUILD_CONFIG.buildMode;
+  }
+  if (value !== "optimized" && value !== "raw-single-html") {
+    throw new Error("buildMode 只支持 optimized 或 raw-single-html。");
+  }
+  return value;
 }
 
 function normalizeImageMode(value: unknown): WebImageMode {
@@ -93,6 +118,11 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
   }
 
   const source = value as Record<string, unknown>;
+  const buildMode = normalizeBuildMode(source.buildMode);
+  if (buildMode === "raw-single-html") {
+    return { ...RAW_SINGLE_HTML_WEB_BUILD_CONFIG };
+  }
+
   const imageMode = normalizeImageMode(source.imageMode);
   const minimumPngQuality = imageMode === "squoosh" ? 0 : 1;
   const pngQuality = source.pngQuality === undefined
@@ -117,6 +147,7 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
   }
 
   return {
+    buildMode,
     imageMode,
     pngQuality,
     jpegQuality,
