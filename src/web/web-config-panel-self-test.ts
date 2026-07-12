@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { Script } from "node:vm";
 
 import {
+  createWebBuildRequest,
   DEFAULT_WEB_BUILD_CONFIG,
+  normalizeWebBuildConfig,
+  RAW_SINGLE_HTML_WEB_BUILD_CONFIG,
   RECOMMENDED_WEB_BUILD_CONFIG,
 } from "./web-build-config.js";
 import { createWebMvpIndexHtml } from "./web-ui.js";
 
 assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
+  buildMode: "optimized",
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
@@ -17,6 +21,7 @@ assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
 });
 
 assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
+  buildMode: "optimized",
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
@@ -25,9 +30,42 @@ assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
   brotliFallback: "raw-js",
 });
 
+assert.deepEqual(RAW_SINGLE_HTML_WEB_BUILD_CONFIG, {
+  buildMode: "raw-single-html",
+  imageMode: "none",
+  pngQuality: 80,
+  jpegQuality: 80,
+  audioBitrateKbps: null,
+  payloadEncoding: "base64",
+  brotliFallback: "raw-js",
+});
+
+const normalizedRaw = normalizeWebBuildConfig({
+  buildMode: "raw-single-html",
+  imageMode: "webp",
+  pngQuality: 1,
+  jpegQuality: 1,
+  audioBitrateKbps: 48,
+  payloadEncoding: "html7",
+  brotliFallback: "gzip-packed-js",
+});
+assert.deepEqual(normalizedRaw, RAW_SINGLE_HTML_WEB_BUILD_CONFIG);
+
+const rawRequest = createWebBuildRequest(
+  "./web-mobile",
+  "./dist/raw.html",
+  "raw-test",
+  normalizedRaw,
+);
+assert.deepEqual(rawRequest.image, { mode: "none" });
+assert.equal(rawRequest.audio, null);
+assert.equal(rawRequest.payloadEncoding, "base64");
+assert.equal(rawRequest.brotliFallback, "raw-js");
+
 const html = createWebMvpIndexHtml();
 for (const id of [
   "recommendedPresetButton",
+  "buildMode",
   "imageMode",
   "pngQuality",
   "jpegQuality",
@@ -41,6 +79,8 @@ for (const id of [
 
 assert.match(html, /应用一键推荐预设/);
 assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
+assert.match(html, /仅合并单 HTML（不压缩）/);
+assert.match(html, /不执行图片压缩、音频压缩、Brotli 压缩或 Payload 编码/);
 assert.match(html, /FFmpeg/);
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
@@ -48,10 +88,12 @@ assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
 
-assert.match(inlineScript, /const defaultConfig = .*"audioBitrateKbps":null/);
+assert.match(inlineScript, /const defaultConfig = .*"buildMode":"optimized"/);
 assert.match(inlineScript, /const recommendedConfig = .*"audioBitrateKbps":48/);
+assert.match(inlineScript, /buildMode: 'raw-single-html'/);
 assert.match(inlineScript, /config: config/);
 assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
+assert.match(inlineScript, /buildModeInput\.addEventListener/);
 
 console.log("Playable Web config panel self-test passed.");
