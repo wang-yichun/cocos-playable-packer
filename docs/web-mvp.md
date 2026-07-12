@@ -1,15 +1,13 @@
 # Web MVP：ZIP 上传并生成 Playable HTML
 
-当前 Web MVP 用于验证以下业务闭环：
+当前 Web MVP 用于验证最小业务闭环：
 
 ```text
-选择构建配置
-    ↓
 上传 web-mobile.zip
     ↓
 服务端安全校验并解压
     ↓
-调用 buildPlayable()
+选择优化压缩或仅合并单 HTML
     ↓
 生成单 HTML 与 report.json
     ↓
@@ -37,41 +35,26 @@ $env:PLAYABLE_WEB_ROOT = ".packer-web"
 npm run web:mvp
 ```
 
-## 基础配置面板
+## 构建模式
 
-网页当前开放以下配置：
+网页提供两种构建模式。
 
-- 图片模式：`none`、`squoosh`、`webp`；
-- PNG 质量；
-- JPEG 质量；
-- 音频压缩开关；
-- 音频目标码率；
-- Payload 编码：`base64`、`base91`、`html7`。
+### 优化并压缩
 
-Brotli 回退模式在当前基础面板中固定为：
+执行完整 Pipeline，可配置图片、音频和 Payload：
 
 ```text
-raw-js
+图片：none / Squoosh / WebP
+PNG/JPEG 质量：可配置
+音频：关闭或 8-320 kbps
+Payload：Base64 / Base91 / HTML7
+Brotli 回退：raw-js
 ```
 
-选择 `none` 时，PNG 和 JPEG 质量输入会自动禁用。关闭音频压缩时，音频码率输入会自动禁用。
-
-页面会在构建前校验：
+页面首次打开时使用安全默认配置：
 
 ```text
-WebP PNG 质量：1-100
-Squoosh PNG 质量：0-100
-JPEG 质量：1-100
-音频码率：8-320 kbps
-```
-
-构建开始后，ZIP 选择和全部配置控件会锁定，防止任务参数在执行期间变化。
-
-## 默认配置
-
-页面首次打开时采用不依赖 FFmpeg 的安全默认配置：
-
-```text
+构建模式：优化并压缩
 图片：WebP
 PNG WebP Quality：80
 JPEG WebP Quality：80
@@ -80,47 +63,71 @@ Payload：HTML7
 Brotli 回退：raw-js
 ```
 
-## 一键推荐预设
-
-点击“应用一键推荐预设”后，页面会切换为当前已经完成真实游戏试玩验证的组合：
+点击“一键推荐预设”后使用已经通过真实游戏验证的组合：
 
 ```text
-图片：WebP
-PNG WebP Quality：80
-JPEG WebP Quality：80
-音频：48 kbps，保持原声道数
+构建模式：优化并压缩
+图片：WebP 80
+音频：48 kbps
 Payload：HTML7
 Brotli 回退：raw-js
 ```
 
-推荐预设会启用音频压缩，因此启动 Web MVP 的系统必须能够执行 FFmpeg。
+推荐预设启用音频压缩，因此运行环境必须能够执行 FFmpeg。
+
+### 仅合并单 HTML（不压缩）
+
+该模式直接复用项目现有的 `pack:raw` 单 HTML 打包逻辑：
+
+```text
+图片压缩：关闭
+音频压缩：关闭
+Solid Brotli：关闭
+Base64/Base91/HTML7 Payload：不使用
+```
+
+它仍会完成：
+
+- Cocos Creator `web-mobile` 文件内嵌；
+- SystemJS/Cocos Bundle 兼容处理；
+- 单 HTML 输出；
+- SHA-256 与报告生成；
+- 在线试玩和文件下载。
+
+该模式的结果通常在 20 MB 左右，具体取决于原始构建大小。它主要用于：
+
+- 兼容基线；
+- 与只支持单 HTML 合并的竞品插件对照；
+- 排查资源压缩是否导致运行差异；
+- 不需要极限体积优化的场景。
+
+选择该模式后，图片质量、音频码率和 Payload 控件会自动禁用。服务端也会把这些参数规范化为“不处理”，避免绕过网页控件提交冲突配置。
 
 ## FFmpeg 与 Web MVP
 
 FFmpeg 是外部程序，不会由 `npm ci` 或 `npm install` 自动安装。
 
-Windows 推荐安装命令：
+以下情况不需要 FFmpeg：
+
+- 使用“仅合并单 HTML（不压缩）”；
+- 优化模式中关闭音频压缩；
+- 只执行图片优化、Brotli 打包和 Payload 编码。
+
+启用音频压缩后，启动 Web MVP 的 Node.js 进程必须能从 Windows `Path` 中找到 `ffmpeg`。
+
+推荐安装：
 
 ```powershell
 winget install --id Gyan.FFmpeg -e --source winget
 ```
 
-安装后重新打开 PowerShell 或 VS Code 终端，并验证：
+启动服务前建议验证：
 
 ```powershell
 where.exe ffmpeg
 ffmpeg -version
 ffmpeg -encoders | Select-String libmp3lame
 ```
-
-以下情况不需要 FFmpeg：
-
-- 使用页面默认配置；
-- 音频压缩开关关闭；
-- `audioBitrateKbps` 为 `null`；
-- 只执行图片优化、Brotli 打包和 Payload 编码。
-
-启用音频压缩后，启动 Web MVP 的 Node.js 进程必须能从 Windows `Path` 中找到 `ffmpeg`。
 
 典型缺失错误：
 
@@ -138,7 +145,7 @@ ffmpeg -encoders | Select-String libmp3lame
 4. 确认 `ffmpeg -version` 成功；
 5. 重新执行 `npm run web:mvp`。
 
-当前 Web MVP 配置接口尚未开放自定义 `ffmpegPath`，因此启用音频压缩时应通过系统 `Path` 提供 FFmpeg。完整说明见 [FFmpeg 安装说明](ffmpeg-installation.md)。
+完整安装与排查步骤见 [FFmpeg 安装说明](ffmpeg-installation.md)。
 
 ## API
 
@@ -153,7 +160,7 @@ Content-Type: application/zip
 
 返回 `uploadId`。
 
-### 创建任务
+### 创建优化任务
 
 ```http
 POST /api/jobs
@@ -162,6 +169,7 @@ Content-Type: application/json
 {
   "uploadId": "...",
   "config": {
+    "buildMode": "optimized",
     "imageMode": "webp",
     "pngQuality": 80,
     "jpegQuality": 80,
@@ -172,24 +180,45 @@ Content-Type: application/json
 }
 ```
 
-关闭音频时发送：
+### 创建仅合并单 HTML 任务
 
-```json
+```http
+POST /api/jobs
+Content-Type: application/json
+
 {
-  "audioBitrateKbps": null
+  "uploadId": "...",
+  "config": {
+    "buildMode": "raw-single-html"
+  }
 }
 ```
 
-`config` 可省略。省略后使用服务端默认配置。
+`config` 可省略。当前支持：
 
-当前支持：
-
+- `buildMode`：`optimized`、`raw-single-html`；
 - `imageMode`：`none`、`squoosh`、`webp`；
 - `pngQuality`；
 - `jpegQuality`；
-- `audioBitrateKbps`：`null` 表示关闭，`8-320` 表示启用；
+- `audioBitrateKbps`：`null` 表示关闭，传入 `8-320` 表示开启；
 - `payloadEncoding`：`base64`、`base91`、`html7`；
-- `brotliFallback`：`raw-js`、`gzip-packed-js`。
+- `brotliFallback`：当前网页固定使用 `raw-js`。
+
+当 `buildMode` 为 `raw-single-html` 时，服务端会忽略其他优化字段，并规范化为：
+
+```json
+{
+  "buildMode": "raw-single-html",
+  "imageMode": "none",
+  "pngQuality": 80,
+  "jpegQuality": 80,
+  "audioBitrateKbps": null,
+  "payloadEncoding": "base64",
+  "brotliFallback": "raw-js"
+}
+```
+
+其中 `payloadEncoding` 在未压缩模式中不会实际参与输出，只作为统一配置模型的占位值。
 
 TinyPNG 暂未开放给网页接口，避免服务器端 API 密钥和配额在 MVP 阶段被误用。
 
@@ -224,6 +253,18 @@ POST /api/jobs/<jobId>/cancel
 /artifacts/<jobId>/game.html
 /artifacts/<jobId>/report.json
 /preview/<jobId>/
+```
+
+未压缩模式的报告包含：
+
+```text
+buildMode: raw-single-html
+processing.imageOptimization: false
+processing.audioOptimization: false
+processing.brotliCompression: false
+processing.payloadEncoding: null
+output.bytes
+output.sha256
 ```
 
 ## ZIP 安全限制
@@ -264,8 +305,7 @@ ZIP 根目录本身，或唯一一级子目录中必须存在 `index.html`。
 - 没有对象存储、Redis 或持久化数据库；
 - 试玩页面与管理页面仍是同一 Origin；
 - 没有自动清理历史输出目录；
-- 取消操作不能中断正在同步解压的单个 ZIP 文件，只会在解压后停止或终止 Pipeline；
-- 基础面板暂未开放 TinyPNG、FFmpeg 路径和 Brotli 回退模式。
+- 取消操作不能中断正在同步解压的单个 ZIP 文件，只会在解压后停止或终止 Pipeline。
 
 正式公网部署前，应将试玩产物放到独立域名，并增加容器资源限制、任务持久化、文件保留策略和身份认证。
 
@@ -278,13 +318,13 @@ npm run test:web-mvp
 
 自测覆盖：
 
-- 默认配置和推荐预设；
-- 配置控件和任务请求结构；
+- 默认配置、推荐预设和配置校验；
+- 未压缩模式参数规范化；
+- 未压缩任务路由到 `pack:raw` 包装器；
 - 页面内嵌脚本语法；
 - ZIP 生成、上传、解压；
 - 一级 `web-mobile` 目录识别；
-- 任务创建与轮询；
-- 服务层调用；
+- 优化任务和未压缩任务创建与轮询；
 - HTML、报告下载；
 - 在线试玩路由；
 - 路径穿越 ZIP 拒绝。
