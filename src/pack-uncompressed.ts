@@ -5,6 +5,7 @@ import {
     writeFile,
 } from 'node:fs/promises';
 import path from 'node:path';
+import { detectImageMimeType } from './images/image-content-type.js';
 import { parse } from 'acorn';
 import * as walk from 'acorn-walk';
 import * as cheerio from 'cheerio';
@@ -98,7 +99,11 @@ function isExternalUrl(value: string): boolean {
     );
 }
 
-function getMimeType(filePath: string): string {
+function getMimeType(filePath: string, buffer?: Uint8Array): string {
+    const detectedImageType = buffer === undefined ? null : detectImageMimeType(buffer);
+    if (detectedImageType !== null) {
+        return detectedImageType;
+    }
     const extension =
         path.extname(filePath).toLowerCase();
 
@@ -680,7 +685,7 @@ function rewriteCssUrls(
             }
 
             const mime =
-                getMimeType(resolvedPath);
+                getMimeType(resolvedPath, buffer);
 
             return (
                 `url("data:${mime};base64,`
@@ -2536,7 +2541,7 @@ async function main(): Promise<void> {
         }
 
         packedFiles[relativePath] = {
-            m: getMimeType(relativePath),
+            m: getMimeType(relativePath, outputBuffer),
             b: outputBuffer.toString(
                 'base64',
             ),
