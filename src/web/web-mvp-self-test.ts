@@ -66,6 +66,12 @@ function createStoredZip(entries: readonly StoredZipEntry[]): Buffer {
   return Buffer.concat([localDirectory, centralDirectory, end]);
 }
 
+function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  const copy = new Uint8Array(buffer.byteLength);
+  copy.set(buffer);
+  return copy.buffer;
+}
+
 async function fakeBuildPlayable(
   request: BuildPlayableRequest,
   options: BuildPlayableServiceOptions = {},
@@ -186,7 +192,7 @@ try {
       "Content-Type": "application/zip",
       "Content-Length": String(zip.length),
     },
-    body: zip,
+    body: bufferToArrayBuffer(zip),
   }));
   const upload = uploadPayload.upload as Record<string, unknown>;
   assert.equal(typeof upload.uploadId, "string");
@@ -225,7 +231,7 @@ try {
   const unsafeUploadPayload = await readJson(await fetch(`${server.url}/api/uploads`, {
     method: "POST",
     headers: { "Content-Type": "application/zip" },
-    body: unsafeZip,
+    body: bufferToArrayBuffer(unsafeZip),
   }));
   const unsafeUpload = unsafeUploadPayload.upload as Record<string, unknown>;
   const unsafeCreatePayload = await readJson(await fetch(`${server.url}/api/jobs`, {
