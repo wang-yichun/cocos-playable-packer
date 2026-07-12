@@ -102,10 +102,6 @@ try {
       iosStoreUrl: TEST_IOS_STORE_URL,
     },
   );
-  const uploadId = randomUUID();
-  const uploadPath = server.manager.createUploadPath(uploadId);
-  await writeFile(uploadPath, inputArtifact.body);
-  server.manager.registerUpload(uploadId, uploadPath, inputArtifact.body.length);
 
   const cases: Array<{
     platform: ChannelPlatform;
@@ -152,7 +148,14 @@ try {
   ];
 
   for (const testCase of cases) {
-    const created = server.manager.createJob(uploadId, {
+    // WebJobManager 会在 createJob 时消费上传记录；每个渠道用独立上传，
+    // 既符合真实 API 行为，也避免测试错误复用已经消费的 uploadId。
+    const caseUploadId = randomUUID();
+    const caseUploadPath = server.manager.createUploadPath(caseUploadId);
+    await writeFile(caseUploadPath, inputArtifact.body);
+    server.manager.registerUpload(caseUploadId, caseUploadPath, inputArtifact.body.length);
+
+    const created = server.manager.createJob(caseUploadId, {
       channel: {
         platform: testCase.platform,
         androidStoreUrl: TEST_ANDROID_STORE_URL,
