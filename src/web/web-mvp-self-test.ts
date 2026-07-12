@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { Script } from "node:vm";
 
 import type {
   BuildPlayableRequest,
@@ -11,6 +12,7 @@ import type {
 } from "../service/build-playable-types.js";
 import { normalizeWebBuildConfig } from "./web-build-config.js";
 import { startWebMvpServer } from "./web-mvp-server.js";
+import { createWebMvpIndexHtml } from "./web-ui.js";
 import { calculateCrc32 } from "./zip-extractor.js";
 
 interface StoredZipEntry {
@@ -162,6 +164,13 @@ assert.equal(
   normalizeWebBuildConfig({ audioBitrateKbps: null }).audioBitrateKbps,
   null,
 );
+
+const generatedIndexHtml = createWebMvpIndexHtml();
+const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(generatedIndexHtml);
+assert.notEqual(inlineScriptMatch, null);
+const inlineScript = inlineScriptMatch?.[1] ?? "";
+new Script(inlineScript);
+assert.match(inlineScript, /recentLogs\.join\('\\n'\)/);
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "playable-web-mvp-"));
 const server = await startWebMvpServer({
