@@ -74,14 +74,27 @@ function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
   return copy.buffer;
 }
 
+function isRawSingleHtmlScript(scriptPath: string | undefined): boolean {
+  return scriptPath?.replace(/\\/g, "/").endsWith("/src/web/raw-single-html-cli.ts") === true;
+}
+
 async function fakeBuildPlayable(
   request: BuildPlayableRequest,
   options: BuildPlayableServiceOptions = {},
 ): Promise<BuildPlayableResult> {
-  assert.equal(request.image.mode, "webp");
-  assert.equal(request.payloadEncoding, "html7");
-  assert.equal(request.brotliFallback, "raw-js");
-  assert.equal(request.audio, null);
+  const rawMode = isRawSingleHtmlScript(options.scriptPath);
+  if (rawMode) {
+    assert.equal(request.image.mode, "none");
+    assert.equal(request.payloadEncoding, "base64");
+    assert.equal(request.brotliFallback, "raw-js");
+    assert.equal(request.audio, null);
+  } else {
+    assert.equal(request.image.mode, "webp");
+    assert.equal(request.payloadEncoding, "html7");
+    assert.equal(request.brotliFallback, "raw-js");
+    assert.equal(request.audio, null);
+  }
+
   const indexHtml = await readFile(path.join(request.inputDirectory, "index.html"), "utf8");
   assert.match(indexHtml, /Cocos test/);
 
@@ -90,23 +103,26 @@ async function fakeBuildPlayable(
     stage: "running",
     timestamp: new Date().toISOString(),
     elapsedMs: 1,
-    message: "模拟 Pipeline 已启动。",
+    message: rawMode ? "模拟未压缩单 HTML 已启动。" : "模拟 Pipeline 已启动。",
   });
   options.onEvent?.({
     type: "log",
     stream: "stdout",
     timestamp: new Date().toISOString(),
     elapsedMs: 2,
-    line: "模拟打包日志",
+    line: rawMode ? "模拟未压缩打包日志" : "模拟打包日志",
   });
 
   await mkdir(path.dirname(request.outputFile), { recursive: true });
-  const html = "<!doctype html><title>Playable test</title><script>window.__ok=true</script>";
+  const html = rawMode
+    ? "<!doctype html><title>Raw playable test</title><script>window.__raw=true</script>"
+    : "<!doctype html><title>Playable test</title><script>window.__ok=true</script>";
   await writeFile(request.outputFile, html, "utf8");
   const outputSha256 = createHash("sha256").update(html).digest("hex");
   const reportFile = request.outputFile.replace(/\.html$/i, ".report.json");
   const report = {
-    schemaVersion: 3,
+    schemaVersion: rawMode ? 1 : 3,
+    buildMode: rawMode ? "raw-single-html" : "optimized",
     output: {
       file: request.outputFile,
       bytes: Buffer.byteLength(html),
@@ -147,8 +163,21 @@ async function waitForTerminalJob(baseUrl: string, jobId: string): Promise<Recor
   throw new Error("等待 Web 任务完成超时。");
 }
 
+async function uploadZip(baseUrl: string, zip: Buffer): Promise<Record<string, unknown>> {
+  const payload = await readJson(await fetch(`${baseUrl}/api/uploads`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/zip",
+      "Content-Length": String(zip.length),
+    },
+    body: bufferToArrayBuffer(zip),
+  }));
+  return payload.upload as Record<string, unknown>;
+}
+
 const defaults = normalizeWebBuildConfig(undefined);
 assert.deepEqual(defaults, {
+  buildMode: "optimized",
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
@@ -175,7 +204,7 @@ assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
 assert.match(inlineScript, /recentLogs\.join\('\\n'\)/);
-assert.match(generatedIndexHtml, /不处理音频/);
+assert.match(generatedIndexHtml, /仅合并单 HTML（不压缩）/);
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "playable-web-mvp-"));
 const server = await startWebMvpServer({
@@ -200,17 +229,9 @@ try {
       data: Buffer.from("asset", "utf8"),
     },
   ]);
-  const uploadPayload = await readJson(await fetch(`${server.url}/api/uploads`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/zip",
-      "Content-Length": String(zip.length),
-    },
-    body: bufferToArrayBuffer(zip),
-  }));
-  const upload = uploadPayload.upload as Record<string, unknown>;
-  assert.equal(typeof upload.uploadId, "string");
 
+  const upload = await uploadZip(server.url, zip);
+  assert.equal(typeof upload.uploadId, "string");
   const createPayload = await readJson(await fetch(`${server.url}/api/jobs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -222,6 +243,7 @@ try {
 
   const job = await waitForTerminalJob(server.url, jobId as string);
   assert.equal(job.status, "succeeded");
+  assert.equal((job.config as Record<string, unknown>).buildMode, "optimized");
   assert.equal(typeof job.outputSha256, "string");
   assert.match((job.recentLogs as string[]).join("\n"), /模拟打包日志/);
 
@@ -239,15 +261,40 @@ try {
   assert.equal(previewResponse.ok, true);
   assert.match(await previewResponse.text(), /Playable test/);
 
+  const rawUpload = await uploadZip(server.url, zip);
+  const rawCreatePayload = await readJson(await fetch(`${server.url}/api/jobs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      uploadId: rawUpload.uploadId,
+      config: {
+        buildMode: "raw-single-html",
+        imageMode: "webp",
+        audioBitrateKbps: 48,
+        payloadEncoding: "html7",
+      },
+    }),
+  }));
+  const rawCreatedJob = rawCreatePayload.job as Record<string, unknown>;
+  const rawJob = await waitForTerminalJob(server.url, rawCreatedJob.id as string);
+  assert.equal(rawJob.status, "succeeded");
+  const rawConfig = rawJob.config as Record<string, unknown>;
+  assert.equal(rawConfig.buildMode, "raw-single-html");
+  assert.equal(rawConfig.imageMode, "none");
+  assert.equal(rawConfig.audioBitrateKbps, null);
+  assert.equal(rawConfig.payloadEncoding, "base64");
+  assert.match((rawJob.recentLogs as string[]).join("\n"), /模拟未压缩打包日志/);
+
+  const rawHtmlResponse = await fetch(
+    `${server.url}/artifacts/${String(rawCreatedJob.id)}/game.html`,
+  );
+  assert.equal(rawHtmlResponse.ok, true);
+  assert.match(await rawHtmlResponse.text(), /Raw playable test/);
+
   const unsafeZip = createStoredZip([
     { name: "../escape.txt", data: Buffer.from("bad", "utf8") },
   ]);
-  const unsafeUploadPayload = await readJson(await fetch(`${server.url}/api/uploads`, {
-    method: "POST",
-    headers: { "Content-Type": "application/zip" },
-    body: bufferToArrayBuffer(unsafeZip),
-  }));
-  const unsafeUpload = unsafeUploadPayload.upload as Record<string, unknown>;
+  const unsafeUpload = await uploadZip(server.url, unsafeZip);
   const unsafeCreatePayload = await readJson(await fetch(`${server.url}/api/jobs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
