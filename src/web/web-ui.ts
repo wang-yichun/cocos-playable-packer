@@ -52,13 +52,13 @@ export function createWebMvpIndexHtml(): string {
 <body>
   <main>
     <h1>Cocos Playable Packer</h1>
-    <p>上传 Cocos Creator 的 <code>web-mobile.zip</code>，按所选参数生成单文件 Playable HTML。</p>
+    <p>上传 Cocos Creator 的 <code>web-mobile.zip</code>，按所选模式生成单文件 Playable HTML。</p>
 
     <section class="card">
       <div class="section-head">
         <div>
           <h2>构建配置</h2>
-          <div class="hint">默认配置不处理音频；推荐预设会启用 48 kbps 音频压缩。</div>
+          <div class="hint">既可以执行完整压缩，也可以只合并为单 HTML，作为兼容基线或竞品能力对照。</div>
         </div>
         <button id="recommendedPresetButton" class="secondary" type="button">应用一键推荐预设</button>
       </div>
@@ -69,6 +69,15 @@ export function createWebMvpIndexHtml(): string {
       </div>
 
       <div class="config-grid" style="margin-top: 18px;">
+        <div class="field">
+          <label for="buildMode">构建模式</label>
+          <select id="buildMode">
+            <option value="optimized">优化并压缩</option>
+            <option value="raw-single-html">仅合并单 HTML（不压缩）</option>
+          </select>
+          <small id="buildModeHint">执行图片、音频、Brotli 和 Payload 优化。</small>
+        </div>
+
         <div class="field">
           <label for="imageMode">图片模式</label>
           <select id="imageMode">
@@ -145,6 +154,8 @@ export function createWebMvpIndexHtml(): string {
     const buildButton = document.getElementById('buildButton');
     const cancelButton = document.getElementById('cancelButton');
     const recommendedPresetButton = document.getElementById('recommendedPresetButton');
+    const buildModeInput = document.getElementById('buildMode');
+    const buildModeHint = document.getElementById('buildModeHint');
     const imageModeInput = document.getElementById('imageMode');
     const imageModeHint = document.getElementById('imageModeHint');
     const pngQualityInput = document.getElementById('pngQuality');
@@ -178,6 +189,19 @@ export function createWebMvpIndexHtml(): string {
     }
 
     function readConfig() {
+      const buildMode = buildModeInput.value;
+      if (buildMode === 'raw-single-html') {
+        return {
+          buildMode: 'raw-single-html',
+          imageMode: 'none',
+          pngQuality: 80,
+          jpegQuality: 80,
+          audioBitrateKbps: null,
+          payloadEncoding: 'base64',
+          brotliFallback: 'raw-js',
+        };
+      }
+
       const imageMode = imageModeInput.value;
       const minimumPngQuality = imageMode === 'squoosh' ? 0 : 1;
       const pngQuality = parseInteger(pngQualityInput, 'PNG 质量', minimumPngQuality, 100);
@@ -187,6 +211,7 @@ export function createWebMvpIndexHtml(): string {
         : null;
 
       return {
+        buildMode: 'optimized',
         imageMode: imageMode,
         pngQuality: pngQuality,
         jpegQuality: jpegQuality,
@@ -197,6 +222,7 @@ export function createWebMvpIndexHtml(): string {
     }
 
     function applyConfig(config) {
+      buildModeInput.value = config.buildMode;
       imageModeInput.value = config.imageMode;
       pngQualityInput.value = String(config.pngQuality);
       jpegQualityInput.value = String(config.jpegQuality);
@@ -207,20 +233,26 @@ export function createWebMvpIndexHtml(): string {
     }
 
     function refreshConfigUi() {
+      const rawMode = buildModeInput.value === 'raw-single-html';
       const imageMode = imageModeInput.value;
-      const imagesDisabled = busy || imageMode === 'none';
-      const audioEnabled = audioEnabledInput.checked;
+      const imagesDisabled = busy || rawMode || imageMode === 'none';
+      const audioEnabled = !rawMode && audioEnabledInput.checked;
 
       fileInput.disabled = busy;
       buildButton.disabled = busy;
       recommendedPresetButton.disabled = busy;
-      imageModeInput.disabled = busy;
+      buildModeInput.disabled = busy;
+      imageModeInput.disabled = busy || rawMode;
       pngQualityInput.disabled = imagesDisabled;
       jpegQualityInput.disabled = imagesDisabled;
-      audioEnabledInput.disabled = busy;
-      audioBitrateInput.disabled = busy || !audioEnabled;
-      payloadEncodingInput.disabled = busy;
+      audioEnabledInput.disabled = busy || rawMode;
+      audioBitrateInput.disabled = busy || rawMode || !audioEnabled;
+      payloadEncodingInput.disabled = busy || rawMode;
       cancelButton.disabled = !busy || currentJobId === null;
+
+      buildModeHint.textContent = rawMode
+        ? '直接复用未压缩单 HTML 打包器，不处理图片、音频，也不使用 Brotli 或文本 Payload 编码。'
+        : '执行资源优化、Solid Brotli 和所选 Payload 编码。';
 
       if (imageMode === 'webp') {
         pngQualityInput.min = '1';
@@ -247,7 +279,12 @@ export function createWebMvpIndexHtml(): string {
         payloadHint.textContent = '兼容性最高，但文本 Payload 体积最大。';
       }
 
-      audioWarning.hidden = !audioEnabled;
+      audioWarning.hidden = rawMode || !audioEnabled;
+
+      if (rawMode) {
+        configSummary.textContent = '当前配置：仅合并单 HTML，不执行图片压缩、音频压缩、Brotli 压缩或 Payload 编码。该模式通常约 20 MB，用于兼容基线和竞品能力对照。';
+        return;
+      }
 
       try {
         const config = readConfig();
@@ -318,6 +355,7 @@ export function createWebMvpIndexHtml(): string {
       statusElement.textContent = '已应用推荐预设。';
     });
 
+    buildModeInput.addEventListener('change', refreshConfigUi);
     imageModeInput.addEventListener('change', refreshConfigUi);
     pngQualityInput.addEventListener('input', refreshConfigUi);
     jpegQualityInput.addEventListener('input', refreshConfigUi);
