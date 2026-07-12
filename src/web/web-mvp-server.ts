@@ -8,7 +8,10 @@ import {
   createChannelDownloadArtifact,
   createChannelHtml,
 } from "../channel/liftoff-delivery.js";
-import { createChannelReport } from "../channel/channel-profile.js";
+import {
+  createChannelReport,
+  type ChannelPlatform,
+} from "../channel/channel-profile.js";
 import type { BuildPlayableFunction } from "./web-job-manager.js";
 import { WebJobManager } from "./web-job-manager.js";
 import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
@@ -16,6 +19,15 @@ import { loadWebVersionInfo, type WebVersionInfo } from "./web-version-info.js";
 
 const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_BYTES = 64 * 1024;
+const DELIVERY_READY_PLATFORMS = new Set<ChannelPlatform>([
+  "AppLovin",
+  "Google",
+  "Facebook",
+  "Liftoff",
+  "IronSource",
+  "Unity",
+  "Moloco",
+]);
 
 export interface WebMvpServerOptions {
   host?: string;
@@ -220,6 +232,27 @@ async function sendChannelHtml(
   response.end(html);
 }
 
+function deliveryWarning(platform: ChannelPlatform): string {
+  switch (platform) {
+    case "AppLovin":
+      return "已生成 AppLovin 单 HTML，并注入 MRAID 生命周期与下载桥；正式投放前仍需通过 AppLovin Validator。";
+    case "Google":
+      return "已生成包含 index.html 与 res.js 的 Google ZIP，并引用 Exit API；正式投放前仍需通过 Google Ads 验证。";
+    case "Facebook":
+      return "已生成包含 index.html 与 res.js 的 Facebook ZIP；正式投放前仍需通过 Meta Validator。";
+    case "Liftoff":
+      return "已生成根目录仅含 index.html 的 Liftoff ZIP；正式投放前仍需通过目标渠道 Validator。";
+    case "IronSource":
+      return "已生成 IronSource 单 HTML，并注入 MRAID 生命周期与下载桥；正式投放前仍需通过 IronSource 验证。";
+    case "Unity":
+      return "已生成 Unity Ads 单 HTML，并依赖宿主提供 mraid；正式投放前仍需通过 Unity Ads 验证。";
+    case "Moloco":
+      return "已生成 Moloco 单 HTML，并按历史兼容基线注入 CTA 下载桥；正式投放前仍需通过 Moloco 验证。";
+    case "Preview":
+      return "本地预览只验证浏览器运行，不代表任何广告渠道审核结果。";
+  }
+}
+
 async function sendChannelReport(
   response: ServerResponse,
   reportFile: string,
@@ -243,32 +276,21 @@ async function sendChannelReport(
   const baseChannel = createChannelReport(job.config.channel);
   const report = parsed as Record<string, unknown>;
   const platform = job.config.channel.platform;
-  const isPackagedChannel = platform === "Liftoff" || platform === "Facebook";
+  const isDeliveryReady = DELIVERY_READY_PLATFORMS.has(platform);
   const isMraid = baseChannel.bridge === "mraid";
-  const integrationStatus = isPackagedChannel
+  const integrationStatus = isDeliveryReady
     ? "channel-delivery-ready"
     : isMraid
       ? "mraid-lifecycle-injected"
       : "download-bridge-injected";
 
-  let primaryWarning: string;
-  if (platform === "Liftoff") {
-    primaryWarning = "已生成根目录仅含 index.html 的 Liftoff ZIP；正式投放前仍需通过目标渠道 Validator。";
-  } else if (platform === "Facebook") {
-    primaryWarning = "已生成包含 index.html 与 res.js 的 Facebook ZIP；正式投放前仍需通过 Meta Validator。";
-  } else if (isMraid) {
-    primaryWarning = "已注入 MRAID 生命周期和下载桥；渠道专用交付容器按 Profile 状态处理。";
-  } else {
-    primaryWarning = "已向下载和在线试玩的 HTML 注入渠道下载桥；渠道专用交付容器按 Profile 状态处理。";
-  }
-
   report.channel = {
     ...baseChannel,
     integrationStatus,
-    warnings: [primaryWarning, ...baseChannel.warnings],
+    warnings: [deliveryWarning(platform), ...baseChannel.warnings],
   };
 
-  if (isPackagedChannel) {
+  if (isDeliveryReady) {
     const htmlFile = manager.getArtifactPath(jobId, "html");
     if (htmlFile === null) {
       requestError(response, 404, "ARTIFACT_NOT_FOUND", "渠道 HTML 产物不存在。");
