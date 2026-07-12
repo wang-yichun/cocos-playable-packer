@@ -82,7 +82,7 @@ async function initializeCodec(): Promise<void> {
   return codecInitialization;
 }
 
-async function encode(source: Buffer, quality: number): Promise<{ buffer: Buffer; width: number; height: number; hasAlpha: boolean }> {
+export async function encodeWebpCandidate(source: Buffer, quality: number): Promise<{ buffer: Buffer; width: number; height: number; hasAlpha: boolean }> {
   await initializeCodec();
   const decoded = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const pixels = new Uint8ClampedArray(decoded.data.byteLength);
@@ -157,7 +157,7 @@ export async function benchmarkBuildWebp(options: Options): Promise<void> {
     const sourceFormat = extension === ".png" ? "png" : "jpeg";
     const quality = sourceFormat === "png" ? options.pngQuality : options.jpegQuality;
     const source = await readFile(absolutePath);
-    const webp = await encode(source, quality);
+    const webp = await encodeWebpCandidate(source, quality);
     const originalPath = path.join(outputRoot, "originals", ...relativePath.split("/"));
     const candidateRelativePath = relativePath.replace(/\.(png|jpe?g)$/i, ".webp");
     const candidatePath = path.join(outputRoot, "candidates", ...candidateRelativePath.split("/"));
