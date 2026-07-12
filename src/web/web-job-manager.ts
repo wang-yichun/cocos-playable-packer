@@ -62,7 +62,8 @@ interface StoredUpload extends WebUploadReceipt {
   filePath: string;
 }
 
-interface InternalWebJob extends PublicWebJob {
+interface InternalWebJob extends Omit<PublicWebJob, "recentLogs"> {
+  recentLogs: string[];
   uploadPath: string;
   jobDirectory: string;
   extractionDirectory: string;
