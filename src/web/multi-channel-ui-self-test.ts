@@ -1,11 +1,22 @@
 import assert from "node:assert/strict";
 import { Script } from "node:vm";
 
+import { CHANNEL_PLATFORMS } from "../channel/channel-profile.js";
 import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
 
 const html = createChannelWebMvpIndexHtml();
-assert.equal((html.match(/name="channelPlatform"/g) ?? []).length, 8);
-assert.equal((html.match(/name="channelPlatform"[^>]*checked/g) ?? []).length, 8);
+const channelCheckboxes = html.match(
+  /<input\s+type="checkbox"\s+name="channelPlatform"\s+value="[^"]+"\s+checked>/g,
+) ?? [];
+assert.equal(channelCheckboxes.length, CHANNEL_PLATFORMS.length);
+for (const platform of CHANNEL_PLATFORMS) {
+  assert.match(
+    html,
+    new RegExp(
+      `<input\\s+type="checkbox"\\s+name="channelPlatform"\\s+value="${platform}"\\s+checked>`,
+    ),
+  );
+}
 assert.match(html, /目标渠道（可多选）/);
 assert.match(html, /默认全选/);
 assert.match(html, /选择试玩渠道/);
