@@ -180,6 +180,16 @@ export function createChannelWebMvpIndexHtml(
     `    const channelProfiles = ${profilesJson};
     const testAndroidStoreUrl = ${testAndroidUrlJson};
     const testIosStoreUrl = ${testIosUrlJson};
+    const channelDownloadLabels = {
+      Preview: '下载 HTML',
+      AppLovin: '下载 AppLovin HTML',
+      Google: '下载 Google ZIP',
+      Facebook: '下载 Facebook ZIP',
+      Liftoff: '下载 Liftoff ZIP',
+      IronSource: '下载 IronSource HTML',
+      Unity: '下载 Unity Ads HTML',
+      Moloco: '下载 Moloco HTML',
+    };
     const recommendedConfig = `,
   );
 
@@ -263,12 +273,7 @@ export function createChannelWebMvpIndexHtml(
           + ' / 必需全局对象：'
           + (channelProfile.requiredGlobals.length === 0 ? '无' : channelProfile.requiredGlobals.join(', '));
         channelWarning.textContent = channelProfile.warnings.join(' ');
-        const selectedPlatform = channelPlatformInput.value;
-        htmlLink.textContent = selectedPlatform === 'Liftoff'
-          ? '下载 Liftoff ZIP'
-          : selectedPlatform === 'Facebook'
-            ? '下载 Facebook ZIP'
-            : '下载 HTML';
+        htmlLink.textContent = channelDownloadLabels[channelPlatformInput.value] || '下载 HTML';
       }`,
   );
 
@@ -276,12 +281,8 @@ export function createChannelWebMvpIndexHtml(
     html,
     "        htmlLink.href = job.links.html + '?download=1';",
     `        htmlLink.href = job.links.html + '?download=1';
-        const completedPlatform = job.config?.channel?.platform;
-        htmlLink.textContent = completedPlatform === 'Liftoff'
-          ? '下载 Liftoff ZIP'
-          : completedPlatform === 'Facebook'
-            ? '下载 Facebook ZIP'
-            : '下载 HTML';`,
+        const completedPlatform = job.config?.channel?.platform || 'Preview';
+        htmlLink.textContent = channelDownloadLabels[completedPlatform] || '下载 HTML';`,
   );
 
   html = replaceOnce(

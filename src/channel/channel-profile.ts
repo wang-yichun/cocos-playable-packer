@@ -69,10 +69,8 @@ export const TEST_ANDROID_STORE_URL =
 export const TEST_IOS_STORE_URL =
   "https://apps.apple.com/app/google-maps/id585027354";
 
-const DELIVERY_PENDING_WARNING =
-  "已注入渠道下载桥，但尚未生成该渠道要求的专用交付容器。";
 const MRAID_LIFECYCLE_WARNING =
-  "已注入 MRAID ready/viewable、尺寸、音量和下载桥；尚未通过目标渠道最新官方 Validator。";
+  "已注入 MRAID ready/viewable、尺寸、音量和下载桥；正式投放前仍需通过目标渠道最新 Validator。";
 
 export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>> = {
   Preview: {
@@ -112,8 +110,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     ],
     requiresExternalApi: true,
     warnings: [
-      DELIVERY_PENDING_WARNING,
-      "历史成品交付为 ZIP（index.html + res.js）；当前阶段尚未切换输出结构。",
+      "当前实现会生成 ZIP（index.html + res.js）、引用 Exit API，并优先调用 ExitApi.exit()；正式投放前仍需通过 Google Ads 验证。",
     ],
   },
   Facebook: {
@@ -155,7 +152,10 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     requiredGlobals: ["mraid"],
     externalScripts: [],
     requiresExternalApi: true,
-    warnings: [MRAID_LIFECYCLE_WARNING],
+    warnings: [
+      MRAID_LIFECYCLE_WARNING,
+      "当前实现生成单 HTML，并依赖 IronSource 宿主提供 mraid 全局对象。",
+    ],
   },
   Unity: {
     platform: "Unity",
@@ -165,11 +165,11 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     startupPolicy: "mraid-viewable",
     analyticsAdapter: "none",
     requiredGlobals: ["mraid"],
-    externalScripts: ["mraid.js"],
+    externalScripts: ["mraid.js (host-provided)"],
     requiresExternalApi: true,
     warnings: [
       MRAID_LIFECYCLE_WARNING,
-      "历史成品包含 mraid.js 占位引用但未携带该文件，不能把本地模拟器打进正式包。",
+      "当前实现生成单 HTML，并依赖 Unity Ads 宿主注入 mraid；不会把本地模拟器或伪造 mraid.js 打进正式产物。",
     ],
   },
   Moloco: {
@@ -178,12 +178,12 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     deliveryFormat: "single-html",
     bridge: "facebook-cta",
     startupPolicy: "window-load",
-    analyticsAdapter: "custom-beacon",
+    analyticsAdapter: "none",
     requiredGlobals: ["FbPlayableAd"],
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      "已注入 CTA 下载桥；历史成品使用 FbPlayableAd.onCTAClick，仍需结合 Moloco 最新官方规范复核。",
+      "当前实现按历史成品兼容基线使用 FbPlayableAd.onCTAClick，并生成单 HTML；正式投放前仍需通过 Moloco 最新渠道验证。",
       "历史成品中的第三方 beacon 不会作为默认实现复制。",
     ],
   },

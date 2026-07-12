@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Script } from "node:vm";
@@ -18,7 +18,7 @@ import type {
 import { normalizeWebBuildConfig } from "./web-build-config.js";
 import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
 import { startWebMvpServer } from "./web-mvp-server.js";
-import { calculateCrc32 } from "./zip-extractor.js";
+import { calculateCrc32, extractZipArchive } from "./zip-extractor.js";
 
 interface StoredZipEntry {
   name: string;
@@ -115,7 +115,19 @@ async function fakeBuildPlayable(
   await mkdir(path.dirname(request.outputFile), { recursive: true });
   const html = rawMode
     ? "<!doctype html><title>Raw playable test</title><script>window.__raw=true</script>"
-    : "<!doctype html><title>Playable test</title><script>window.__ok=true</script>";
+    : `<!doctype html><html><head><title>Playable test</title></head><body><script>
+window.__PACK_ARCHIVE__={"v":1,"c":"br","e":"base64","b":"QQ=="};
+(function () {
+    async function boot() {
+        window.__ok = true;
+    }
+    boot().catch(
+        function (error) {
+            console.error(error);
+        }
+    );
+})();
+</script></body></html>`;
   await writeFile(request.outputFile, html, "utf8");
   const outputSha256 = createHash("sha256").update(html).digest("hex");
   const reportFile = request.outputFile.replace(/\.html$/i, ".report.json");
@@ -239,12 +251,22 @@ try {
 
   const htmlResponse = await fetch(`${server.url}/artifacts/${jobId}/game.html?download=1`);
   assert.equal(htmlResponse.ok, true);
-  const servedHtml = await htmlResponse.text();
-  assert.match(servedHtml, /Playable test/);
-  assert.match(servedHtml, new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
-  assert.match(servedHtml, /window\.ExitApi\.exit/);
-  assert.match(servedHtml, /com\.google\.android\.apps\.maps/);
-  assert.match(htmlResponse.headers.get("content-disposition") ?? "", /attachment/);
+  assert.match(htmlResponse.headers.get("content-type") ?? "", /application\/zip/);
+  assert.match(htmlResponse.headers.get("content-disposition") ?? "", /google-playable\.zip/);
+  const googleZip = Buffer.from(await htmlResponse.arrayBuffer());
+  const googleZipFile = path.join(temporaryRoot, "google-playable.zip");
+  const googleOutput = path.join(temporaryRoot, "google-output");
+  await writeFile(googleZipFile, googleZip);
+  const googleExtraction = await extractZipArchive(googleZipFile, googleOutput);
+  assert.equal(googleExtraction.fileCount, 2);
+  assert.deepEqual((await readdir(googleOutput)).sort(), ["index.html", "res.js"]);
+  const servedIndex = await readFile(path.join(googleOutput, "index.html"), "utf8");
+  const servedResource = await readFile(path.join(googleOutput, "res.js"), "utf8");
+  assert.match(servedIndex, /Playable test/);
+  assert.match(servedIndex, new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
+  assert.match(servedIndex, /window\.ExitApi\.exit/);
+  assert.match(servedIndex, /com\.google\.android\.apps\.maps/);
+  assert.match(servedResource, /window\.__PACK_ARCHIVE__/);
 
   const reportResponse = await fetch(`${server.url}/artifacts/${jobId}/report.json`);
   const report = await readJson(reportResponse);
@@ -252,8 +274,12 @@ try {
   const reportChannel = report.channel as Record<string, unknown>;
   assert.equal(reportChannel.platform, "Google");
   assert.equal(reportChannel.deliveryFormat, "zip-html-res-js");
-  assert.equal(reportChannel.integrationStatus, "download-bridge-injected");
+  assert.equal(reportChannel.integrationStatus, "channel-delivery-ready");
   assert.deepEqual(reportChannel.requiredGlobals, ["ExitApi"]);
+  const reportDelivery = report.delivery as Record<string, unknown>;
+  assert.equal(reportDelivery.fileName, "google-playable.zip");
+  assert.deepEqual(reportDelivery.entries, ["index.html", "res.js"]);
+  assert.equal(reportDelivery.bytes, googleZip.length);
 
   const previewResponse = await fetch(`${server.url}/preview/${jobId}/`);
   assert.equal(previewResponse.ok, true);

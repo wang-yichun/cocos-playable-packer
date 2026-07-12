@@ -108,8 +108,17 @@ assert.match(html, /不执行图片压缩、音频压缩、Brotli 压缩或 Payl
 assert.match(html, /FFmpeg/);
 assert.match(html, /zip-html-res-js/);
 assert.match(html, /zip-single-html/);
-assert.match(html, /下载 Liftoff ZIP/);
-assert.match(html, /下载 Facebook ZIP/);
+for (const label of [
+  "下载 AppLovin HTML",
+  "下载 Google ZIP",
+  "下载 Facebook ZIP",
+  "下载 Liftoff ZIP",
+  "下载 IronSource HTML",
+  "下载 Unity Ads HTML",
+  "下载 Moloco HTML",
+]) {
+  assert.match(html, new RegExp(label));
+}
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -126,8 +135,7 @@ assert.match(inlineScript, /config: config/);
 assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /buildModeInput\.addEventListener/);
-assert.match(inlineScript, /const completedPlatform = job\.config\?\.channel\?\.platform/);
-assert.match(inlineScript, /completedPlatform === 'Liftoff'/);
-assert.match(inlineScript, /completedPlatform === 'Facebook'/);
+assert.match(inlineScript, /const channelDownloadLabels =/);
+assert.match(inlineScript, /channelDownloadLabels\[completedPlatform\]/);
 
 console.log("Playable Web config panel self-test passed.");

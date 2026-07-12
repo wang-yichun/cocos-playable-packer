@@ -5,9 +5,14 @@ import { injectChannelDownloadBridge } from "./channel-download-bridge.js";
 import type {
   ChannelBuildConfig,
   ChannelDeliveryFormat,
+  ChannelPlatform,
 } from "./channel-profile.js";
 import { HTML_SAFE_7BIT_PAYLOAD_ELEMENT_ID } from "../encoding/html-safe-7bit.js";
 import { calculateCrc32 } from "../web/zip-extractor.js";
+
+export const GOOGLE_EXIT_API_URL =
+  "https://tpc.googlesyndication.com/pagead/gadgets/html5/api/exitapi.js";
+export const CHANNEL_EXTERNAL_SCRIPT_MARKER = "data-cocos-playable-channel-external-script";
 
 export interface ChannelDownloadArtifact {
   body: Buffer;
@@ -32,7 +37,7 @@ interface ScriptBlock {
   body: string;
 }
 
-interface FacebookSplitResult {
+export interface RuntimeSplitResult {
   indexHtml: string;
   resourceJavaScript: string;
 }
@@ -168,7 +173,27 @@ function createHtml7PayloadBootstrap(payload: string): string {
     `})();`;
 }
 
-export function splitFacebookHtml(sourceHtml: string): FacebookSplitResult {
+function injectHeadScript(html: string, script: string): string {
+  const headMatch = /<head\b[^>]*>/i.exec(html);
+  if (headMatch !== null && headMatch.index !== undefined) {
+    const insertionIndex = headMatch.index + headMatch[0].length;
+    return `${html.slice(0, insertionIndex)}\n${script}${html.slice(insertionIndex)}`;
+  }
+  return `${script}\n${html}`;
+}
+
+export function injectGoogleExitApiScript(html: string): string {
+  if (html.includes(CHANNEL_EXTERNAL_SCRIPT_MARKER) || html.includes(GOOGLE_EXIT_API_URL)) {
+    return html;
+  }
+  const script = `<script ${CHANNEL_EXTERNAL_SCRIPT_MARKER} async src="${GOOGLE_EXIT_API_URL}"></script>`;
+  return injectHeadScript(html, script);
+}
+
+export function splitRuntimeHtml(
+  sourceHtml: string,
+  channelName: string,
+): RuntimeSplitResult {
   const scripts = scanScriptBlocks(sourceHtml);
   const runtime = [...scripts].reverse().find((block) => {
     if (/\bsrc\s*=/i.test(block.attributes)) {
@@ -180,7 +205,7 @@ export function splitFacebookHtml(sourceHtml: string): FacebookSplitResult {
   });
 
   if (runtime === undefined) {
-    throw new Error("Facebook 交付无法定位 Playable 主运行时 script。");
+    throw new Error(`${channelName} 交付无法定位 Playable 主运行时 script。`);
   }
 
   const payload = [...scripts]
@@ -191,15 +216,15 @@ export function splitFacebookHtml(sourceHtml: string): FacebookSplitResult {
     );
 
   if (sourceHtml.includes(HTML_SAFE_7BIT_PAYLOAD_ELEMENT_ID) && payload === undefined) {
-    throw new Error("Facebook 交付检测到 HTML7 Payload，但无法定位 Payload script。");
+    throw new Error(`${channelName} 交付检测到 HTML7 Payload，但无法定位 Payload script。`);
   }
 
   if (payload !== undefined && sourceHtml.slice(payload.end, runtime.start).trim().length > 0) {
-    throw new Error("Facebook 交付要求 HTML7 Payload 与主运行时 script 相邻。");
+    throw new Error(`${channelName} 交付要求 HTML7 Payload 与主运行时 script 相邻。`);
   }
 
   const resourceParts: string[] = [
-    "/* Cocos Playable Packer Facebook resource */",
+    `/* Cocos Playable Packer ${channelName} resource */`,
   ];
   if (payload !== undefined) {
     resourceParts.push(createHtml7PayloadBootstrap(payload.body));
@@ -213,13 +238,60 @@ export function splitFacebookHtml(sourceHtml: string): FacebookSplitResult {
   const resourceJavaScript = `${resourceParts.join("\n\n")}\n`;
 
   if (!indexHtml.includes('<script src="res.js"></script>')) {
-    throw new Error("Facebook 交付没有生成 res.js 引用。");
+    throw new Error(`${channelName} 交付没有生成 res.js 引用。`);
   }
   if (resourceJavaScript.trim().length === 0) {
-    throw new Error("Facebook res.js 为空。");
+    throw new Error(`${channelName} res.js 为空。`);
   }
 
   return { indexHtml, resourceJavaScript };
+}
+
+export function splitFacebookHtml(sourceHtml: string): RuntimeSplitResult {
+  return splitRuntimeHtml(sourceHtml, "Facebook");
+}
+
+function createZipHtmlResJsArtifact(
+  html: string,
+  channelName: string,
+  fileName: string,
+): ChannelDownloadArtifact {
+  const split = splitRuntimeHtml(html, channelName);
+  const indexBuffer = Buffer.from(split.indexHtml, "utf8");
+  const resourceBuffer = Buffer.from(split.resourceJavaScript, "utf8");
+  const entries = [
+    { name: "index.html", content: indexBuffer },
+    { name: "res.js", content: resourceBuffer },
+  ] as const;
+  const body = createDeterministicZip(entries);
+  return {
+    body,
+    contentType: "application/zip",
+    fileName,
+    deliveryFormat: "zip-html-res-js",
+    entries: entries.map((entry) => entry.name),
+    entryBytes: {
+      "index.html": indexBuffer.length,
+      "res.js": resourceBuffer.length,
+    },
+    sha256: sha256(body),
+    htmlBytes: indexBuffer.length,
+  };
+}
+
+function singleHtmlFileName(platform: ChannelPlatform): string {
+  switch (platform) {
+    case "AppLovin":
+      return "applovin-playable.html";
+    case "IronSource":
+      return "ironsource-playable.html";
+    case "Unity":
+      return "unity-playable.html";
+    case "Moloco":
+      return "moloco-playable.html";
+    default:
+      return "game.html";
+  }
 }
 
 export function createChannelHtml(
@@ -233,30 +305,15 @@ export function createChannelDownloadArtifact(
   sourceHtml: string,
   config: ChannelBuildConfig,
 ): ChannelDownloadArtifact {
-  const html = createChannelHtml(sourceHtml, config);
+  let html = createChannelHtml(sourceHtml, config);
+
+  if (config.platform === "Google") {
+    html = injectGoogleExitApiScript(html);
+    return createZipHtmlResJsArtifact(html, "Google", "google-playable.zip");
+  }
 
   if (config.platform === "Facebook") {
-    const split = splitFacebookHtml(html);
-    const indexBuffer = Buffer.from(split.indexHtml, "utf8");
-    const resourceBuffer = Buffer.from(split.resourceJavaScript, "utf8");
-    const entries = [
-      { name: "index.html", content: indexBuffer },
-      { name: "res.js", content: resourceBuffer },
-    ] as const;
-    const body = createDeterministicZip(entries);
-    return {
-      body,
-      contentType: "application/zip",
-      fileName: "facebook-playable.zip",
-      deliveryFormat: "zip-html-res-js",
-      entries: entries.map((entry) => entry.name),
-      entryBytes: {
-        "index.html": indexBuffer.length,
-        "res.js": resourceBuffer.length,
-      },
-      sha256: sha256(body),
-      htmlBytes: indexBuffer.length,
-    };
+    return createZipHtmlResJsArtifact(html, "Facebook", "facebook-playable.zip");
   }
 
   const htmlBuffer = Buffer.from(html, "utf8");
@@ -275,13 +332,14 @@ export function createChannelDownloadArtifact(
     };
   }
 
+  const fileName = singleHtmlFileName(config.platform);
   return {
     body: htmlBuffer,
     contentType: "text/html; charset=utf-8",
-    fileName: "game.html",
+    fileName,
     deliveryFormat: "single-html",
-    entries: ["game.html"],
-    entryBytes: { "game.html": htmlBuffer.length },
+    entries: [fileName],
+    entryBytes: { [fileName]: htmlBuffer.length },
     sha256: sha256(htmlBuffer),
     htmlBytes: htmlBuffer.length,
   };
