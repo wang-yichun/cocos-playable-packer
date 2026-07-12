@@ -309,6 +309,8 @@ async function main(): Promise<void> {
       "  --quality=80       --png-quality 的兼容别名",
       "  --audio-bitrate=48  可选：将更高码率 MP3 转为目标码率并保持声道",
       "  --ffmpeg=ffmpeg     可选：FFmpeg 命令或可执行文件路径",
+      "  --image-mode=webp    可选：将 PNG/JPEG 编码为 WebP 内容",
+      "  --png-webp-quality=80 --jpeg-webp-quality=80",
     ].join("\n"));
   }
 
