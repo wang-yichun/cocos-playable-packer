@@ -22,7 +22,42 @@ https://ffmpeg.org/download.html
 - Web MVP 保持音频压缩关闭；
 - 只执行图片压缩、Brotli 打包或 Payload 编码。
 
-## 2. Windows 手动安装
+## 2. 推荐：使用 Winget 自动安装
+
+Windows 11 或已安装 Windows Package Manager 的系统，推荐直接在 PowerShell 中执行：
+
+```powershell
+winget install --id Gyan.FFmpeg -e --source winget
+```
+
+参数含义：
+
+- `--id Gyan.FFmpeg`：指定 FFmpeg 软件包 ID；
+- `-e`：要求软件包 ID 精确匹配；
+- `--source winget`：明确使用 Winget 公共软件源。
+
+安装完成后，关闭并重新打开 PowerShell、VS Code 终端以及已经启动的 Web MVP 服务，然后执行后文的验证命令。
+
+已经安装过 FFmpeg 时，可以通过以下命令检查并升级：
+
+```powershell
+winget upgrade --id Gyan.FFmpeg -e --source winget
+```
+
+如果系统无法识别 `winget`，先确认 Windows Package Manager 是否可用：
+
+```powershell
+winget --version
+```
+
+如果软件源异常，可尝试：
+
+```powershell
+winget source update
+winget search --id Gyan.FFmpeg -e --source winget
+```
+
+## 3. 备用：Windows 手动安装
 
 1. 打开 FFmpeg 官方下载页面：
 
@@ -64,7 +99,7 @@ Windows 图形界面中的常见入口：
 → 新建
 ```
 
-## 3. 安装验证
+## 4. 安装验证
 
 在新的 PowerShell 窗口中执行：
 
@@ -83,7 +118,7 @@ ffmpeg -encoders | Select-String libmp3lame
 
 只要 `ffmpeg -version` 失败，项目中的音频转码也会失败。
 
-## 4. CLI 使用完整路径
+## 5. CLI 使用完整路径
 
 不想修改系统 `Path` 时，可以在支持 `--ffmpeg` 的 CLI 命令中直接指定可执行文件：
 
@@ -108,7 +143,7 @@ npm run audio:optimize -- `
 
 当前 Web MVP 页面尚未提供 FFmpeg 路径输入框。Web MVP 启用音频压缩时，启动服务的进程必须能通过 `Path` 找到 `ffmpeg`。
 
-## 5. `spawn ffmpeg ENOENT`
+## 6. `spawn ffmpeg ENOENT`
 
 典型错误：
 
@@ -125,7 +160,7 @@ where.exe ffmpeg
 ffmpeg -version
 ```
 
-如果刚刚修改过 `Path`：
+如果刚刚通过 Winget 安装 FFmpeg，或刚刚修改过 `Path`：
 
 1. 停止当前服务；
 2. 关闭当前 PowerShell 或 VS Code 终端；
@@ -133,7 +168,7 @@ ffmpeg -version
 4. 再次验证 `ffmpeg -version`；
 5. 重新执行 `npm run web:mvp` 或相关构建命令。
 
-## 6. 找不到 `libmp3lame`
+## 7. 找不到 `libmp3lame`
 
 如果 `ffmpeg` 可以启动，但日志提示 MP3 编码器不存在，请执行：
 
@@ -143,16 +178,17 @@ ffmpeg -encoders | Select-String libmp3lame
 
 没有结果时，应更换为包含 `libmp3lame` 的 Windows 构建。仅有 `ffmpeg.exe` 并不一定代表该构建包含项目需要的全部编码器。
 
-## 7. 新电脑检查清单
+## 8. 新电脑检查清单
 
 ```powershell
 node --version
 npm --version
 npm ci
 npm run typecheck
+winget install --id Gyan.FFmpeg -e --source winget
 where.exe ffmpeg
 ffmpeg -version
 ffmpeg -encoders | Select-String libmp3lame
 ```
 
-不使用音频压缩时，最后三项可以跳过。
+不使用音频压缩时，FFmpeg 安装和最后三项检查可以跳过。
