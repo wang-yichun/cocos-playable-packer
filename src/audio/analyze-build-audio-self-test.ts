@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { analyzeAudioDirectory } from './analyze-build-audio.js';
+import { analyzeAudioDirectory, inspectMp3Layout } from './analyze-build-audio.js';
 
 function makeWav(): Buffer {
     const dataBytes = 8000;
@@ -13,6 +13,23 @@ function makeWav(): Buffer {
     buffer.write('data', 36); buffer.writeUInt32LE(dataBytes, 40);
     return buffer;
 }
+
+function makeTaggedMp3(): Buffer {
+    const buffer = Buffer.alloc(10 + 20 + 100 + 128, 0x55);
+    buffer.write('ID3', 0);
+    buffer.fill(0, 3, 10);
+    buffer[3] = 4;
+    buffer[9] = 20;
+    buffer.write('TAG', buffer.length - 128);
+    return buffer;
+}
+
+const layout = inspectMp3Layout(makeTaggedMp3());
+assert.equal(layout.id3v2Bytes, 30);
+assert.equal(layout.id3v1Bytes, 128);
+assert.equal(layout.totalId3Bytes, 158);
+assert.equal(layout.audioPayloadBytes, 100);
+assert.ok(layout.estimatedSingleFileBrotliSavingsBytes > 0);
 
 const root = await mkdtemp(path.join(tmpdir(), 'audio-analysis-'));
 await mkdir(path.join(root, 'assets'));
