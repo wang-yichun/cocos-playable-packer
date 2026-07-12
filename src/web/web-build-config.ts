@@ -33,6 +33,15 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   brotliFallback: "raw-js",
 };
 
+export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
+  imageMode: "webp",
+  pngQuality: 80,
+  jpegQuality: 80,
+  audioBitrateKbps: 48,
+  payloadEncoding: "html7",
+  brotliFallback: "raw-js",
+};
+
 function integerInRange(
   value: unknown,
   name: string,

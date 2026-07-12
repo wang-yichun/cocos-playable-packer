@@ -1,8 +1,10 @@
 # Web MVP：ZIP 上传并生成 Playable HTML
 
-当前 Web MVP 用于验证最小业务闭环：
+当前 Web MVP 用于验证以下业务闭环：
 
 ```text
+选择构建配置
+    ↓
 上传 web-mobile.zip
     ↓
 服务端安全校验并解压
@@ -35,7 +37,39 @@ $env:PLAYABLE_WEB_ROOT = ".packer-web"
 npm run web:mvp
 ```
 
-## 默认构建参数
+## 基础配置面板
+
+网页当前开放以下配置：
+
+- 图片模式：`none`、`squoosh`、`webp`；
+- PNG 质量；
+- JPEG 质量；
+- 音频压缩开关；
+- 音频目标码率；
+- Payload 编码：`base64`、`base91`、`html7`。
+
+Brotli 回退模式在当前基础面板中固定为：
+
+```text
+raw-js
+```
+
+选择 `none` 时，PNG 和 JPEG 质量输入会自动禁用。关闭音频压缩时，音频码率输入会自动禁用。
+
+页面会在构建前校验：
+
+```text
+WebP PNG 质量：1-100
+Squoosh PNG 质量：0-100
+JPEG 质量：1-100
+音频码率：8-320 kbps
+```
+
+构建开始后，ZIP 选择和全部配置控件会锁定，防止任务参数在执行期间变化。
+
+## 默认配置
+
+页面首次打开时采用不依赖 FFmpeg 的安全默认配置：
 
 ```text
 图片：WebP
@@ -46,29 +80,47 @@ Payload：HTML7
 Brotli 回退：raw-js
 ```
 
-音频压缩默认关闭，因此最小流程不要求系统安装 FFmpeg。后续配置面板可让用户主动开启音频压缩；启用时服务器必须能够执行 `ffmpeg`。
+## 一键推荐预设
 
-网页暂时不展示配置面板，但创建任务接口已经接受 `config` 对象，后续可以在不修改上传流程的情况下加入参数控件。
+点击“应用一键推荐预设”后，页面会切换为当前已经完成真实游戏试玩验证的组合：
+
+```text
+图片：WebP
+PNG WebP Quality：80
+JPEG WebP Quality：80
+音频：48 kbps，保持原声道数
+Payload：HTML7
+Brotli 回退：raw-js
+```
+
+推荐预设会启用音频压缩，因此启动 Web MVP 的系统必须能够执行 FFmpeg。
 
 ## FFmpeg 与 Web MVP
 
 FFmpeg 是外部程序，不会由 `npm ci` 或 `npm install` 自动安装。
 
-以下情况不需要 FFmpeg：
+Windows 推荐安装命令：
 
-- 使用当前默认配置；
-- `audioBitrateKbps` 为 `null`；
-- 只执行图片优化、Brotli 打包和 Payload 编码。
+```powershell
+winget install --id Gyan.FFmpeg -e --source winget
+```
 
-将 `audioBitrateKbps` 设置为 `8-320` 后，启动 Web MVP 的 Node.js 进程必须能从 Windows `Path` 中找到 `ffmpeg`。
-
-启动服务前建议验证：
+安装后重新打开 PowerShell 或 VS Code 终端，并验证：
 
 ```powershell
 where.exe ffmpeg
 ffmpeg -version
 ffmpeg -encoders | Select-String libmp3lame
 ```
+
+以下情况不需要 FFmpeg：
+
+- 使用页面默认配置；
+- 音频压缩开关关闭；
+- `audioBitrateKbps` 为 `null`；
+- 只执行图片优化、Brotli 打包和 Payload 编码。
+
+启用音频压缩后，启动 Web MVP 的 Node.js 进程必须能从 Windows `Path` 中找到 `ffmpeg`。
 
 典型缺失错误：
 
@@ -86,7 +138,7 @@ ffmpeg -encoders | Select-String libmp3lame
 4. 确认 `ffmpeg -version` 成功；
 5. 重新执行 `npm run web:mvp`。
 
-当前 Web MVP 配置接口尚未开放自定义 `ffmpegPath`，因此启用音频压缩时应通过系统 `Path` 提供 FFmpeg。完整安装与排查步骤见 [FFmpeg 安装说明](ffmpeg-installation.md)。
+当前 Web MVP 配置接口尚未开放自定义 `ffmpegPath`，因此启用音频压缩时应通过系统 `Path` 提供 FFmpeg。完整说明见 [FFmpeg 安装说明](ffmpeg-installation.md)。
 
 ## API
 
@@ -113,19 +165,29 @@ Content-Type: application/json
     "imageMode": "webp",
     "pngQuality": 80,
     "jpegQuality": 80,
-    "audioBitrateKbps": null,
+    "audioBitrateKbps": 48,
     "payloadEncoding": "html7",
     "brotliFallback": "raw-js"
   }
 }
 ```
 
-`config` 可省略。当前支持：
+关闭音频时发送：
+
+```json
+{
+  "audioBitrateKbps": null
+}
+```
+
+`config` 可省略。省略后使用服务端默认配置。
+
+当前支持：
 
 - `imageMode`：`none`、`squoosh`、`webp`；
 - `pngQuality`；
 - `jpegQuality`；
-- `audioBitrateKbps`：默认和 `null` 均表示关闭；传入 `8-320` 可主动开启；
+- `audioBitrateKbps`：`null` 表示关闭，`8-320` 表示启用；
 - `payloadEncoding`：`base64`、`base91`、`html7`；
 - `brotliFallback`：`raw-js`、`gzip-packed-js`。
 
@@ -202,7 +264,8 @@ ZIP 根目录本身，或唯一一级子目录中必须存在 `index.html`。
 - 没有对象存储、Redis 或持久化数据库；
 - 试玩页面与管理页面仍是同一 Origin；
 - 没有自动清理历史输出目录；
-- 取消操作不能中断正在同步解压的单个 ZIP 文件，只会在解压后停止或终止 Pipeline。
+- 取消操作不能中断正在同步解压的单个 ZIP 文件，只会在解压后停止或终止 Pipeline；
+- 基础面板暂未开放 TinyPNG、FFmpeg 路径和 Brotli 回退模式。
 
 正式公网部署前，应将试玩产物放到独立域名，并增加容器资源限制、任务持久化、文件保留策略和身份认证。
 
@@ -215,7 +278,9 @@ npm run test:web-mvp
 
 自测覆盖：
 
-- 默认配置和配置校验；
+- 默认配置和推荐预设；
+- 配置控件和任务请求结构；
+- 页面内嵌脚本语法；
 - ZIP 生成、上传、解压；
 - 一级 `web-mobile` 目录识别；
 - 任务创建与轮询；
