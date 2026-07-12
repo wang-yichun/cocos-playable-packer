@@ -86,7 +86,7 @@ export function createWebMvpIndexHtml(): string {
       const job = payload.job;
       statusElement.textContent = job.message + '（' + job.status + '）';
       updateProgress(job.status);
-      logsElement.textContent = job.recentLogs.length === 0 ? '暂无日志。' : job.recentLogs.join('\n');
+      logsElement.textContent = job.recentLogs.length === 0 ? '暂无日志。' : job.recentLogs.join('\\n');
       logsElement.scrollTop = logsElement.scrollHeight;
 
       if (job.status === 'succeeded') {
