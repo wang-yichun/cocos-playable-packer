@@ -81,7 +81,7 @@ async function fakeBuildPlayable(
   assert.equal(request.image.mode, "webp");
   assert.equal(request.payloadEncoding, "html7");
   assert.equal(request.brotliFallback, "raw-js");
-  assert.equal(request.audio?.bitrateKbps, 48);
+  assert.equal(request.audio, null);
   const indexHtml = await readFile(path.join(request.inputDirectory, "index.html"), "utf8");
   assert.match(indexHtml, /Cocos test/);
 
@@ -152,7 +152,7 @@ assert.deepEqual(defaults, {
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
-  audioBitrateKbps: 48,
+  audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
 });
@@ -164,6 +164,10 @@ assert.equal(
   normalizeWebBuildConfig({ audioBitrateKbps: null }).audioBitrateKbps,
   null,
 );
+assert.equal(
+  normalizeWebBuildConfig({ audioBitrateKbps: 48 }).audioBitrateKbps,
+  48,
+);
 
 const generatedIndexHtml = createWebMvpIndexHtml();
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(generatedIndexHtml);
@@ -171,6 +175,7 @@ assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
 assert.match(inlineScript, /recentLogs\.join\('\\n'\)/);
+assert.match(generatedIndexHtml, /不处理音频/);
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "playable-web-mvp-"));
 const server = await startWebMvpServer({
