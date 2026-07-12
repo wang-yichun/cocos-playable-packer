@@ -26,6 +26,8 @@
     "test:audio-optimize": "tsx src/audio/optimize-build-audio-self-test.ts",
     "webp:benchmark-build": "tsx src/webp/benchmark-build-webp.ts",
     "test:webp-benchmark": "tsx src/webp/benchmark-build-webp-self-test.ts && tsx src/images/image-content-type-self-test.ts",
+    "webp:optimize-build": "tsx src/webp/optimize-build-webp.ts",
+    "test:webp-optimize": "tsx src/webp/optimize-build-webp-self-test.ts",
     "tinypng:build": "node --env-file=.env --import tsx src/tinypng-build/compress-build-images.ts",
     "squoosh:test-one": "tsx src/squoosh/test-one.ts",
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
