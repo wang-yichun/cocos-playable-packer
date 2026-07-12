@@ -183,8 +183,8 @@ export function createMultiChannelDownloadArtifact(
   config: ChannelBuildConfig & { platforms?: readonly ChannelPlatform[] },
 ): MultiChannelDownloadArtifact {
   const platforms = selectedChannelPlatforms(config);
-  if (platforms.length < 2) {
-    throw new Error("多渠道交付包至少需要两个渠道。");
+  if (platforms.length === 0) {
+    throw new Error("多渠道交付包至少需要一个渠道。");
   }
 
   const channelArtifacts: MultiChannelArtifactEntry[] = platforms.map((platform) => {
