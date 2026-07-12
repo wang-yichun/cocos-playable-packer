@@ -307,6 +307,8 @@ async function main(): Promise<void> {
       "  --png-quality=80   PNG 调色板量化质量，范围 0-100",
       "  --jpeg-quality=80  MozJPEG 质量，范围 1-100",
       "  --quality=80       --png-quality 的兼容别名",
+      "  --audio-bitrate=48  可选：将更高码率 MP3 转为目标码率并保持声道",
+      "  --ffmpeg=ffmpeg     可选：FFmpeg 命令或可执行文件路径",
     ].join("\n"));
   }
 
