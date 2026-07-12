@@ -30,6 +30,8 @@ interface Options {
   effort: number;
   dither: number;
   oxipngLevel: number;
+  audioBitrateKbps: number | null;
+  ffmpegPath: string;
 }
 
 interface DirectoryStats {
@@ -37,6 +39,8 @@ interface DirectoryStats {
   totalBytes: number;
   imageCount: number;
   imageBytes: number;
+  audioCount: number;
+  audioBytes: number;
 }
 
 interface BuildReport {
@@ -55,6 +59,8 @@ interface BuildReport {
     totalBytes: number;
     imageCount: number;
     imageBytes: number;
+    audioCount: number;
+    audioBytes: number;
   };
   workspace: {
     runDirectory: string;
@@ -63,6 +69,15 @@ interface BuildReport {
   };
   imageOptimization: {
     mode: ImageMode;
+    beforeBytes: number;
+    afterBytes: number;
+    savedBytes: number;
+    savedPercent: number;
+  };
+  audioOptimization: {
+    enabled: boolean;
+    targetBitrateKbps: number | null;
+    preserveChannels: true;
     beforeBytes: number;
     afterBytes: number;
     savedBytes: number;
@@ -78,6 +93,7 @@ interface BuildReport {
   timingMs: {
     copy: number;
     imageOptimization: number;
+    audioOptimization: number;
     packaging: number;
     total: number;
   };
@@ -96,6 +112,8 @@ function usage(): string {
     "通用参数：",
     "  --project=<项目名>       显式指定 workspaces 下的项目名",
     "  --keep-workspace         成功后保留本次 web-mobile 副本",
+    "  --audio-bitrate=48       将更高码率 MP3 转为目标码率；不传则关闭",
+    "  --ffmpeg=ffmpeg          FFmpeg 命令或可执行文件路径",
     "",
     "TinyPNG 参数：",
     "  --all | --limit=N [--min-bytes=N]",
@@ -153,6 +171,8 @@ function parseArguments(argv: readonly string[]): Options {
   let effort = 10;
   let dither = 0.5;
   let oxipngLevel = 3;
+  let audioBitrateKbps: number | null = null;
+  let ffmpegPath = "ffmpeg";
 
   for (const argument of args) {
     if (argument === "-h" || argument === "--help") {
@@ -274,6 +294,27 @@ function parseArguments(argv: readonly string[]): Options {
       continue;
     }
 
+    if (argument.startsWith("--audio-bitrate=")) {
+      if (audioBitrateKbps !== null) {
+        throw new Error("--audio-bitrate 只能指定一次。");
+      }
+      audioBitrateKbps = parseInteger(
+        argument.slice("--audio-bitrate=".length),
+        "--audio-bitrate",
+        8,
+        320,
+      );
+      continue;
+    }
+
+    if (argument.startsWith("--ffmpeg=")) {
+      ffmpegPath = argument.slice("--ffmpeg=".length).trim();
+      if (ffmpegPath.length === 0) {
+        throw new Error("--ffmpeg 不能为空。");
+      }
+      continue;
+    }
+
     if (argument.startsWith("-")) {
       throw new Error(`无法识别的参数：${argument}`);
     }
@@ -312,6 +353,8 @@ function parseArguments(argv: readonly string[]): Options {
     effort,
     dither,
     oxipngLevel,
+    audioBitrateKbps,
+    ffmpegPath,
   };
 }
 
@@ -407,6 +450,8 @@ async function collectDirectoryStats(directory: string): Promise<DirectoryStats>
   let totalBytes = 0;
   let imageCount = 0;
   let imageBytes = 0;
+  let audioCount = 0;
+  let audioBytes = 0;
 
   async function visit(currentDirectory: string): Promise<void> {
     const entries = await readdir(currentDirectory, { withFileTypes: true });
@@ -427,11 +472,15 @@ async function collectDirectoryStats(directory: string): Promise<DirectoryStats>
         imageCount += 1;
         imageBytes += info.size;
       }
+      if (path.extname(entry.name).toLowerCase() === ".mp3") {
+        audioCount += 1;
+        audioBytes += info.size;
+      }
     }
   }
 
   await visit(directory);
-  return { fileCount, totalBytes, imageCount, imageBytes };
+  return { fileCount, totalBytes, imageCount, imageBytes, audioCount, audioBytes };
 }
 
 async function runTypeScript(
@@ -500,6 +549,23 @@ function createImageArguments(options: Options, buildDirectory: string): string[
   }
 
   return args;
+}
+
+function createAudioArguments(
+  options: Options,
+  buildDirectory: string,
+  reportFile: string,
+): string[] {
+  if (options.audioBitrateKbps === null) {
+    return [];
+  }
+  return [
+    buildDirectory,
+    `--bitrate=${options.audioBitrateKbps}`,
+    "--confirm",
+    `--ffmpeg=${options.ffmpegPath}`,
+    `--report=${reportFile}`,
+  ];
 }
 
 function reportPathForOutput(outputFile: string): string {
@@ -571,6 +637,10 @@ async function main(): Promise<void> {
     "reports",
     `${timestamp}.json`,
   );
+  const audioOptimizationReportFile = path.join(
+    runDirectory,
+    "audio-optimization.json",
+  );
   const outputReportFile = reportPathForOutput(options.outputFile);
   const tempOutputFile = `${options.outputFile}.tmp-${process.pid}-${timestamp}`;
 
@@ -580,6 +650,7 @@ async function main(): Promise<void> {
   console.log(`输入：${options.inputDirectory}`);
   console.log(`工作区：${workspaceBuildDirectory}`);
   console.log(`图片压缩模式：${options.imageMode}`);
+  console.log(`音频压缩：${options.audioBitrateKbps === null ? "关闭" : `${options.audioBitrateKbps} kbps（保持声道）`}`);
   console.log(`输出：${options.outputFile}`);
   console.log("");
 
@@ -587,6 +658,7 @@ async function main(): Promise<void> {
 
   let copyMs = 0;
   let imageOptimizationMs = 0;
+  let audioOptimizationMs = 0;
   let packagingMs = 0;
 
   try {
@@ -606,6 +678,22 @@ async function main(): Promise<void> {
       createImageArguments(options, workspaceBuildDirectory),
     );
     imageOptimizationMs = performance.now() - imageStart;
+
+    const afterImageStats = await collectDirectoryStats(workspaceBuildDirectory);
+
+    if (options.audioBitrateKbps !== null) {
+      const audioStart = performance.now();
+      await runTypeScript(
+        projectRoot,
+        "src/audio/optimize-build-audio.ts",
+        createAudioArguments(
+          options,
+          workspaceBuildDirectory,
+          audioOptimizationReportFile,
+        ),
+      );
+      audioOptimizationMs = performance.now() - audioStart;
+    }
 
     const optimizedStats = await collectDirectoryStats(workspaceBuildDirectory);
 
@@ -633,6 +721,11 @@ async function main(): Promise<void> {
       inputStats.imageBytes === 0
         ? 0
         : (savedBytes / inputStats.imageBytes) * 100;
+    const audioSavedBytes = afterImageStats.audioBytes - optimizedStats.audioBytes;
+    const audioSavedPercent =
+      afterImageStats.audioBytes === 0
+        ? 0
+        : (audioSavedBytes / afterImageStats.audioBytes) * 100;
 
     const report: BuildReport = {
       schemaVersion: 1,
@@ -650,6 +743,8 @@ async function main(): Promise<void> {
         totalBytes: inputStats.totalBytes,
         imageCount: inputStats.imageCount,
         imageBytes: inputStats.imageBytes,
+        audioCount: inputStats.audioCount,
+        audioBytes: inputStats.audioBytes,
       },
       workspace: {
         runDirectory,
@@ -663,6 +758,15 @@ async function main(): Promise<void> {
         savedBytes,
         savedPercent,
       },
+      audioOptimization: {
+        enabled: options.audioBitrateKbps !== null,
+        targetBitrateKbps: options.audioBitrateKbps,
+        preserveChannels: true,
+        beforeBytes: afterImageStats.audioBytes,
+        afterBytes: optimizedStats.audioBytes,
+        savedBytes: audioSavedBytes,
+        savedPercent: audioSavedPercent,
+      },
       output: {
         file: options.outputFile,
         bytes: outputInfo.size,
@@ -673,6 +777,7 @@ async function main(): Promise<void> {
       timingMs: {
         copy: copyMs,
         imageOptimization: imageOptimizationMs,
+        audioOptimization: audioOptimizationMs,
         packaging: packagingMs,
         total: performance.now() - totalStart,
       },
@@ -695,6 +800,12 @@ async function main(): Promise<void> {
     console.log(
       `图片减少：${formatBytes(savedBytes)} (${savedPercent.toFixed(2)}%)`,
     );
+    console.log(`音频数量：${inputStats.audioCount}`);
+    console.log(`音频优化前：${formatBytes(afterImageStats.audioBytes)}`);
+    console.log(`音频优化后：${formatBytes(optimizedStats.audioBytes)}`);
+    console.log(
+      `音频减少：${formatBytes(audioSavedBytes)} (${audioSavedPercent.toFixed(2)}%)`,
+    );
     console.log(`最终 HTML：${formatBytes(outputInfo.size)}`);
     console.log(`SHA-256：${report.output.sha256}`);
     console.log(`输出报告：${outputReportFile}`);
@@ -715,6 +826,7 @@ async function main(): Promise<void> {
       outputFile: options.outputFile,
       runDirectory,
       imageMode: options.imageMode,
+      audioBitrateKbps: options.audioBitrateKbps,
       error: error instanceof Error ? error.stack ?? error.message : String(error),
     };
     await writeJson(path.join(runDirectory, "failure.json"), failureReport).catch(

@@ -18,6 +18,12 @@
     "encoding:html7": "tsx src/encoding/reencode-brotli-html7.ts",
     "typecheck": "tsc --noEmit",
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
+    "audio:analyze": "tsx src/audio/analyze-build-audio.ts",
+    "test:audio-analysis": "tsx src/audio/analyze-build-audio-self-test.ts",
+    "audio:benchmark": "tsx src/audio/benchmark-build-audio.ts",
+    "test:audio-benchmark": "tsx src/audio/benchmark-build-audio-self-test.ts",
+    "audio:optimize": "tsx src/audio/optimize-build-audio.ts",
+    "test:audio-optimize": "tsx src/audio/optimize-build-audio-self-test.ts",
     "tinypng:build": "node --env-file=.env --import tsx src/tinypng-build/compress-build-images.ts",
     "squoosh:test-one": "tsx src/squoosh/test-one.ts",
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
@@ -46,6 +52,7 @@
     "acorn": "^8.17.0",
     "acorn-walk": "^8.3.5",
     "cheerio": "^1.2.0",
+    "music-metadata": "^11.13.0",
     "sharp": "^0.35.3",
     "tinify": "^1.8.3"
   }
