@@ -314,7 +314,9 @@ export class WebJobManager {
 
       const inputDirectory = await findWebMobileRoot(job.extractionDirectory);
       job.status = "building";
-      job.message = "正在构建单 HTML Playable。";
+      job.message = job.config.buildMode === "raw-single-html"
+        ? "正在仅合并为未压缩单 HTML。"
+        : "正在构建并优化单 HTML Playable。";
       const request = createWebBuildRequest(
         inputDirectory,
         job.outputFile,
@@ -323,6 +325,9 @@ export class WebJobManager {
       );
       const result = await this.buildPlayableImpl(request, {
         projectRoot: this.projectRoot,
+        scriptPath: job.config.buildMode === "raw-single-html"
+          ? path.join("src", "web", "raw-single-html-cli.ts")
+          : undefined,
         signal: job.abortController.signal,
         onEvent: (event) => this.handleBuildEvent(job, event),
       });
@@ -332,7 +337,9 @@ export class WebJobManager {
       }
 
       job.status = "succeeded";
-      job.message = "Playable 构建完成。";
+      job.message = job.config.buildMode === "raw-single-html"
+        ? "未压缩单 HTML 合并完成。"
+        : "Playable 优化构建完成。";
       job.outputBytes = result.outputBytes;
       job.outputSha256 = result.outputSha256;
       job.completedAt = timestamp();
