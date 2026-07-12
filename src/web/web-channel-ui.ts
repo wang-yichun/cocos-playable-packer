@@ -4,6 +4,10 @@ import {
   TEST_IOS_STORE_URL,
 } from "../channel/channel-profile.js";
 import { createWebMvpIndexHtml } from "./web-ui.js";
+import {
+  createFallbackWebVersionInfo,
+  type WebVersionInfo,
+} from "./web-version-info.js";
 
 function replaceOnce(source: string, search: string, replacement: string): string {
   const index = source.indexOf(search);
@@ -13,7 +17,74 @@ function replaceOnce(source: string, search: string, replacement: string): strin
   return `${source.slice(0, index)}${replacement}${source.slice(index + search.length)}`;
 }
 
-export function createChannelWebMvpIndexHtml(): string {
+function escapeHtml(value: unknown): string {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function createVersionFooter(versionInfo: WebVersionInfo): string {
+  const components = versionInfo.components.length === 0
+    ? '<div class="version-empty">未检测到核心 npm 组件版本。</div>'
+    : `<dl class="version-list">${versionInfo.components
+      .map(
+        (component) => `<dt>${escapeHtml(component.name)}</dt><dd>${escapeHtml(component.version)}</dd>`,
+      )
+      .join("")}</dl>`;
+  const ffmpegVersion = versionInfo.ffmpegVersion ?? "未检测到";
+  const buildDate = versionInfo.buildDate ?? "未检测到 Git 提交时间";
+
+  return `    <footer class="app-footer">
+      <div class="footer-meta">
+        <span>Cocos Playable Packer v${escapeHtml(versionInfo.appVersion)}</span>
+        <span aria-hidden="true">·</span>
+        <span title="${escapeHtml(versionInfo.buildSha)}">Build ${escapeHtml(versionInfo.buildShortSha)}</span>
+        <span aria-hidden="true">·</span>
+        <span>Node.js ${escapeHtml(versionInfo.nodeVersion)}</span>
+      </div>
+      <div class="footer-meta footer-copyright">
+        <span>© ${escapeHtml(versionInfo.copyrightYear)} ${escapeHtml(versionInfo.copyrightName)}. All rights reserved.</span>
+      </div>
+      <details class="version-details">
+        <summary>版本与许可</summary>
+        <div class="version-panel">
+          <section class="version-block">
+            <h3>应用与构建</h3>
+            <dl class="version-list">
+              <dt>应用版本</dt><dd>${escapeHtml(versionInfo.appVersion)}</dd>
+              <dt>Git Commit</dt><dd class="version-mono">${escapeHtml(versionInfo.buildSha)}</dd>
+              <dt>Git 提交时间</dt><dd>${escapeHtml(buildDate)}</dd>
+              <dt>页面信息生成时间</dt><dd>${escapeHtml(versionInfo.generatedAt)}</dd>
+            </dl>
+          </section>
+          <section class="version-block">
+            <h3>运行环境</h3>
+            <dl class="version-list">
+              <dt>Node.js</dt><dd>${escapeHtml(versionInfo.nodeVersion)}</dd>
+              <dt>FFmpeg</dt><dd>${escapeHtml(ffmpegVersion)}</dd>
+            </dl>
+          </section>
+          <section class="version-block version-components">
+            <h3>核心组件</h3>
+            ${components}
+          </section>
+          <section class="version-block version-legal">
+            <h3>版权与声明</h3>
+            <p>© ${escapeHtml(versionInfo.copyrightYear)} ${escapeHtml(versionInfo.copyrightName)}. All rights reserved.</p>
+            <p>第三方组件保留其各自版权，并遵循各自许可证。</p>
+            <p>本工具为独立开发项目，与 Cocos 官方无隶属或授权关系。Cocos Creator 及相关名称归其各自权利人所有。</p>
+          </section>
+        </div>
+      </details>
+    </footer>`;
+}
+
+export function createChannelWebMvpIndexHtml(
+  versionInfo: WebVersionInfo = createFallbackWebVersionInfo(),
+): string {
   const profilesJson = JSON.stringify(CHANNEL_PROFILES);
   const testAndroidUrlJson = JSON.stringify(TEST_ANDROID_STORE_URL);
   const testIosUrlJson = JSON.stringify(TEST_IOS_STORE_URL);
@@ -23,6 +94,28 @@ export function createChannelWebMvpIndexHtml(): string {
     html,
     "select, input[type=number] {",
     "select, input[type=number], input[type=url] {",
+  );
+
+  html = replaceOnce(
+    html,
+    "    .error { color: #fca5a5; }\n  </style>",
+    `    .error { color: #fca5a5; }
+    .app-footer { margin-top: 32px; padding: 22px 2px 0; border-top: 1px solid #374151; color: #9ca3af; font-size: 12px; line-height: 1.65; }
+    .footer-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .footer-copyright { margin-top: 2px; }
+    .version-details { margin-top: 8px; }
+    .version-details summary { width: max-content; color: #cbd5e1; cursor: pointer; user-select: none; }
+    .version-details summary:hover { color: #fff; }
+    .version-panel { margin-top: 12px; padding: 16px; border: 1px solid #374151; border-radius: 10px; background: #0f172a; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+    .version-block h3 { margin: 0 0 8px; color: #e5e7eb; font-size: 13px; }
+    .version-block p { margin: 5px 0 0; color: #9ca3af; font-size: 12px; line-height: 1.55; }
+    .version-list { display: grid; grid-template-columns: minmax(90px, auto) minmax(0, 1fr); gap: 5px 12px; margin: 0; }
+    .version-list dt { color: #9ca3af; }
+    .version-list dd { margin: 0; color: #d1d5db; overflow-wrap: anywhere; }
+    .version-mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .version-empty { color: #9ca3af; }
+    .version-legal { grid-column: 1 / -1; }
+  </style>`,
   );
 
   html = replaceOnce(
@@ -72,6 +165,13 @@ export function createChannelWebMvpIndexHtml(): string {
     `      <div id="channelSummary" class="summary"></div>
       <div id="channelWarning" class="warning"></div>
       <div id="configSummary" class="summary"></div>`,
+  );
+
+  html = replaceOnce(
+    html,
+    "  </main>",
+    `${createVersionFooter(versionInfo)}
+  </main>`,
   );
 
   html = replaceOnce(
