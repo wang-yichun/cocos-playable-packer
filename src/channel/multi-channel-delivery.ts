@@ -15,6 +15,7 @@ import { calculateCrc32 } from "../web/zip-extractor.js";
 interface ZipEntry {
   name: string;
   content: Buffer;
+  compression: "store" | "fast-deflate";
 }
 
 export interface MultiChannelArtifactEntry {
@@ -85,8 +86,11 @@ function createDeterministicZip(entries: readonly ZipEntry[]): Buffer {
     names.add(safeName);
 
     const name = Buffer.from(safeName, "utf8");
-    const deflated = deflateRawSync(entry.content, { level: 9 });
-    const useDeflate = deflated.length < entry.content.length;
+    const deflated = entry.compression === "fast-deflate"
+      ? deflateRawSync(entry.content, { level: 1 })
+      : entry.content;
+    const useDeflate = entry.compression === "fast-deflate"
+      && deflated.length < entry.content.length;
     const compressed = useDeflate ? deflated : entry.content;
     const method = useDeflate ? ZIP_DEFLATE_METHOD : ZIP_STORE_METHOD;
     const crc32 = calculateCrc32(entry.content);
@@ -218,6 +222,10 @@ export function createMultiChannelDownloadArtifact(
         "payloadEncoding",
       ],
       channelSpecificStage: "deliveryPackaging",
+      bundleCompressionPolicy: {
+        nestedZip: "store",
+        htmlAndManifest: "deflate-level-1",
+      },
     },
     deliveries: channelArtifacts.map(({ platform, bundlePath, artifact }) => ({
       platform,
@@ -237,8 +245,15 @@ export function createMultiChannelDownloadArtifact(
   const zipEntries: ZipEntry[] = channelArtifacts.map(({ bundlePath, artifact }) => ({
     name: bundlePath,
     content: artifact.body,
+    compression: artifact.contentType === "application/zip"
+      ? "store"
+      : "fast-deflate",
   }));
-  zipEntries.push({ name: "manifest.json", content: manifestBuffer });
+  zipEntries.push({
+    name: "manifest.json",
+    content: manifestBuffer,
+    compression: "fast-deflate",
+  });
 
   const body = createDeterministicZip(zipEntries);
   return {
