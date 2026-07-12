@@ -17,6 +17,7 @@
     "encoding:base91": "tsx src/encoding/reencode-brotli-html.ts",
     "encoding:html7": "tsx src/encoding/reencode-brotli-html7.ts",
     "typecheck": "tsc --noEmit",
+    "test:build-service": "tsx src/service/build-playable-service-self-test.ts",
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
     "audio:analyze": "tsx src/audio/analyze-build-audio.ts",
     "test:audio-analysis": "tsx src/audio/analyze-build-audio-self-test.ts",
