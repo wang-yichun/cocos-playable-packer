@@ -326,7 +326,7 @@ export class WebJobManager {
       const result = await this.buildPlayableImpl(request, {
         projectRoot: this.projectRoot,
         scriptPath: job.config.buildMode === "raw-single-html"
-          ? path.join("src", "web", "raw-single-html-cli.ts")
+          ? path.join(this.projectRoot, "src", "web", "raw-single-html-cli.ts")
           : undefined,
         signal: job.abortController.signal,
         onEvent: (event) => this.handleBuildEvent(job, event),
