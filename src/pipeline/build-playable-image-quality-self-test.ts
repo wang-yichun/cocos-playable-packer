@@ -25,6 +25,7 @@ const explicit = parseImageQualityPipelineArguments([
   "--image-mode=squoosh",
   "--png-quality=72",
   "--jpeg-quality=85",
+  "--audio-bitrate=48",
   "--payload-encoding=html7",
 ]);
 assert.equal(explicit.pngQuality, 72);
@@ -39,6 +40,7 @@ assert.equal(
   false,
 );
 assert.equal(explicit.passthroughArgs.includes("--payload-encoding=html7"), true);
+assert.equal(explicit.passthroughArgs.includes("--audio-bitrate=48"), true);
 
 const legacy = parseImageQualityPipelineArguments([
   "./web-mobile",
