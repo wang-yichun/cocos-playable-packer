@@ -186,7 +186,7 @@ const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(generatedIndexHtml
 assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
-assert.equal(inlineScript.includes("recentLogs.join('\\\\n')"), true);
+assert.equal(inlineScript.includes("recentLogs.join('\\n')"), true);
 assert.match(generatedIndexHtml, /目标渠道/);
 assert.match(generatedIndexHtml, /Google Maps 测试链接/);
 
