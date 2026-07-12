@@ -1,4 +1,5 @@
 import {
+  CHANNEL_PLATFORMS,
   CHANNEL_PROFILES,
   TEST_ANDROID_STORE_URL,
   TEST_IOS_STORE_URL,
@@ -82,10 +83,21 @@ function createVersionFooter(versionInfo: WebVersionInfo): string {
     </footer>`;
 }
 
+function createChannelCheckboxes(): string {
+  return CHANNEL_PLATFORMS.map((platform) => {
+    const profile = CHANNEL_PROFILES[platform];
+    return `<label class="channel-option">
+              <input type="checkbox" name="channelPlatform" value="${escapeHtml(platform)}" checked>
+              <span><strong>${escapeHtml(profile.displayName)}</strong><small>${escapeHtml(profile.deliveryFormat)} · ${escapeHtml(profile.bridge)}</small></span>
+            </label>`;
+  }).join("\n");
+}
+
 export function createChannelWebMvpIndexHtml(
   versionInfo: WebVersionInfo = createFallbackWebVersionInfo(),
 ): string {
   const profilesJson = JSON.stringify(CHANNEL_PROFILES);
+  const platformsJson = JSON.stringify(CHANNEL_PLATFORMS);
   const testAndroidUrlJson = JSON.stringify(TEST_ANDROID_STORE_URL);
   const testIosUrlJson = JSON.stringify(TEST_IOS_STORE_URL);
   let html = createWebMvpIndexHtml();
@@ -100,6 +112,17 @@ export function createChannelWebMvpIndexHtml(
     html,
     "    .error { color: #fca5a5; }\n  </style>",
     `    .error { color: #fca5a5; }
+    .channel-field { grid-column: 1 / -1; }
+    .channel-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .channel-toolbar button { padding: 7px 11px; }
+    .channel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 9px; }
+    .channel-option { display: flex; gap: 9px; align-items: flex-start; padding: 10px 11px; border: 1px solid #4b5563; border-radius: 9px; background: #111827; cursor: pointer; }
+    .channel-option input { margin-top: 3px; }
+    .channel-option span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .channel-option small { color: #9ca3af; font-weight: 400; overflow-wrap: anywhere; }
+    dialog { width: min(520px, calc(100vw - 32px)); border: 1px solid #4b5563; border-radius: 12px; padding: 20px; background: #1f2937; color: #e5e7eb; }
+    dialog::backdrop { background: rgba(3, 7, 18, .72); }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
     .app-footer { margin-top: 32px; padding: 22px 2px 0; border-top: 1px solid #374151; color: #9ca3af; font-size: 12px; line-height: 1.65; }
     .footer-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
     .footer-copyright { margin-top: 2px; }
@@ -122,31 +145,28 @@ export function createChannelWebMvpIndexHtml(
     html,
     "      <div class=\"config-grid\" style=\"margin-top: 18px;\">\n        <div class=\"field\">\n          <label for=\"buildMode\">构建模式</label>",
     `      <div class="config-grid" style="margin-top: 18px;">
-        <div class="field">
-          <label for="channelPlatform">目标渠道</label>
-          <select id="channelPlatform">
-            <option value="Preview">Preview（本地预览）</option>
-            <option value="AppLovin">AppLovin</option>
-            <option value="Google">Google Ads</option>
-            <option value="Facebook">Facebook</option>
-            <option value="Liftoff">Liftoff</option>
-            <option value="IronSource">IronSource</option>
-            <option value="Unity">Unity Ads</option>
-            <option value="Moloco">Moloco</option>
-          </select>
-          <small id="channelPlatformHint">根据渠道 Profile 生成下载桥和对应交付文件。</small>
+        <div class="field channel-field">
+          <label>目标渠道（可多选）</label>
+          <div class="channel-toolbar">
+            <button id="selectAllChannelsButton" class="secondary" type="button">全选</button>
+            <button id="previewOnlyButton" class="secondary" type="button">仅 Preview</button>
+          </div>
+          <div id="channelPlatformGroup" class="channel-grid">
+            ${createChannelCheckboxes()}
+          </div>
+          <small id="channelPlatformHint">默认全选。基础资源只压缩一次，各渠道仅派生运行时桥接和最终交付容器。</small>
         </div>
 
         <div class="field">
           <label for="androidStoreUrl">Android 商店地址</label>
           <input id="androidStoreUrl" type="url" placeholder="https://play.google.com/store/apps/details?id=...">
-          <small>渠道下载桥会优先调用宿主 API，否则回退到该地址。</small>
+          <small>所有已选渠道共用；宿主 API 不可用时回退到该地址。</small>
         </div>
 
         <div class="field">
           <label for="iosStoreUrl">iOS 商店地址</label>
           <input id="iosStoreUrl" type="url" placeholder="https://apps.apple.com/app/id...">
-          <small>可以暂时留空；未配置时会回退到另一平台地址。</small>
+          <small>所有已选渠道共用；可以暂时留空。</small>
         </div>
 
         <div class="field">
@@ -171,25 +191,28 @@ export function createChannelWebMvpIndexHtml(
     html,
     "  </main>",
     `${createVersionFooter(versionInfo)}
-  </main>`,
+  </main>
+  <dialog id="previewChannelDialog">
+    <h2>选择试玩渠道</h2>
+    <p>同一份基础构建将按所选渠道注入对应桥接和启动策略。</p>
+    <div class="field">
+      <label for="previewChannelSelect">试玩渠道</label>
+      <select id="previewChannelSelect"></select>
+    </div>
+    <div class="dialog-actions">
+      <button id="closePreviewDialogButton" class="secondary" type="button">取消</button>
+      <button id="startPreviewButton" type="button">开始试玩</button>
+    </div>
+  </dialog>`,
   );
 
   html = replaceOnce(
     html,
     "    const recommendedConfig = ",
     `    const channelProfiles = ${profilesJson};
+    const channelPlatforms = ${platformsJson};
     const testAndroidStoreUrl = ${testAndroidUrlJson};
     const testIosStoreUrl = ${testIosUrlJson};
-    const channelDownloadLabels = {
-      Preview: '下载 HTML',
-      AppLovin: '下载 AppLovin HTML',
-      Google: '下载 Google ZIP',
-      Facebook: '下载 Facebook ZIP',
-      Liftoff: '下载 Liftoff ZIP',
-      IronSource: '下载 IronSource HTML',
-      Unity: '下载 Unity Ads HTML',
-      Moloco: '下载 Moloco HTML',
-    };
     const recommendedConfig = `,
   );
 
@@ -197,7 +220,9 @@ export function createChannelWebMvpIndexHtml(
     html,
     "    const recommendedPresetButton = document.getElementById('recommendedPresetButton');",
     `    const recommendedPresetButton = document.getElementById('recommendedPresetButton');
-    const channelPlatformInput = document.getElementById('channelPlatform');
+    const channelPlatformInputs = Array.from(document.querySelectorAll('input[name="channelPlatform"]'));
+    const selectAllChannelsButton = document.getElementById('selectAllChannelsButton');
+    const previewOnlyButton = document.getElementById('previewOnlyButton');
     const channelPlatformHint = document.getElementById('channelPlatformHint');
     const androidStoreUrlInput = document.getElementById('androidStoreUrl');
     const iosStoreUrlInput = document.getElementById('iosStoreUrl');
@@ -214,10 +239,45 @@ export function createChannelWebMvpIndexHtml(
 
   html = replaceOnce(
     html,
+    "    const reportLink = document.getElementById('reportLink');",
+    `    const reportLink = document.getElementById('reportLink');
+    const previewChannelDialog = document.getElementById('previewChannelDialog');
+    const previewChannelSelect = document.getElementById('previewChannelSelect');
+    const closePreviewDialogButton = document.getElementById('closePreviewDialogButton');
+    const startPreviewButton = document.getElementById('startPreviewButton');`,
+  );
+
+  html = replaceOnce(
+    html,
+    "    let busy = false;",
+    `    let busy = false;
+    let completedPreviewUrl = null;
+    let completedPlatforms = [];`,
+  );
+
+  html = replaceOnce(
+    html,
     "    function readConfig() {\n      const buildMode = buildModeInput.value;",
-    `    function readConfig() {
+    `    function readSelectedPlatforms(throwWhenEmpty = true) {
+      const selected = channelPlatformInputs.filter((input) => input.checked).map((input) => input.value);
+      if (throwWhenEmpty && selected.length === 0) {
+        throw new Error('至少需要选择一个目标渠道。');
+      }
+      return channelPlatforms.filter((platform) => selected.includes(platform));
+    }
+
+    function applySelectedPlatforms(platforms) {
+      const selected = new Set(platforms);
+      for (const input of channelPlatformInputs) {
+        input.checked = selected.has(input.value);
+      }
+    }
+
+    function readConfig() {
+      const platforms = readSelectedPlatforms();
       const channel = {
-        platform: channelPlatformInput.value,
+        platform: platforms[0],
+        platforms: platforms,
         androidStoreUrl: androidStoreUrlInput.value.trim() || null,
         iosStoreUrl: iosStoreUrlInput.value.trim() || null,
       };
@@ -240,8 +300,11 @@ export function createChannelWebMvpIndexHtml(
     html,
     "    function applyConfig(config) {\n      buildModeInput.value = config.buildMode;",
     `    function applyConfig(config) {
-      const channel = config.channel || { platform: 'Preview', androidStoreUrl: null, iosStoreUrl: null };
-      channelPlatformInput.value = channel.platform;
+      const channel = config.channel || { platform: 'Preview', platforms: channelPlatforms, androidStoreUrl: null, iosStoreUrl: null };
+      const configuredPlatforms = Array.isArray(channel.platforms) && channel.platforms.length > 0
+        ? channel.platforms
+        : channelPlatforms;
+      applySelectedPlatforms(configuredPlatforms);
       androidStoreUrlInput.value = channel.androidStoreUrl || '';
       iosStoreUrlInput.value = channel.iosStoreUrl || '';
       buildModeInput.value = config.buildMode;`,
@@ -251,7 +314,9 @@ export function createChannelWebMvpIndexHtml(
     html,
     "      recommendedPresetButton.disabled = busy;",
     `      recommendedPresetButton.disabled = busy;
-      channelPlatformInput.disabled = busy;
+      for (const input of channelPlatformInputs) input.disabled = busy;
+      selectAllChannelsButton.disabled = busy;
+      previewOnlyButton.disabled = busy;
       androidStoreUrlInput.disabled = busy;
       iosStoreUrlInput.disabled = busy;
       testStoreUrlsButton.disabled = busy;`,
@@ -262,27 +327,45 @@ export function createChannelWebMvpIndexHtml(
     "      audioWarning.hidden = rawMode || !audioEnabled;",
     `      audioWarning.hidden = rawMode || !audioEnabled;
 
-      const channelProfile = channelProfiles[channelPlatformInput.value];
-      if (channelProfile) {
-        channelPlatformHint.textContent = '交付格式：' + channelProfile.deliveryFormat
-          + '；桥接：' + channelProfile.bridge
-          + '；启动：' + channelProfile.startupPolicy + '。';
-        channelSummary.textContent = '渠道 Profile：' + channelProfile.displayName
-          + ' / ' + channelProfile.deliveryFormat
-          + ' / ' + channelProfile.bridge
-          + ' / 必需全局对象：'
-          + (channelProfile.requiredGlobals.length === 0 ? '无' : channelProfile.requiredGlobals.join(', '));
-        channelWarning.textContent = channelProfile.warnings.join(' ');
-        htmlLink.textContent = channelDownloadLabels[channelPlatformInput.value] || '下载 HTML';
-      }`,
+      const selectedPlatforms = readSelectedPlatforms(false);
+      const selectedProfiles = selectedPlatforms.map((platform) => channelProfiles[platform]).filter(Boolean);
+      channelPlatformHint.textContent = selectedPlatforms.length === 0
+        ? '至少需要选择一个渠道。'
+        : '已选 ' + selectedPlatforms.length + ' 个渠道；基础资源压缩、Brotli 和 Payload 编码只执行一次。';
+      channelSummary.textContent = selectedProfiles.length === 0
+        ? '未选择渠道。'
+        : '渠道合集：' + selectedProfiles.map((profile) => profile.displayName).join(' / ');
+      const warnings = [];
+      for (const profile of selectedProfiles) {
+        for (const warning of profile.warnings) {
+          if (!warnings.includes(warning)) warnings.push(warning);
+        }
+      }
+      channelWarning.textContent = warnings.join(' ');
+      htmlLink.textContent = '下载渠道合集 ZIP（' + selectedPlatforms.length + '）';`,
+  );
+
+  html = replaceOnce(
+    html,
+    "        previewLink.href = job.links.preview;",
+    `        completedPreviewUrl = job.links.preview;
+        completedPlatforms = Array.isArray(job.config?.channel?.platforms)
+          ? job.config.channel.platforms
+          : [job.config?.channel?.platform || 'Preview'];
+        previewLink.href = '#';`,
   );
 
   html = replaceOnce(
     html,
     "        htmlLink.href = job.links.html + '?download=1';",
-    `        htmlLink.href = job.links.html + '?download=1';
-        const completedPlatform = job.config?.channel?.platform || 'Preview';
-        htmlLink.textContent = channelDownloadLabels[completedPlatform] || '下载 HTML';`,
+    `        htmlLink.href = job.links.html + '?download=1&bundle=1';
+        htmlLink.textContent = '下载渠道合集 ZIP（' + completedPlatforms.length + '）';`,
+  );
+
+  html = replaceOnce(
+    html,
+    "        reportLink.href = job.links.report + '?download=1';",
+    "        reportLink.href = job.links.report + '?download=1&bundle=1';",
   );
 
   html = replaceOnce(
@@ -291,7 +374,8 @@ export function createChannelWebMvpIndexHtml(
     `      applyConfig({
         ...recommendedConfig,
         channel: {
-          platform: channelPlatformInput.value,
+          platform: readSelectedPlatforms(false)[0] || 'Preview',
+          platforms: readSelectedPlatforms(false).length > 0 ? readSelectedPlatforms(false) : channelPlatforms,
           androidStoreUrl: androidStoreUrlInput.value.trim() || null,
           iosStoreUrl: iosStoreUrlInput.value.trim() || null,
         },
@@ -301,12 +385,43 @@ export function createChannelWebMvpIndexHtml(
   html = replaceOnce(
     html,
     "    recommendedPresetButton.addEventListener('click', () => {",
-    `    testStoreUrlsButton.addEventListener('click', () => {
+    `    selectAllChannelsButton.addEventListener('click', () => {
+      applySelectedPlatforms(channelPlatforms);
+      refreshConfigUi();
+    });
+
+    previewOnlyButton.addEventListener('click', () => {
+      applySelectedPlatforms(['Preview']);
+      refreshConfigUi();
+    });
+
+    testStoreUrlsButton.addEventListener('click', () => {
       androidStoreUrlInput.value = testAndroidStoreUrl;
       iosStoreUrlInput.value = testIosStoreUrl;
       statusElement.classList.remove('error');
       statusElement.textContent = '已填入 Google Maps 测试商店地址；正式投放前必须替换。';
       refreshConfigUi();
+    });
+
+    previewLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (!completedPreviewUrl || completedPlatforms.length === 0) return;
+      previewChannelSelect.innerHTML = '';
+      for (const platform of completedPlatforms) {
+        const option = document.createElement('option');
+        option.value = platform;
+        option.textContent = channelProfiles[platform]?.displayName || platform;
+        previewChannelSelect.appendChild(option);
+      }
+      previewChannelDialog.showModal();
+    });
+
+    closePreviewDialogButton.addEventListener('click', () => previewChannelDialog.close());
+    startPreviewButton.addEventListener('click', () => {
+      if (!completedPreviewUrl) return;
+      const separator = completedPreviewUrl.includes('?') ? '&' : '?';
+      window.open(completedPreviewUrl + separator + 'channel=' + encodeURIComponent(previewChannelSelect.value), '_blank', 'noopener');
+      previewChannelDialog.close();
     });
 
     recommendedPresetButton.addEventListener('click', () => {`,
@@ -315,10 +430,23 @@ export function createChannelWebMvpIndexHtml(
   html = replaceOnce(
     html,
     "    buildModeInput.addEventListener('change', refreshConfigUi);",
-    `    channelPlatformInput.addEventListener('change', refreshConfigUi);
+    `    for (const input of channelPlatformInputs) input.addEventListener('change', refreshConfigUi);
     androidStoreUrlInput.addEventListener('input', refreshConfigUi);
     iosStoreUrlInput.addEventListener('input', refreshConfigUi);
     buildModeInput.addEventListener('change', refreshConfigUi);`,
+  );
+
+  html = replaceOnce(
+    html,
+    "    applyConfig(defaultConfig);",
+    `    applyConfig({
+      ...defaultConfig,
+      channel: {
+        ...defaultConfig.channel,
+        platform: 'Preview',
+        platforms: channelPlatforms,
+      },
+    });`,
   );
 
   return html;

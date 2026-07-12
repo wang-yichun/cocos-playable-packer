@@ -9,7 +9,13 @@ import {
   createChannelHtml,
 } from "../channel/liftoff-delivery.js";
 import {
+  channelConfigForPlatform,
+  createMultiChannelDownloadArtifact,
+  selectedChannelPlatforms,
+} from "../channel/multi-channel-delivery.js";
+import {
   createChannelReport,
+  normalizeChannelPlatform,
   type ChannelPlatform,
 } from "../channel/channel-profile.js";
 import type { BuildPlayableFunction } from "./web-job-manager.js";
@@ -19,15 +25,6 @@ import { loadWebVersionInfo, type WebVersionInfo } from "./web-version-info.js";
 
 const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_BYTES = 64 * 1024;
-const DELIVERY_READY_PLATFORMS = new Set<ChannelPlatform>([
-  "AppLovin",
-  "Google",
-  "Facebook",
-  "Liftoff",
-  "IronSource",
-  "Unity",
-  "Moloco",
-]);
 
 export interface WebMvpServerOptions {
   host?: string;
@@ -205,6 +202,8 @@ async function sendChannelHtml(
   manager: WebJobManager,
   jobId: string,
   downloadRequested: boolean,
+  bundleRequested: boolean,
+  requestedPreviewPlatform: ChannelPlatform | null = null,
 ): Promise<void> {
   const info = await stat(htmlFile).catch(() => null);
   const job = manager.getJob(jobId);
@@ -215,7 +214,20 @@ async function sendChannelHtml(
 
   const source = await readFile(htmlFile, "utf8");
   if (downloadRequested) {
-    const artifact = createChannelDownloadArtifact(source, job.config.channel);
+    if (bundleRequested) {
+      const bundle = createMultiChannelDownloadArtifact(source, job.config.channel);
+      response.writeHead(
+        200,
+        contentHeaders(bundle.contentType, bundle.body.length, bundle.fileName),
+      );
+      response.end(bundle.body);
+      return;
+    }
+
+    const artifact = createChannelDownloadArtifact(
+      source,
+      channelConfigForPlatform(job.config.channel, job.config.channel.platform),
+    );
     response.writeHead(
       200,
       contentHeaders(artifact.contentType, artifact.body.length, artifact.fileName),
@@ -224,7 +236,17 @@ async function sendChannelHtml(
     return;
   }
 
-  const html = createChannelHtml(source, job.config.channel);
+  const selectedPlatforms = selectedChannelPlatforms(job.config.channel);
+  const platform = requestedPreviewPlatform ?? job.config.channel.platform;
+  if (!selectedPlatforms.includes(platform)) {
+    requestError(response, 400, "CHANNEL_NOT_SELECTED", `渠道 ${platform} 未包含在本次构建中。`);
+    return;
+  }
+
+  const html = createChannelHtml(
+    source,
+    channelConfigForPlatform(job.config.channel, platform),
+  );
   response.writeHead(
     200,
     contentHeaders("text/html; charset=utf-8", Buffer.byteLength(html), null),
@@ -253,12 +275,33 @@ function deliveryWarning(platform: ChannelPlatform): string {
   }
 }
 
+function deliveryReport(
+  platform: ChannelPlatform,
+  bundlePath: string | null,
+  artifact: ReturnType<typeof createChannelDownloadArtifact>,
+): Record<string, unknown> {
+  return {
+    platform,
+    ...(bundlePath === null ? {} : { bundlePath }),
+    format: artifact.deliveryFormat,
+    fileName: artifact.fileName,
+    mediaType: artifact.contentType,
+    entries: [...artifact.entries],
+    entryBytes: { ...artifact.entryBytes },
+    bytes: artifact.body.length,
+    sha256: artifact.sha256,
+    htmlBytes: artifact.htmlBytes,
+    generatedOnDownload: true,
+  };
+}
+
 async function sendChannelReport(
   response: ServerResponse,
   reportFile: string,
   manager: WebJobManager,
   jobId: string,
   downloadRequested: boolean,
+  bundleRequested: boolean,
 ): Promise<void> {
   const info = await stat(reportFile).catch(() => null);
   const job = manager.getJob(jobId);
@@ -273,42 +316,67 @@ async function sendChannelReport(
     return;
   }
 
-  const baseChannel = createChannelReport(job.config.channel);
+  const htmlFile = manager.getArtifactPath(jobId, "html");
+  if (htmlFile === null) {
+    requestError(response, 404, "ARTIFACT_NOT_FOUND", "渠道 HTML 产物不存在。");
+    return;
+  }
+
+  const sourceHtml = await readFile(htmlFile, "utf8");
   const report = parsed as Record<string, unknown>;
-  const platform = job.config.channel.platform;
-  const isDeliveryReady = DELIVERY_READY_PLATFORMS.has(platform);
-  const isMraid = baseChannel.bridge === "mraid";
-  const integrationStatus = isDeliveryReady
-    ? "channel-delivery-ready"
-    : isMraid
-      ? "mraid-lifecycle-injected"
-      : "download-bridge-injected";
 
-  report.channel = {
-    ...baseChannel,
-    integrationStatus,
-    warnings: [deliveryWarning(platform), ...baseChannel.warnings],
-  };
+  if (!bundleRequested) {
+    const platform = job.config.channel.platform;
+    const config = channelConfigForPlatform(job.config.channel, platform);
+    const base = createChannelReport(config);
+    const artifact = createChannelDownloadArtifact(sourceHtml, config);
+    report.channel = {
+      ...base,
+      integrationStatus: "channel-delivery-ready",
+      warnings: [deliveryWarning(platform), ...base.warnings],
+    };
+    report.delivery = deliveryReport(platform, null, artifact);
+  } else {
+    const bundle = createMultiChannelDownloadArtifact(sourceHtml, job.config.channel);
+    const channels = bundle.channelArtifacts.map(({ platform }) => {
+      const base = createChannelReport(channelConfigForPlatform(job.config.channel, platform));
+      return {
+        ...base,
+        integrationStatus: "channel-delivery-ready",
+        warnings: [deliveryWarning(platform), ...base.warnings],
+      };
+    });
+    const deliveries = bundle.channelArtifacts.map(({ platform, bundlePath, artifact }) =>
+      deliveryReport(platform, bundlePath, artifact)
+    );
 
-  if (isDeliveryReady) {
-    const htmlFile = manager.getArtifactPath(jobId, "html");
-    if (htmlFile === null) {
-      requestError(response, 404, "ARTIFACT_NOT_FOUND", "渠道 HTML 产物不存在。");
-      return;
-    }
-    const sourceHtml = await readFile(htmlFile, "utf8");
-    const artifact = createChannelDownloadArtifact(sourceHtml, job.config.channel);
-    report.delivery = {
-      format: artifact.deliveryFormat,
-      fileName: artifact.fileName,
-      mediaType: artifact.contentType,
-      entries: [...artifact.entries],
-      entryBytes: { ...artifact.entryBytes },
-      bytes: artifact.body.length,
-      sha256: artifact.sha256,
-      htmlBytes: artifact.htmlBytes,
+    report.channels = channels;
+    report.deliveries = deliveries;
+    report.bundle = {
+      format: "zip-channel-bundle",
+      fileName: bundle.fileName,
+      mediaType: bundle.contentType,
+      entries: [...bundle.entries],
+      bytes: bundle.body.length,
+      sha256: bundle.sha256,
+      manifestFile: "manifest.json",
       generatedOnDownload: true,
     };
+    report.reuse = {
+      baseBuildExecutions: 1,
+      selectedChannelCount: channels.length,
+      sharedStages: [
+        "copy",
+        "imageOptimization",
+        "audioOptimization",
+        "brotliCompression",
+        "payloadEncoding",
+      ],
+      channelSpecificStage: "deliveryPackaging",
+      note: "图片、音频、Brotli 和 Payload 只处理一次，各渠道仅派生下载桥、运行时包装和交付容器。",
+    };
+    delete report.channel;
+    delete report.delivery;
   }
 
   const body = `${JSON.stringify(report, null, 2)}\n`;
@@ -317,7 +385,11 @@ async function sendChannelReport(
     contentHeaders(
       "application/json; charset=utf-8",
       Buffer.byteLength(body),
-      downloadRequested ? "game.report.json" : null,
+      downloadRequested
+        ? bundleRequested
+          ? "playable-channel-report.json"
+          : "game.report.json"
+        : null,
     ),
   );
   response.end(body);
@@ -406,8 +478,16 @@ async function handleRequest(
       return;
     }
     const downloadRequested = url.searchParams.get("download") === "1";
+    const bundleRequested = url.searchParams.get("bundle") === "1";
     if (artifact.artifact === "report") {
-      await sendChannelReport(response, filePath, manager, artifact.jobId, downloadRequested);
+      await sendChannelReport(
+        response,
+        filePath,
+        manager,
+        artifact.jobId,
+        downloadRequested,
+        bundleRequested,
+      );
       return;
     }
     await sendChannelHtml(
@@ -416,6 +496,7 @@ async function handleRequest(
       manager,
       artifact.jobId,
       downloadRequested,
+      bundleRequested,
     );
     return;
   }
@@ -427,7 +508,9 @@ async function handleRequest(
       requestError(response, 404, "PREVIEW_NOT_FOUND", "任务尚未完成或试玩文件不存在。");
       return;
     }
-    await sendChannelHtml(response, filePath, manager, previewId, false);
+    const rawPlatform = url.searchParams.get("channel");
+    const platform = rawPlatform === null ? null : normalizeChannelPlatform(rawPlatform);
+    await sendChannelHtml(response, filePath, manager, previewId, false, false, platform);
     return;
   }
 

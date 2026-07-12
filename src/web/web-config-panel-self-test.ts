@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { Script } from "node:vm";
 
+import { CHANNEL_PLATFORMS } from "../channel/channel-profile.js";
 import {
   createWebBuildRequest,
   DEFAULT_WEB_BUILD_CONFIG,
@@ -12,6 +13,7 @@ import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
 
 const previewChannel = {
   platform: "Preview",
+  platforms: ["Preview"],
   androidStoreUrl: null,
   iosStoreUrl: null,
 };
@@ -59,6 +61,7 @@ const normalizedRaw = normalizeWebBuildConfig({
   brotliFallback: "gzip-packed-js",
   channel: {
     platform: "Google",
+    platforms: ["Google", "Preview", "Google"],
     androidStoreUrl: "https://play.google.com/store/apps/details?id=com.google.android.apps.maps",
   },
 });
@@ -67,6 +70,16 @@ assert.equal(normalizedRaw.imageMode, "none");
 assert.equal(normalizedRaw.audioBitrateKbps, null);
 assert.equal(normalizedRaw.payloadEncoding, "base64");
 assert.equal(normalizedRaw.channel.platform, "Google");
+assert.deepEqual(normalizedRaw.channel.platforms, ["Preview", "Google"]);
+
+assert.throws(
+  () => normalizeWebBuildConfig({ channel: { platforms: [] } }),
+  /至少需要选择一个目标渠道/,
+);
+assert.throws(
+  () => normalizeWebBuildConfig({ channel: { platforms: ["Unknown"] } }),
+  /channel\.platforms 只支持/,
+);
 
 const rawRequest = createWebBuildRequest(
   "./web-mobile",
@@ -82,12 +95,17 @@ assert.equal(rawRequest.brotliFallback, "raw-js");
 const html = createChannelWebMvpIndexHtml();
 for (const id of [
   "recommendedPresetButton",
-  "channelPlatform",
+  "channelPlatformGroup",
+  "selectAllChannelsButton",
+  "previewOnlyButton",
   "androidStoreUrl",
   "iosStoreUrl",
   "testStoreUrlsButton",
   "channelSummary",
   "channelWarning",
+  "previewChannelDialog",
+  "previewChannelSelect",
+  "startPreviewButton",
   "buildMode",
   "imageMode",
   "pngQuality",
@@ -100,6 +118,23 @@ for (const id of [
   assert.match(html, new RegExp(`id=["']${id}["']`));
 }
 
+const channelCheckboxTags = html.match(
+  /<input\b(?=[^>]*\btype="checkbox")(?=[^>]*\bname="channelPlatform")[^>]*>/g,
+) ?? [];
+assert.equal(channelCheckboxTags.length, CHANNEL_PLATFORMS.length);
+for (const platform of CHANNEL_PLATFORMS) {
+  assert.ok(
+    channelCheckboxTags.some(
+      (tag) => tag.includes(`value="${platform}"`) && /\bchecked\b/.test(tag),
+    ),
+    `${platform} 渠道复选框缺失或未默认勾选。`,
+  );
+}
+assert.match(html, /目标渠道（可多选）/);
+assert.match(html, /默认全选/);
+assert.match(html, /下载渠道合集 ZIP/);
+assert.match(html, /选择试玩渠道/);
+assert.match(html, /基础资源只压缩一次/);
 assert.match(html, /应用一键推荐预设/);
 assert.match(html, /填入 Google Maps 测试链接/);
 assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
@@ -108,17 +143,6 @@ assert.match(html, /不执行图片压缩、音频压缩、Brotli 压缩或 Payl
 assert.match(html, /FFmpeg/);
 assert.match(html, /zip-html-res-js/);
 assert.match(html, /zip-single-html/);
-for (const label of [
-  "下载 AppLovin HTML",
-  "下载 Google ZIP",
-  "下载 Facebook ZIP",
-  "下载 Liftoff ZIP",
-  "下载 IronSource HTML",
-  "下载 Unity Ads HTML",
-  "下载 Moloco HTML",
-]) {
-  assert.match(html, new RegExp(label));
-}
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -128,14 +152,16 @@ new Script(inlineScript);
 assert.match(inlineScript, /const defaultConfig = .*"buildMode":"optimized"/);
 assert.match(inlineScript, /const recommendedConfig = .*"audioBitrateKbps":48/);
 assert.match(inlineScript, /buildMode: 'raw-single-html'/);
+assert.match(inlineScript, /platforms: platforms/);
 assert.match(inlineScript, /channel: channel/);
-assert.match(inlineScript, /channelPlatformInput\.addEventListener/);
+assert.match(inlineScript, /readSelectedPlatforms/);
+assert.match(inlineScript, /channelPlatformInputs/);
+assert.match(inlineScript, /previewChannelDialog\.showModal/);
+assert.match(inlineScript, /encodeURIComponent\(previewChannelSelect\.value\)/);
 assert.match(inlineScript, /testStoreUrlsButton\.addEventListener/);
 assert.match(inlineScript, /config: config/);
 assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /buildModeInput\.addEventListener/);
-assert.match(inlineScript, /const channelDownloadLabels =/);
-assert.match(inlineScript, /channelDownloadLabels\[completedPlatform\]/);
 
-console.log("Playable Web config panel self-test passed.");
+console.log("Playable Web multi-channel config self-test passed.");
