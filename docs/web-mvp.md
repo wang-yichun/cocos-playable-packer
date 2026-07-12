@@ -41,10 +41,12 @@ npm run web:mvp
 图片：WebP
 PNG WebP Quality：80
 JPEG WebP Quality：80
-音频：48 kbps
+音频：关闭
 Payload：HTML7
 Brotli 回退：raw-js
 ```
+
+音频压缩默认关闭，因此最小流程不要求系统安装 FFmpeg。后续配置面板可让用户主动开启音频压缩；启用时服务器必须能够执行 `ffmpeg`，或配置明确的 FFmpeg 可执行文件路径。
 
 网页暂时不展示配置面板，但创建任务接口已经接受 `config` 对象，后续可以在不修改上传流程的情况下加入参数控件。
 
@@ -73,7 +75,7 @@ Content-Type: application/json
     "imageMode": "webp",
     "pngQuality": 80,
     "jpegQuality": 80,
-    "audioBitrateKbps": 48,
+    "audioBitrateKbps": null,
     "payloadEncoding": "html7",
     "brotliFallback": "raw-js"
   }
@@ -85,7 +87,7 @@ Content-Type: application/json
 - `imageMode`：`none`、`squoosh`、`webp`；
 - `pngQuality`；
 - `jpegQuality`；
-- `audioBitrateKbps`，传 `null` 可关闭音频压缩；
+- `audioBitrateKbps`：默认和 `null` 均表示关闭；传入 `8-320` 可主动开启；
 - `payloadEncoding`：`base64`、`base91`、`html7`；
 - `brotliFallback`：`raw-js`、`gzip-packed-js`。
 
