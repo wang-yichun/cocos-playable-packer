@@ -24,6 +24,8 @@
     "test:audio-benchmark": "tsx src/audio/benchmark-build-audio-self-test.ts",
     "audio:optimize": "tsx src/audio/optimize-build-audio.ts",
     "test:audio-optimize": "tsx src/audio/optimize-build-audio-self-test.ts",
+    "webp:benchmark-build": "tsx src/webp/benchmark-build-webp.ts",
+    "test:webp-benchmark": "tsx src/webp/benchmark-build-webp-self-test.ts && tsx src/images/image-content-type-self-test.ts",
     "tinypng:build": "node --env-file=.env --import tsx src/tinypng-build/compress-build-images.ts",
     "squoosh:test-one": "tsx src/squoosh/test-one.ts",
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
@@ -49,6 +51,7 @@
   "dependencies": {
     "@jsquash/jpeg": "^1.6.0",
     "@jsquash/oxipng": "^2.3.0",
+    "@jsquash/webp": "^1.5.0",
     "acorn": "^8.17.0",
     "acorn-walk": "^8.3.5",
     "cheerio": "^1.2.0",
