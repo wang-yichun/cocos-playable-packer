@@ -4,9 +4,11 @@ import { open, readFile, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { injectChannelDownloadBridge } from "../channel/channel-download-bridge.js";
+import { createChannelReport } from "../channel/channel-profile.js";
 import type { BuildPlayableFunction } from "./web-job-manager.js";
 import { WebJobManager } from "./web-job-manager.js";
-import { createWebMvpIndexHtml } from "./web-ui.js";
+import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
 
 const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_BYTES = 64 * 1024;
@@ -54,10 +56,13 @@ function sendText(
   response.end(body);
 }
 
-function requestError(response: ServerResponse, statusCode: number, code: string, message: string): void {
-  sendJson(response, statusCode, {
-    error: { code, message },
-  });
+function requestError(
+  response: ServerResponse,
+  statusCode: number,
+  code: string,
+  message: string,
+): void {
+  sendJson(response, statusCode, { error: { code, message } });
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<unknown> {
@@ -159,28 +164,88 @@ function previewJobId(pathname: string): string | null {
   return /^\/preview\/([0-9a-f-]{36})\/?$/i.exec(pathname)?.[1] ?? null;
 }
 
-async function sendFile(
-  response: ServerResponse,
-  filePath: string,
+function contentHeaders(
   contentType: string,
+  contentLength: number,
   downloadName: string | null,
-): Promise<void> {
-  const info = await stat(filePath).catch(() => null);
-  if (!info?.isFile()) {
-    requestError(response, 404, "ARTIFACT_NOT_FOUND", "构建产物不存在。");
-    return;
-  }
-  const body = await readFile(filePath);
+): Record<string, string | number> {
   const headers: Record<string, string | number> = {
     "Content-Type": contentType,
-    "Content-Length": body.length,
+    "Content-Length": contentLength,
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
   };
   if (downloadName !== null) {
     headers["Content-Disposition"] = `attachment; filename="${downloadName}"`;
   }
-  response.writeHead(200, headers);
+  return headers;
+}
+
+async function sendChannelHtml(
+  response: ServerResponse,
+  htmlFile: string,
+  manager: WebJobManager,
+  jobId: string,
+  downloadName: string | null,
+): Promise<void> {
+  const info = await stat(htmlFile).catch(() => null);
+  const job = manager.getJob(jobId);
+  if (!info?.isFile() || job === null) {
+    requestError(response, 404, "ARTIFACT_NOT_FOUND", "构建产物不存在。");
+    return;
+  }
+
+  const source = await readFile(htmlFile, "utf8");
+  const html = injectChannelDownloadBridge(source, job.config.channel);
+  response.writeHead(
+    200,
+    contentHeaders("text/html; charset=utf-8", Buffer.byteLength(html), downloadName),
+  );
+  response.end(html);
+}
+
+async function sendChannelReport(
+  response: ServerResponse,
+  reportFile: string,
+  manager: WebJobManager,
+  jobId: string,
+  downloadRequested: boolean,
+): Promise<void> {
+  const info = await stat(reportFile).catch(() => null);
+  const job = manager.getJob(jobId);
+  if (!info?.isFile() || job === null) {
+    requestError(response, 404, "ARTIFACT_NOT_FOUND", "构建报告不存在。");
+    return;
+  }
+
+  const parsed = JSON.parse(await readFile(reportFile, "utf8")) as unknown;
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    requestError(response, 500, "REPORT_INVALID", "构建报告根节点必须是对象。");
+    return;
+  }
+
+  const baseChannel = createChannelReport(job.config.channel);
+  const report = parsed as Record<string, unknown>;
+  report.channel = {
+    ...baseChannel,
+    integrationStatus: "download-bridge-injected",
+    warnings: [
+      "已向下载和在线试玩的 HTML 注入渠道下载桥；渠道专用交付容器和启动生命周期尚未实现。",
+      ...baseChannel.warnings.filter(
+        (warning) => !warning.includes("尚未向最终产物注入渠道桥接代码"),
+      ),
+    ],
+  };
+
+  const body = `${JSON.stringify(report, null, 2)}\n`;
+  response.writeHead(
+    200,
+    contentHeaders(
+      "application/json; charset=utf-8",
+      Buffer.byteLength(body),
+      downloadRequested ? "game.report.json" : null,
+    ),
+  );
   response.end(body);
 }
 
@@ -194,7 +259,7 @@ async function handleRequest(
   const pathname = url.pathname;
 
   if (method === "GET" && pathname === "/") {
-    sendText(response, 200, createWebMvpIndexHtml(), "text/html; charset=utf-8");
+    sendText(response, 200, createChannelWebMvpIndexHtml(), "text/html; charset=utf-8");
     return;
   }
   if (method === "GET" && pathname === "/api/health") {
@@ -262,15 +327,16 @@ async function handleRequest(
       return;
     }
     const downloadRequested = url.searchParams.get("download") === "1";
-    await sendFile(
+    if (artifact.artifact === "report") {
+      await sendChannelReport(response, filePath, manager, artifact.jobId, downloadRequested);
+      return;
+    }
+    await sendChannelHtml(
       response,
       filePath,
-      artifact.artifact === "html"
-        ? "text/html; charset=utf-8"
-        : "application/json; charset=utf-8",
-      downloadRequested
-        ? artifact.artifact === "html" ? "game.html" : "game.report.json"
-        : null,
+      manager,
+      artifact.jobId,
+      downloadRequested ? "game.html" : null,
     );
     return;
   }
@@ -282,7 +348,7 @@ async function handleRequest(
       requestError(response, 404, "PREVIEW_NOT_FOUND", "任务尚未完成或试玩文件不存在。");
       return;
     }
-    await sendFile(response, filePath, "text/html; charset=utf-8", null);
+    await sendChannelHtml(response, filePath, manager, previewId, null);
     return;
   }
 

@@ -3,6 +3,10 @@ import type {
   PlayableBrotliFallbackMode,
   PlayablePayloadEncoding,
 } from "../service/build-playable-types.js";
+import {
+  normalizeChannelBuildConfig,
+  type ChannelBuildConfig,
+} from "../channel/channel-profile.js";
 
 export type WebBuildMode = "optimized" | "raw-single-html";
 export type WebImageMode = "none" | "squoosh" | "webp";
@@ -15,6 +19,7 @@ export interface WebBuildConfig {
   audioBitrateKbps?: number | null;
   payloadEncoding?: PlayablePayloadEncoding;
   brotliFallback?: PlayableBrotliFallbackMode;
+  channel?: Partial<ChannelBuildConfig>;
 }
 
 export interface NormalizedWebBuildConfig {
@@ -25,7 +30,14 @@ export interface NormalizedWebBuildConfig {
   audioBitrateKbps: number | null;
   payloadEncoding: PlayablePayloadEncoding;
   brotliFallback: PlayableBrotliFallbackMode;
+  channel: ChannelBuildConfig;
 }
+
+const DEFAULT_CHANNEL_CONFIG: ChannelBuildConfig = {
+  platform: "Preview",
+  androidStoreUrl: null,
+  iosStoreUrl: null,
+};
 
 export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   buildMode: "optimized",
@@ -35,6 +47,7 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
+  channel: { ...DEFAULT_CHANNEL_CONFIG },
 };
 
 export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
@@ -45,6 +58,7 @@ export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = 
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
+  channel: { ...DEFAULT_CHANNEL_CONFIG },
 };
 
 export const RAW_SINGLE_HTML_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
@@ -55,6 +69,7 @@ export const RAW_SINGLE_HTML_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig
   audioBitrateKbps: null,
   payloadEncoding: "base64",
   brotliFallback: "raw-js",
+  channel: { ...DEFAULT_CHANNEL_CONFIG },
 };
 
 function integerInRange(
@@ -111,16 +126,23 @@ function normalizeBrotliFallback(value: unknown): PlayableBrotliFallbackMode {
 
 export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfig {
   if (value === undefined || value === null) {
-    return { ...DEFAULT_WEB_BUILD_CONFIG };
+    return {
+      ...DEFAULT_WEB_BUILD_CONFIG,
+      channel: { ...DEFAULT_WEB_BUILD_CONFIG.channel },
+    };
   }
   if (typeof value !== "object" || Array.isArray(value)) {
     throw new Error("config 必须是对象。");
   }
 
   const source = value as Record<string, unknown>;
+  const channel = normalizeChannelBuildConfig(source.channel);
   const buildMode = normalizeBuildMode(source.buildMode);
   if (buildMode === "raw-single-html") {
-    return { ...RAW_SINGLE_HTML_WEB_BUILD_CONFIG };
+    return {
+      ...RAW_SINGLE_HTML_WEB_BUILD_CONFIG,
+      channel,
+    };
   }
 
   const imageMode = normalizeImageMode(source.imageMode);
@@ -154,6 +176,7 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
     audioBitrateKbps,
     payloadEncoding: normalizePayloadEncoding(source.payloadEncoding),
     brotliFallback: normalizeBrotliFallback(source.brotliFallback),
+    channel,
   };
 }
 

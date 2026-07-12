@@ -8,7 +8,13 @@ import {
   RAW_SINGLE_HTML_WEB_BUILD_CONFIG,
   RECOMMENDED_WEB_BUILD_CONFIG,
 } from "./web-build-config.js";
-import { createWebMvpIndexHtml } from "./web-ui.js";
+import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
+
+const previewChannel = {
+  platform: "Preview",
+  androidStoreUrl: null,
+  iosStoreUrl: null,
+};
 
 assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
   buildMode: "optimized",
@@ -18,6 +24,7 @@ assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
+  channel: previewChannel,
 });
 
 assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
@@ -28,6 +35,7 @@ assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
+  channel: previewChannel,
 });
 
 assert.deepEqual(RAW_SINGLE_HTML_WEB_BUILD_CONFIG, {
@@ -38,6 +46,7 @@ assert.deepEqual(RAW_SINGLE_HTML_WEB_BUILD_CONFIG, {
   audioBitrateKbps: null,
   payloadEncoding: "base64",
   brotliFallback: "raw-js",
+  channel: previewChannel,
 });
 
 const normalizedRaw = normalizeWebBuildConfig({
@@ -48,8 +57,16 @@ const normalizedRaw = normalizeWebBuildConfig({
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
   brotliFallback: "gzip-packed-js",
+  channel: {
+    platform: "Google",
+    androidStoreUrl: "https://play.google.com/store/apps/details?id=com.google.android.apps.maps",
+  },
 });
-assert.deepEqual(normalizedRaw, RAW_SINGLE_HTML_WEB_BUILD_CONFIG);
+assert.equal(normalizedRaw.buildMode, "raw-single-html");
+assert.equal(normalizedRaw.imageMode, "none");
+assert.equal(normalizedRaw.audioBitrateKbps, null);
+assert.equal(normalizedRaw.payloadEncoding, "base64");
+assert.equal(normalizedRaw.channel.platform, "Google");
 
 const rawRequest = createWebBuildRequest(
   "./web-mobile",
@@ -62,9 +79,15 @@ assert.equal(rawRequest.audio, null);
 assert.equal(rawRequest.payloadEncoding, "base64");
 assert.equal(rawRequest.brotliFallback, "raw-js");
 
-const html = createWebMvpIndexHtml();
+const html = createChannelWebMvpIndexHtml();
 for (const id of [
   "recommendedPresetButton",
+  "channelPlatform",
+  "androidStoreUrl",
+  "iosStoreUrl",
+  "testStoreUrlsButton",
+  "channelSummary",
+  "channelWarning",
   "buildMode",
   "imageMode",
   "pngQuality",
@@ -78,10 +101,12 @@ for (const id of [
 }
 
 assert.match(html, /应用一键推荐预设/);
+assert.match(html, /填入 Google Maps 测试链接/);
 assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
 assert.match(html, /仅合并单 HTML（不压缩）/);
 assert.match(html, /不执行图片压缩、音频压缩、Brotli 压缩或 Payload 编码/);
 assert.match(html, /FFmpeg/);
+assert.match(html, /zip-html-res-js/);
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -91,6 +116,9 @@ new Script(inlineScript);
 assert.match(inlineScript, /const defaultConfig = .*"buildMode":"optimized"/);
 assert.match(inlineScript, /const recommendedConfig = .*"audioBitrateKbps":48/);
 assert.match(inlineScript, /buildMode: 'raw-single-html'/);
+assert.match(inlineScript, /channel: channel/);
+assert.match(inlineScript, /channelPlatformInput\.addEventListener/);
+assert.match(inlineScript, /testStoreUrlsButton\.addEventListener/);
 assert.match(inlineScript, /config: config/);
 assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
