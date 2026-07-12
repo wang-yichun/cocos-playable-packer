@@ -25,13 +25,18 @@ music-metadata
 - 声道数；
 - MP3 元数据状态。
 
-### 外部工具
+### 外部工具：FFmpeg
 
-```text
-FFmpeg
-```
+转码使用 FFmpeg 的 `libmp3lame`。FFmpeg 不属于 npm 依赖，项目不会通过 `npm ci` 或 `npm install` 自动下载 FFmpeg。
 
-转码使用 FFmpeg 的 `libmp3lame`。项目不会全局安装 FFmpeg，也不会通过 npm 下载二进制文件。
+以下操作需要 FFmpeg：
+
+- `audio:benchmark`；
+- `audio:optimize` 的实际转码；
+- `playable:build` 并传入 `--audio-bitrate=N`；
+- Web MVP 主动启用音频压缩。
+
+`audio:analyze`、未启用音频压缩的 Pipeline，以及仅执行图片和 HTML 打包的流程不需要 FFmpeg。
 
 默认命令：
 
@@ -39,11 +44,29 @@ FFmpeg
 ffmpeg
 ```
 
+安装后应在新的 PowerShell 窗口中验证：
+
+```powershell
+where.exe ffmpeg
+ffmpeg -version
+ffmpeg -encoders | Select-String libmp3lame
+```
+
+如果出现：
+
+```text
+spawn ffmpeg ENOENT
+```
+
+表示 Node.js 找不到 `ffmpeg` 可执行文件，通常不是 npm 包缺失。修改 Windows `Path` 后，需要重新打开终端并重启相关命令或 Web MVP 服务。
+
 自定义路径：
 
 ```text
 --ffmpeg="D:\Tools\ffmpeg\bin\ffmpeg.exe"
 ```
+
+完整 Windows 安装步骤见 [FFmpeg 安装说明](ffmpeg-installation.md)。
 
 ## 2. 只读分析
 
