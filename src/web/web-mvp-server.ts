@@ -4,7 +4,10 @@ import { open, readFile, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { createChannelHtml } from "../channel/liftoff-delivery.js";
+import {
+  createChannelDownloadArtifact,
+  createChannelHtml,
+} from "../channel/liftoff-delivery.js";
 import {
   channelConfigForPlatform,
   createMultiChannelDownloadArtifact,
@@ -199,6 +202,7 @@ async function sendChannelHtml(
   manager: WebJobManager,
   jobId: string,
   downloadRequested: boolean,
+  bundleRequested: boolean,
   requestedPreviewPlatform: ChannelPlatform | null = null,
 ): Promise<void> {
   const info = await stat(htmlFile).catch(() => null);
@@ -210,12 +214,25 @@ async function sendChannelHtml(
 
   const source = await readFile(htmlFile, "utf8");
   if (downloadRequested) {
-    const bundle = createMultiChannelDownloadArtifact(source, job.config.channel);
+    if (bundleRequested) {
+      const bundle = createMultiChannelDownloadArtifact(source, job.config.channel);
+      response.writeHead(
+        200,
+        contentHeaders(bundle.contentType, bundle.body.length, bundle.fileName),
+      );
+      response.end(bundle.body);
+      return;
+    }
+
+    const artifact = createChannelDownloadArtifact(
+      source,
+      channelConfigForPlatform(job.config.channel, job.config.channel.platform),
+    );
     response.writeHead(
       200,
-      contentHeaders(bundle.contentType, bundle.body.length, bundle.fileName),
+      contentHeaders(artifact.contentType, artifact.body.length, artifact.fileName),
     );
-    response.end(bundle.body);
+    response.end(artifact.body);
     return;
   }
 
@@ -258,12 +275,33 @@ function deliveryWarning(platform: ChannelPlatform): string {
   }
 }
 
+function deliveryReport(
+  platform: ChannelPlatform,
+  bundlePath: string | null,
+  artifact: ReturnType<typeof createChannelDownloadArtifact>,
+): Record<string, unknown> {
+  return {
+    platform,
+    ...(bundlePath === null ? {} : { bundlePath }),
+    format: artifact.deliveryFormat,
+    fileName: artifact.fileName,
+    mediaType: artifact.contentType,
+    entries: [...artifact.entries],
+    entryBytes: { ...artifact.entryBytes },
+    bytes: artifact.body.length,
+    sha256: artifact.sha256,
+    htmlBytes: artifact.htmlBytes,
+    generatedOnDownload: true,
+  };
+}
+
 async function sendChannelReport(
   response: ServerResponse,
   reportFile: string,
   manager: WebJobManager,
   jobId: string,
   downloadRequested: boolean,
+  bundleRequested: boolean,
 ): Promise<void> {
   const info = await stat(reportFile).catch(() => null);
   const job = manager.getJob(jobId);
@@ -285,62 +323,58 @@ async function sendChannelReport(
   }
 
   const sourceHtml = await readFile(htmlFile, "utf8");
-  const bundle = createMultiChannelDownloadArtifact(sourceHtml, job.config.channel);
   const report = parsed as Record<string, unknown>;
 
-  const channels = bundle.channelArtifacts.map(({ platform }) => {
-    const base = createChannelReport(channelConfigForPlatform(job.config.channel, platform));
-    return {
+  if (!bundleRequested) {
+    const platform = job.config.channel.platform;
+    const config = channelConfigForPlatform(job.config.channel, platform);
+    const base = createChannelReport(config);
+    const artifact = createChannelDownloadArtifact(sourceHtml, config);
+    report.channel = {
       ...base,
       integrationStatus: "channel-delivery-ready",
       warnings: [deliveryWarning(platform), ...base.warnings],
     };
-  });
-
-  const deliveries = bundle.channelArtifacts.map(({ platform, bundlePath, artifact }) => ({
-    platform,
-    bundlePath,
-    format: artifact.deliveryFormat,
-    fileName: artifact.fileName,
-    mediaType: artifact.contentType,
-    entries: [...artifact.entries],
-    entryBytes: { ...artifact.entryBytes },
-    bytes: artifact.body.length,
-    sha256: artifact.sha256,
-    htmlBytes: artifact.htmlBytes,
-    generatedOnDownload: true,
-  }));
-
-  report.channels = channels;
-  report.deliveries = deliveries;
-  report.bundle = {
-    format: "zip-channel-bundle",
-    fileName: bundle.fileName,
-    mediaType: bundle.contentType,
-    entries: [...bundle.entries],
-    bytes: bundle.body.length,
-    sha256: bundle.sha256,
-    manifestFile: "manifest.json",
-    generatedOnDownload: true,
-  };
-  report.reuse = {
-    baseBuildExecutions: 1,
-    selectedChannelCount: channels.length,
-    sharedStages: [
-      "copy",
-      "imageOptimization",
-      "audioOptimization",
-      "brotliCompression",
-      "payloadEncoding",
-    ],
-    channelSpecificStage: "deliveryPackaging",
-    note: "图片、音频、Brotli 和 Payload 只处理一次，各渠道仅派生下载桥、运行时包装和交付容器。",
-  };
-
-  if (channels.length === 1) {
-    report.channel = channels[0];
-    report.delivery = deliveries[0];
+    report.delivery = deliveryReport(platform, null, artifact);
   } else {
+    const bundle = createMultiChannelDownloadArtifact(sourceHtml, job.config.channel);
+    const channels = bundle.channelArtifacts.map(({ platform }) => {
+      const base = createChannelReport(channelConfigForPlatform(job.config.channel, platform));
+      return {
+        ...base,
+        integrationStatus: "channel-delivery-ready",
+        warnings: [deliveryWarning(platform), ...base.warnings],
+      };
+    });
+    const deliveries = bundle.channelArtifacts.map(({ platform, bundlePath, artifact }) =>
+      deliveryReport(platform, bundlePath, artifact)
+    );
+
+    report.channels = channels;
+    report.deliveries = deliveries;
+    report.bundle = {
+      format: "zip-channel-bundle",
+      fileName: bundle.fileName,
+      mediaType: bundle.contentType,
+      entries: [...bundle.entries],
+      bytes: bundle.body.length,
+      sha256: bundle.sha256,
+      manifestFile: "manifest.json",
+      generatedOnDownload: true,
+    };
+    report.reuse = {
+      baseBuildExecutions: 1,
+      selectedChannelCount: channels.length,
+      sharedStages: [
+        "copy",
+        "imageOptimization",
+        "audioOptimization",
+        "brotliCompression",
+        "payloadEncoding",
+      ],
+      channelSpecificStage: "deliveryPackaging",
+      note: "图片、音频、Brotli 和 Payload 只处理一次，各渠道仅派生下载桥、运行时包装和交付容器。",
+    };
     delete report.channel;
     delete report.delivery;
   }
@@ -351,7 +385,11 @@ async function sendChannelReport(
     contentHeaders(
       "application/json; charset=utf-8",
       Buffer.byteLength(body),
-      downloadRequested ? "playable-channel-report.json" : null,
+      downloadRequested
+        ? bundleRequested
+          ? "playable-channel-report.json"
+          : "game.report.json"
+        : null,
     ),
   );
   response.end(body);
@@ -440,8 +478,16 @@ async function handleRequest(
       return;
     }
     const downloadRequested = url.searchParams.get("download") === "1";
+    const bundleRequested = url.searchParams.get("bundle") === "1";
     if (artifact.artifact === "report") {
-      await sendChannelReport(response, filePath, manager, artifact.jobId, downloadRequested);
+      await sendChannelReport(
+        response,
+        filePath,
+        manager,
+        artifact.jobId,
+        downloadRequested,
+        bundleRequested,
+      );
       return;
     }
     await sendChannelHtml(
@@ -450,6 +496,7 @@ async function handleRequest(
       manager,
       artifact.jobId,
       downloadRequested,
+      bundleRequested,
     );
     return;
   }
@@ -463,7 +510,7 @@ async function handleRequest(
     }
     const rawPlatform = url.searchParams.get("channel");
     const platform = rawPlatform === null ? null : normalizeChannelPlatform(rawPlatform);
-    await sendChannelHtml(response, filePath, manager, previewId, false, platform);
+    await sendChannelHtml(response, filePath, manager, previewId, false, false, platform);
     return;
   }
 
