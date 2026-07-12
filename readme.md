@@ -1,355 +1,340 @@
 # Cocos Playable Packer
 
-用于 Cocos Creator `web-mobile` 构建的单 HTML 打包，以及基于 TinyPNG 的源图片压缩、缓存、预览、应用和恢复。
+用于将 Cocos Creator 3.8.x `web-mobile` 构建产物优化并打包为离线单文件 Playable HTML。
 
-当前示例项目配置：
+当前生产流程支持：
 
-```text
-configs/game141-source-images.json
+- 图片处理：`none`、TinyPNG、Squoosh PNG/JPEG、WebP；
+- 音频处理：可选 MP3 码率压缩；
+- 资源归档：Solid Brotli；
+- Payload 编码：Base64、Safe Base91、HTML-safe 7-bit；
+- Brotli 回退解码器：原始 JavaScript 或 gzip-packed JavaScript；
+- 工作区隔离、SHA-256 校验、JSON 报告和失败保护。
+
+项目默认环境：Windows 11、PowerShell、Node.js 22、TypeScript。
+
+## 1. 安装与检查
+
+首次克隆或更换电脑后执行：
+
+```powershell
+npm ci
+npm run typecheck
 ```
 
----
-
-## 1. 环境准备
-
-安装依赖：
+如果 `package-lock.json` 与 `package.json` 不一致，再执行：
 
 ```powershell
 npm install
+npm run typecheck
 ```
 
-在项目根目录创建 `.env`：
+音频转码需要本机可执行的 FFmpeg。默认调用：
+
+```text
+ffmpeg
+```
+
+也可以通过 `--ffmpeg=<路径>` 指定可执行文件。
+
+TinyPNG 模式需要在项目根目录创建 `.env`：
 
 ```env
 TINYPNG_API_KEY=你的TinyPNG_API_Key
 
-# 直连失败时可启用代理
+# 直连失败时可选
 # TINYPNG_PROXY=http://127.0.0.1:7890
 ```
 
-真实的 `.env` 不应提交到 Git。建议同时保留一个不含密钥的 `.env.example`。
+`.env`、缓存、工作区副本和构建产物不得提交到 Git。
 
----
+## 2. 推荐：一条命令完成 Playable 构建
 
-## 2. npm 参数转发说明
+### Squoosh PNG/JPEG + MP3 48 kbps + HTML7
 
-在部分 Windows + npm 环境中，单独的脚本开关，例如 `--all`、`--confirm`，可能被 npm 吃掉。
+```powershell
+npm run playable:build -- `
+  "D:\Projects\Cocos\game141\build\web-mobile" `
+  "./dist/game-html7-squoosh80-audio48.html" `
+  --image-mode=squoosh `
+  --png-quality=80 `
+  --jpeg-quality=80 `
+  --audio-bitrate=48 `
+  --payload-encoding=html7 `
+  --brotli-fallback=gzip-packed-js `
+  --project=game141
+```
 
-本项目对带脚本开关的命令统一采用两个 `--`：
+### WebP Q80 + MP3 48 kbps + HTML7
+
+```powershell
+npm run playable:build -- `
+  "D:\Projects\Cocos\game141\build\web-mobile" `
+  "./dist/game-html7-webp80-audio48.html" `
+  --image-mode=webp `
+  --png-webp-quality=80 `
+  --jpeg-webp-quality=80 `
+  --audio-bitrate=48 `
+  --payload-encoding=html7 `
+  --brotli-fallback=gzip-packed-js `
+  --project=game141
+```
+
+Pipeline 会先复制输入构建，再在工作区副本中优化资源。原始 Cocos `web-mobile` 目录不会被修改。
+
+成功后主要输出：
 
 ```text
-npm run <script> -- -- <脚本参数>
+<输出文件>.html
+<输出文件>.report.json
+workspaces/<project>/reports/latest.json
 ```
 
-例如：
-
-```powershell
-npm run tinypng:preview -- -- "./configs/game141-source-images.json" --all
-```
-
-正确时，npm 打印的实际执行命令末尾应保留：
+需要保留本次工作区副本时增加：
 
 ```text
-./configs/game141-source-images.json --all
+--keep-workspace
 ```
 
----
+## 3. 图片模式
 
-## 3. 单 HTML 打包
+| 模式 | 作用 | 主要实现 |
+| --- | --- | --- |
+| `none` | 不修改图片 | 仅复制和校验 |
+| `tinypng` | 调用 TinyPNG API 压缩构建图片 | `tinify` |
+| `squoosh` | PNG 调色板量化 + OxiPNG；JPEG 使用 MozJPEG | `sharp`、`@jsquash/oxipng`、`@jsquash/jpeg` |
+| `webp` | 将 PNG/JPEG 内容编码为 WebP，保留原逻辑路径 | `sharp`、`@jsquash/webp` |
 
-压缩普通 `web-mobile` 构建：
+### 不压缩图片
 
 ```powershell
-npm run pack:br -- "./web-mobile" "./dist/game-compressed.html"
+npm run playable:build -- `
+  "<web-mobile目录>" `
+  "./dist/game.html" `
+  --image-mode=none
 ```
 
-A/B 测试：原图版本
+### TinyPNG
+
+为避免意外消耗 API 配额，必须显式指定 `--all` 或 `--limit=N`：
 
 ```powershell
-npm run pack:br -- `
-  "./workspaces/game141/ab-build/original/web-mobile" `
-  "./dist/game141_original_compressed.html"
-```
-
-A/B 测试：TinyPNG 版本
-
-```powershell
-npm run pack:br -- `
-  "./workspaces/game141/ab-build/tinypng/web-mobile" `
-  "./dist/game141_tinypng_compressed.html"
-```
-
----
-
-## 4. 分析源图片
-
-```powershell
-npm run analyze:source-images -- `
-  "./configs/game141-source-images.json"
-```
-
-主要输出：
-
-```text
-workspaces/game141/reports/source-image-analysis.json
-workspaces/game141/manifests/candidates.json
-```
-
-注意：
-
-- `tinypng:preview` 只读取已经生成的 `candidates.json`。
-- 修改 `manualReviewDirectories`、文件名规则、最小体积等配置后，必须重新运行 `analyze:source-images`。
-- 修改配置后直接运行 `tinypng:preview`，不会重新扫描或重新分类工程资源。
-
----
-
-## 5. TinyPNG 预览压缩
-
-预览压缩只写入工作目录和缓存，不会修改 Cocos Creator 源资源。
-
-输出目录：
-
-```text
-workspaces/game141/preview/
-.tinypng-cache/
-```
-
-### 默认模式
-
-未指定上限时，默认最多新增 5 次 API 请求：
-
-```powershell
-npm run tinypng:preview -- -- `
-  "./configs/game141-source-images.json"
-```
-
-### 最多新增 5 次请求
-
-```powershell
-npm run tinypng:preview -- -- `
-  "./configs/game141-source-images.json" `
-  --limit=5
-```
-
-### 只使用缓存，不请求 TinyPNG
-
-```powershell
-npm run tinypng:preview -- -- `
-  "./configs/game141-source-images.json" `
-  --limit=0
-```
-
-该命令会：
-
-- 复制已有缓存到 `preview`；
-- 显示缓存命中和未命中数量；
-- 不产生新的 TinyPNG API 请求。
-
-### 压缩全部缓存未命中项
-
-```powershell
-npm run tinypng:preview -- -- `
-  "./configs/game141-source-images.json" `
+npm run playable:build -- `
+  "<web-mobile目录>" `
+  "./dist/game-tinypng.html" `
+  --image-mode=tinypng `
   --all
 ```
 
-正确输出应显示：
-
-```text
-API 请求上限：不限
-```
-
-### 临时使用一个很大的上限
+### Squoosh
 
 ```powershell
-npm run tinypng:preview -- -- `
-  "./configs/game141-source-images.json" `
-  --limit=9999
+npm run playable:build -- `
+  "<web-mobile目录>" `
+  "./dist/game-squoosh.html" `
+  --image-mode=squoosh `
+  --png-quality=80 `
+  --jpeg-quality=80
 ```
 
-实际请求数量不会超过当前缓存未命中的候选数量。
+PNG 还支持：
 
----
+```text
+--colours=256
+--effort=10
+--dither=0.5
+--oxipng-level=3
+```
 
-## 6. 检查 TinyPNG 缓存
+`--oxipng-level` 是无损 PNG 优化等级，不是画质参数。
+
+### WebP
 
 ```powershell
-npm run tinypng:cache-check -- `
-  "./configs/game141-source-images.json"
+npm run playable:build -- `
+  "<web-mobile目录>" `
+  "./dist/game-webp.html" `
+  --image-mode=webp `
+  --png-webp-quality=80 `
+  --jpeg-webp-quality=80
 ```
 
-重点确认：
+WebP 模式只在候选文件同时满足以下条件时替换内容：
 
-```text
-缓存记录：N
-有效记录：N
-无效记录：0
-```
+- WebP 原始字节数更小；
+- WebP 经 Brotli Q11 后仍更小。
 
-缓存以源文件 SHA-256 为键。内容未变化时，即使文件移动或重复执行，也不会再次请求 TinyPNG。
+文件引用路径和扩展名保持不变，打包器按文件内容识别真实 MIME 类型。
 
----
+详见 [图片优化说明](docs/image-optimization.md) 和 [WebP 路线说明](docs/webp-optimization.md)。
 
-## 7. 生成应用计划
+## 4. 音频压缩
 
-正式修改源图片前，先生成应用计划：
+Pipeline 的音频压缩是可选项。不传 `--audio-bitrate` 时完全关闭。
 
 ```powershell
-npm run tinypng:apply-plan -- `
-  "./configs/game141-source-images.json"
+npm run playable:build -- `
+  "<web-mobile目录>" `
+  "./dist/game-audio48.html" `
+  --image-mode=none `
+  --audio-bitrate=48
 ```
 
-输出：
+当前生产优化器：
+
+- 只扫描 `.mp3`；
+- 只处理源码率高于目标码率的文件；
+- 使用 FFmpeg `libmp3lame`；
+- 保持原声道数；
+- 移除元数据和封面流；
+- 校验输出码率、声道、体积和 SHA-256；
+- 输出不变小则保留原文件。
+
+详见 [音频优化说明](docs/audio-optimization.md)。
+
+## 5. Payload 编码
 
 ```text
-workspaces/game141/manifests/apply-plan.json
+--payload-encoding=base64
+--payload-encoding=base91
+--payload-encoding=html7
 ```
 
-应用计划会再次检查：
+- `base64`：默认模式，兼容性最高；
+- `base91`：更高密度的可打印 ASCII；
+- `html7`：HTML-safe 7-bit 路线，当前体积最小，但仍应按渠道验证。
 
-- 源文件哈希是否变化；
-- TinyPNG 缓存是否存在且有效；
-- 图片格式和尺寸是否保持；
-- 压缩结果是否小于原图；
-- 预计替换数量和节省体积。
+未指定时默认为 `base64`。
 
-`压缩无收益` 的文件不会被正式应用。
+## 6. Brotli 回退解码器
 
----
+```text
+--brotli-fallback=raw-js
+--brotli-fallback=gzip-packed-js
+```
 
-## 8. 应用压缩结果
+- `raw-js`：默认模式，兼容性最高；
+- `gzip-packed-js`：将 JavaScript Brotli 解码器再次 gzip 压缩，运行时通过 `DecompressionStream('gzip')` 展开，可进一步减小 HTML。
 
-建议先关闭 Cocos Creator，或者至少停止预览和构建，避免图片替换期间触发连续导入。
+目标广告容器或 WebView 未验证前，不应假设其支持 `gzip-packed-js`。
+
+## 7. 独立分析与优化命令
+
+### 构建资源分析
 
 ```powershell
-npm run tinypng:apply -- -- `
-  "./configs/game141-source-images.json" `
-  --confirm
+npm run analyze -- `
+  "./web-mobile" `
+  "./compression-report.json"
 ```
 
-应用流程：
-
-```text
-最终预检
-→ 备份原图
-→ 写入恢复清单
-→ 原子替换源图片
-→ 校验替换结果
-```
-
-应用操作：
-
-- 只替换图片文件；
-- 不修改对应的 `.meta` 文件；
-- 每张图片替换前都会备份；
-- 发生错误时会尝试回滚本次修改；
-- 可以通过 Git 状态查看被替换的源图片。
-
-备份和应用记录位于：
-
-```text
-workspaces/game141/backups/<计划编号>/
-workspaces/game141/manifests/applications/
-workspaces/game141/manifests/latest-application.json
-```
-
-应用后重新打开 Cocos Creator，等待资源导入完成，再运行和构建游戏。
-
----
-
-## 9. 恢复原始图片
+### 图片独立入口
 
 ```powershell
-npm run tinypng:restore -- -- `
-  "./configs/game141-source-images.json" `
-  --confirm
+npm run images:optimize -- `
+  "./web-mobile" `
+  --image-mode=squoosh `
+  --png-quality=80 `
+  --jpeg-quality=80 `
+  --preview
 ```
 
-恢复操作会：
+### 音频分析
 
-- 从最近一次应用备份中恢复原始图片；
-- 校验当前图片和备份图片的 SHA-256；
-- 不修改 `.meta` 文件；
-- 当前图片被人工修改过时拒绝覆盖；
-- 生成恢复记录。
+```powershell
+npm run audio:analyze -- `
+  "./web-mobile" `
+  "./audio-analysis-report.json"
+```
 
-恢复记录位于：
+### 音频转码基准与试听页
+
+```powershell
+npm run audio:benchmark -- `
+  "./web-mobile" `
+  "./audio-benchmark" `
+  --min-bitrate=160 `
+  --bitrates=128,96,64,48
+```
+
+### WebP 批量基准与预览页
+
+```powershell
+npm run webp:benchmark-build -- `
+  "./web-mobile" `
+  "./webp-benchmark" `
+  --png-quality=80 `
+  --jpeg-quality=80
+```
+
+### 仅执行 Brotli 单 HTML 打包
+
+```powershell
+npm run pack:br -- `
+  "./web-mobile" `
+  "./dist/game-compressed.html"
+```
+
+## 8. 技术组成
+
+| 组件 | 用途 |
+| --- | --- |
+| Node.js `zlib` | Solid Brotli Q11、gzip-packed 回退脚本 |
+| `brotli-compress` | 浏览器 JavaScript Brotli 回退解码器 |
+| `sharp` | 图片解码、像素读取和 PNG 调色板量化 |
+| `@jsquash/oxipng` | PNG 无损重排与压缩 |
+| `@jsquash/jpeg` | MozJPEG 编码 |
+| `@jsquash/webp` | libwebp WASM 编码 |
+| `tinify` | TinyPNG API 客户端 |
+| `music-metadata` | 音频格式、码率、时长、采样率和声道分析 |
+| FFmpeg / `libmp3lame` | MP3 候选生成与生产转码 |
+| `acorn`、`acorn-walk` | JavaScript 与 SystemJS 模块结构分析 |
+| `cheerio` | HTML 结构处理 |
+| `tsx`、TypeScript | TypeScript 命令执行和静态检查 |
+
+更完整的分层说明见 [技术概况](docs/technical-overview.md)。
+
+## 9. 缓存与生成目录
+
+以下内容保持本地化，不提交到 Git：
 
 ```text
-workspaces/game141/manifests/restores/
-workspaces/game141/manifests/latest-restore.json
-```
-
----
-
-## 10. 推荐完整流程
-
-### 第一次处理一个项目
-
-```text
-1. 配置 configs/<project>.json
-2. analyze:source-images
-3. tinypng:preview --limit=5
-4. 游戏内检查预览资源
-5. tinypng:preview --all
-6. tinypng:cache-check
-7. tinypng:apply-plan
-8. tinypng:apply --confirm
-9. 等待 Cocos Creator 重新导入
-10. 运行和构建游戏
-11. pack:br
-12. 出现问题时 tinypng:restore --confirm
-```
-
-### 修改图片分类配置后
-
-```text
-修改配置
-→ 重新运行 analyze:source-images
-→ 检查新的 candidates.json
-→ 再运行 tinypng:preview
-```
-
-### A/B 构建验证
-
-```text
-恢复原图
-→ 构建 original/web-mobile
-→ 应用 TinyPNG
-→ 构建 tinypng/web-mobile
-→ 分别 pack:br
-→ 比较两个最终 HTML
-```
-
-当前 `game141_TriChoiceShooter` 的一次实测结果：
-
-```text
-原始单 HTML：7435 KB
-TinyPNG 单 HTML：6742 KB
-减少约：693 KB
-降幅约：9.32%
-```
-
-两个版本均可正常运行。
-
----
-
-## 11. 生成目录建议
-
-以下内容通常不提交到 Git：
-
-```gitignore
+node_modules/
+dist/
+web-mobile/
+workspaces/
+.squoosh-cache/
+.tinypng-cache/
 .env
 .env.*
-!.env.example
-
-.tinypng-cache/
-workspaces/*/preview/
-workspaces/*/backups/
-workspaces/*/manifests/applications/
-workspaces/*/manifests/restores/
-workspaces/*/manifests/latest-application.json
-workspaces/*/manifests/latest-restore.json
 ```
 
-分析报告、候选清单和应用计划是否提交，可以根据项目协作方式决定。
+`.env.example` 可以提交。
+
+## 10. 自动检查
+
+```powershell
+npm run typecheck
+npm run test:audio-analysis
+npm run test:audio-benchmark
+npm run test:audio-optimize
+npm run test:webp-benchmark
+npm run test:webp-optimize
+npm run test:squoosh-jpeg
+npm run test:image-quality-pipeline
+npm run test:brotli-fallback
+npm run test:brotli-fallback-pipeline
+```
+
+## 11. 浏览器验收
+
+自动检查不能替代真实游戏验证。发布前至少确认：
+
+- 游戏正常启动，所有场景可进入；
+- UI、图集、字体、小图标和透明边缘正常；
+- 烟雾、发光、渐变和照片类纹理无明显劣化；
+- 音效、背景音乐和声道表现正常；
+- Bullet 物理及游戏逻辑正常；
+- 浏览器控制台无新增异常；
+- Brotli 解压耗时可接受；
+- 最终 HTML 满足渠道体积限制。
