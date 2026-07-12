@@ -358,8 +358,14 @@ export function createChannelWebMvpIndexHtml(
   html = replaceOnce(
     html,
     "        htmlLink.href = job.links.html + '?download=1';",
-    `        htmlLink.href = job.links.html + '?download=1';
+    `        htmlLink.href = job.links.html + '?download=1&bundle=1';
         htmlLink.textContent = '下载渠道合集 ZIP（' + completedPlatforms.length + '）';`,
+  );
+
+  html = replaceOnce(
+    html,
+    "        reportLink.href = job.links.report + '?download=1';",
+    "        reportLink.href = job.links.report + '?download=1&bundle=1';",
   );
 
   html = replaceOnce(
