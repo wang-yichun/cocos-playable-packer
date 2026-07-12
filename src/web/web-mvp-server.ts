@@ -9,6 +9,7 @@ import { createChannelReport } from "../channel/channel-profile.js";
 import type { BuildPlayableFunction } from "./web-job-manager.js";
 import { WebJobManager } from "./web-job-manager.js";
 import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
+import { loadWebVersionInfo, type WebVersionInfo } from "./web-version-info.js";
 
 const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_BYTES = 64 * 1024;
@@ -19,11 +20,13 @@ export interface WebMvpServerOptions {
   rootDirectory?: string;
   projectRoot?: string;
   buildPlayableImpl?: BuildPlayableFunction;
+  versionInfo?: WebVersionInfo;
 }
 
 export interface RunningWebMvpServer {
   server: Server;
   manager: WebJobManager;
+  versionInfo: WebVersionInfo;
   host: string;
   port: number;
   url: string;
@@ -253,17 +256,22 @@ async function handleRequest(
   request: IncomingMessage,
   response: ServerResponse,
   manager: WebJobManager,
+  versionInfo: WebVersionInfo,
 ): Promise<void> {
   const method = request.method ?? "GET";
   const url = new URL(request.url ?? "/", "http://localhost");
   const pathname = url.pathname;
 
   if (method === "GET" && pathname === "/") {
-    sendText(response, 200, createChannelWebMvpIndexHtml(), "text/html; charset=utf-8");
+    sendText(response, 200, createChannelWebMvpIndexHtml(versionInfo), "text/html; charset=utf-8");
     return;
   }
   if (method === "GET" && pathname === "/api/health") {
-    sendJson(response, 200, { status: "ok" });
+    sendJson(response, 200, {
+      status: "ok",
+      version: versionInfo.appVersion,
+      build: versionInfo.buildShortSha,
+    });
     return;
   }
   if (method === "POST" && pathname === "/api/uploads") {
@@ -371,15 +379,17 @@ export async function startWebMvpServer(
 ): Promise<RunningWebMvpServer> {
   const host = options.host ?? "127.0.0.1";
   const requestedPort = options.port ?? 4173;
+  const projectRoot = options.projectRoot ?? process.cwd();
   const manager = new WebJobManager({
     rootDirectory: options.rootDirectory ?? path.join(process.cwd(), ".packer-web"),
-    projectRoot: options.projectRoot ?? process.cwd(),
+    projectRoot,
     buildPlayableImpl: options.buildPlayableImpl,
   });
   await manager.initialize();
+  const versionInfo = options.versionInfo ?? await loadWebVersionInfo(projectRoot);
 
   const server = createServer((request, response) => {
-    void handleRequest(request, response, manager).catch((error: unknown) => {
+    void handleRequest(request, response, manager, versionInfo).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       if (!response.headersSent) {
         requestError(response, 400, "REQUEST_FAILED", message);
@@ -402,6 +412,7 @@ export async function startWebMvpServer(
   return {
     server,
     manager,
+    versionInfo,
     host,
     port,
     url: `http://${host}:${port}`,
@@ -420,6 +431,7 @@ async function main(): Promise<void> {
   });
   console.log("Cocos Playable Packer Web MVP");
   console.log("----------------------------");
+  console.log(`版本：v${server.versionInfo.appVersion} / Build ${server.versionInfo.buildShortSha}`);
   console.log(`地址：${server.url}`);
   console.log(`数据目录：${server.manager.rootDirectory}`);
 }
