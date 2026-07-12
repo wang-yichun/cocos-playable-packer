@@ -29,8 +29,8 @@
     "test:squoosh-jpeg": "tsx src/squoosh/optimize-build-jpegs-self-test.ts && tsx src/squoosh/apply-build-jpeg-cache-self-test.ts",
     "test:image-quality-pipeline": "tsx src/pipeline/build-playable-image-quality-self-test.ts",
     "images:optimize": "tsx src/images/optimize-build-images-cli.ts",
-    "fonts:subset": "tsx src/fonts/subset-build-fonts.ts",
-    "test:font-subset": "tsx src/fonts/font-subset-self-test.ts",
+    "fonts:subset": "tsx src/fonts/subset-build-fonts-cli.ts",
+    "test:font-subset": "tsx src/fonts/font-subset-self-test.ts && tsx src/fonts/font-discovery-self-test.ts",
     "brotli:fallback:optimize": "tsx src/compression/optimize-brotli-fallback.ts",
     "test:brotli-fallback": "tsx src/compression/optimize-brotli-fallback-self-test.ts",
     "test:brotli-fallback-pipeline": "tsx src/pipeline/build-playable-brotli-fallback-self-test.ts"
