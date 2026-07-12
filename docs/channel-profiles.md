@@ -13,12 +13,12 @@
 - AppLovin 等 MRAID 渠道的 `ready` / `viewableChange` 延迟启动；
 - MRAID 尺寸和音量事件转发；
 - 在线试玩 MRAID 模拟器；
-- 下载报告中的渠道元数据。
+- Liftoff 根目录单 `index.html` ZIP 交付；
+- 下载报告中的渠道元数据和交付文件信息。
 
 当前尚未完成：
 
 - Google / Facebook 的 `index.html + res.js` ZIP 输出；
-- Liftoff ZIP 包装；
 - AppLovin 专用 Analytics 事件映射；
 - 各渠道官方 Validator 自动化；
 - Moloco 最新官方接口复核。
@@ -31,7 +31,7 @@
 | AppLovin | 单 HTML | MRAID | MRAID viewable | 生命周期已接入，待官方 Validator |
 | Google | ZIP：`index.html + res.js` | ExitApi | window load | 下载桥可用，ZIP 输出待实现 |
 | Facebook | ZIP：`index.html + res.js` | Facebook CTA | window load | 下载桥可用，ZIP 输出待实现 |
-| Liftoff | ZIP：单 `index.html` | MRAID | MRAID viewable | 生命周期已接入，ZIP 输出待实现 |
+| Liftoff | ZIP：单 `index.html` | MRAID | MRAID viewable | ZIP 交付和生命周期已接入，待官方 Validator |
 | IronSource | 单 HTML | MRAID | MRAID viewable | 生命周期已接入，待官方 Validator |
 | Unity | 单 HTML | MRAID | MRAID viewable | 生命周期已接入，`mraid.js` 规则待确认 |
 | Moloco | 单 HTML | 历史样本使用 Facebook CTA | window load | 下载桥可用，官方接口待复核 |
@@ -63,7 +63,7 @@
     "payloadEncoding": "html7",
     "brotliFallback": "raw-js",
     "channel": {
-      "platform": "AppLovin",
+      "platform": "Liftoff",
       "androidStoreUrl": "https://play.google.com/store/apps/details?id=...",
       "iosStoreUrl": "https://apps.apple.com/app/id..."
     }
@@ -105,11 +105,33 @@ window.volumeSwitch
 
 完整本地模拟和验收步骤见 [AppLovin / MRAID 生命周期适配](applovin-mraid.md)。
 
+## Liftoff 交付
+
+选择 Liftoff 后，Web 页面的下载按钮返回：
+
+```text
+liftoff-playable.zip
+└─ index.html
+```
+
+ZIP 根目录只包含一个 `index.html`。该文件已经注入 MRAID 生命周期和下载桥。本地“在线试玩”仍直接加载 HTML，并提供 MRAID 模拟器；下载 ZIP 中不会包含模拟器面板。
+
+详细结构和测试步骤见 [Liftoff ZIP 交付](liftoff-delivery.md)。
+
 ## 报告
 
 Web 服务下载的 `game.report.json` 会附加渠道配置、预期交付格式、桥接方式、宿主全局对象和警告信息。
 
-当前报告中的 `integrationStatus` 仍以下载桥阶段为粒度；MRAID 生命周期的详细状态以 Profile 警告和本页说明为准。后续渠道交付容器落地时会进一步细化该字段。
+Liftoff 报告会额外包含：
+
+```text
+channel.integrationStatus = channel-delivery-ready
+delivery.format = zip-single-html
+delivery.fileName = liftoff-playable.zip
+delivery.entries = ["index.html"]
+delivery.bytes
+delivery.sha256
+```
 
 ## 测试
 
@@ -128,4 +150,6 @@ npm run web:mvp
 - MRAID ready / viewable 延迟启动；
 - 运行时只启动一次；
 - MRAID 尺寸和音量转发；
+- Liftoff ZIP 根目录只有 `index.html`；
+- Liftoff ZIP CRC、解压与内容回环；
 - 优化和未压缩任务不回归。
