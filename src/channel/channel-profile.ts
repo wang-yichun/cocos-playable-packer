@@ -127,8 +127,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      DELIVERY_PENDING_WARNING,
-      "历史成品使用 FbPlayableAd.onCTAClick，并交付 ZIP（index.html + res.js）。",
+      "当前实现会生成 ZIP（index.html + res.js）并注入 FbPlayableAd.onCTAClick；正式投放前仍需通过 Meta Validator。",
     ],
   },
   Liftoff: {
