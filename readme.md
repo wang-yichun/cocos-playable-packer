@@ -29,13 +29,53 @@ npm install
 npm run typecheck
 ```
 
-音频转码需要本机可执行的 FFmpeg。默认调用：
+### FFmpeg（仅音频压缩需要）
 
-```text
-ffmpeg
+FFmpeg 是外部程序，不属于 npm 依赖。`npm ci` 和 `npm install` 不会安装 FFmpeg。
+
+以下功能必须能够执行 `ffmpeg`：
+
+- `audio:benchmark`；
+- `audio:optimize` 的实际转码；
+- `playable:build` 并传入 `--audio-bitrate=N`；
+- Web MVP 主动启用音频压缩。
+
+不传 `--audio-bitrate`、Web MVP 保持音频压缩关闭、只处理图片或打包 HTML 时，不需要 FFmpeg。
+
+Windows 安装步骤：
+
+1. 打开 FFmpeg 官方下载页面：<https://ffmpeg.org/download.html>；
+2. 在 `Windows EXE Files` 下选择页面列出的 Windows 构建；
+3. 下载并解压包含 `ffmpeg.exe` 和 `libmp3lame` 的 64 位构建；
+4. 将例如 `D:\Tools\ffmpeg\bin` 加入 Windows `Path`；
+5. 关闭并重新打开 PowerShell、VS Code 终端和已经启动的 Web MVP 服务。
+
+安装后验证：
+
+```powershell
+where.exe ffmpeg
+Get-Command ffmpeg -ErrorAction SilentlyContinue
+ffmpeg -version
+ffmpeg -encoders | Select-String libmp3lame
 ```
 
-也可以通过 `--ffmpeg=<路径>` 指定可执行文件。
+也可以在 CLI 中通过完整路径指定可执行文件：
+
+```text
+--ffmpeg="D:\Tools\ffmpeg\bin\ffmpeg.exe"
+```
+
+出现以下错误时：
+
+```text
+spawn ffmpeg ENOENT
+```
+
+表示 Node.js 找不到 `ffmpeg` 可执行文件，通常不是 npm 包缺失。安装或修改 `Path` 后必须重新打开终端并重启 `npm run web:mvp`。
+
+完整安装、验证和排查步骤见 [FFmpeg 安装说明](docs/ffmpeg-installation.md)。
+
+### TinyPNG 环境变量
 
 TinyPNG 模式需要在项目根目录创建 `.env`：
 
@@ -190,7 +230,7 @@ npm run playable:build -- `
 - 校验输出码率、声道、体积和 SHA-256；
 - 输出不变小则保留原文件。
 
-详见 [音频优化说明](docs/audio-optimization.md)。
+详见 [音频优化说明](docs/audio-optimization.md) 和 [FFmpeg 安装说明](docs/ffmpeg-installation.md)。
 
 ## 5. Payload 编码
 
