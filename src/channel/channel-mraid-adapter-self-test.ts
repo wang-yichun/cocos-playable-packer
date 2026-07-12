@@ -68,8 +68,8 @@ for (const packerFile of ["src/pack-compressed.ts", "src/pack-uncompressed.ts"])
   assert.match(gatedPackerSource, new RegExp(CHANNEL_RUNTIME_GATE_MARKER));
 }
 
-const eventNames: string[] = [];
-const windowObject: Record<string, unknown> & {
+const runtimeEvents: string[] = [];
+const runtimeWindow: Record<string, unknown> & {
   __PACK_DEFER_START__?: boolean;
   __PACK_START_REQUESTED__?: boolean;
   __runGame?: () => Promise<unknown>;
@@ -78,34 +78,147 @@ const windowObject: Record<string, unknown> & {
 } = {
   __PACK_DEFER_START__: true,
   dispatchEvent(event) {
-    eventNames.push(event.type);
+    runtimeEvents.push(event.type);
     return true;
   },
 };
 
-class TestCustomEvent {
+class TestEvent {
   readonly type: string;
-  constructor(type: string) {
+  readonly detail: unknown;
+  constructor(type: string, init?: { detail?: unknown }) {
     this.type = type;
+    this.detail = init?.detail;
   }
 }
 
-const context = createContext({
-  window: windowObject,
-  CustomEvent: TestCustomEvent,
+const runtimeContext = createContext({
+  window: runtimeWindow,
+  CustomEvent: TestEvent,
   console,
 });
-new Script(gatedRuntime).runInContext(context);
-assert.equal(windowObject.__bootCount, undefined);
-assert.equal(typeof windowObject.__runGame, "function");
-assert.deepEqual(eventNames, ["playable-runtime-ready"]);
+new Script(gatedRuntime).runInContext(runtimeContext);
+assert.equal(runtimeWindow.__bootCount, undefined);
+assert.equal(typeof runtimeWindow.__runGame, "function");
+assert.deepEqual(runtimeEvents, ["playable-runtime-ready"]);
 
-windowObject.__PACK_START_REQUESTED__ = true;
-await windowObject.__runGame?.();
-assert.equal(windowObject.__bootCount, 1);
-assert.deepEqual(eventNames, ["playable-runtime-ready", "playable-game-started"]);
-await windowObject.__runGame?.();
-assert.equal(windowObject.__bootCount, 1);
+runtimeWindow.__PACK_START_REQUESTED__ = true;
+await runtimeWindow.__runGame?.();
+assert.equal(runtimeWindow.__bootCount, 1);
+assert.deepEqual(runtimeEvents, ["playable-runtime-ready", "playable-game-started"]);
+await runtimeWindow.__runGame?.();
+assert.equal(runtimeWindow.__bootCount, 1);
+
+const mraidListeners = new Map<string, Array<(value?: unknown) => void>>();
+const windowListeners = new Map<string, Array<(event: TestEvent) => void>>();
+let mraidState = "loading";
+let mraidViewable = false;
+let mraidVolume = 100;
+let mraidSize = { width: 720, height: 1080 };
+let startCount = 0;
+const cocosEvents: Array<{ name: string; value: unknown }> = [];
+
+function addListener<T>(
+  map: Map<string, T[]>,
+  name: string,
+  callback: T,
+): void {
+  const group = map.get(name) ?? [];
+  group.push(callback);
+  map.set(name, group);
+}
+
+const lifecycleWindow: Record<string, unknown> & {
+  __PACK_DEFER_START__?: boolean;
+  __PACK_START_REQUESTED__?: boolean;
+  __PLAYABLE_VIEWABLE__?: boolean;
+  __PLAYABLE_AUDIO_VOLUME__?: number;
+  volumeSwitch?: boolean;
+  volumeAudio?: number;
+} = {
+  location: { pathname: "/artifacts/test/game.html" },
+  innerWidth: 720,
+  innerHeight: 1080,
+  open: () => ({}),
+  addEventListener(name: string, callback: (event: TestEvent) => void) {
+    addListener(windowListeners, name, callback);
+  },
+  dispatchEvent(event: TestEvent) {
+    for (const callback of windowListeners.get(event.type) ?? []) {
+      callback(event);
+    }
+    return true;
+  },
+  __runGame() {
+    startCount += 1;
+    return Promise.resolve();
+  },
+  cc: {
+    view: {
+      emit(name: string, value: unknown) {
+        cocosEvents.push({ name, value });
+      },
+    },
+  },
+  mraid: {
+    getState: () => mraidState,
+    isViewable: () => mraidViewable,
+    getScreenSize: () => ({ ...mraidSize }),
+    getAudioVolume: () => mraidVolume,
+    addEventListener(name: string, callback: (value?: unknown) => void) {
+      addListener(mraidListeners, name, callback);
+    },
+    removeEventListener() {},
+    open() {},
+  },
+};
+
+const lifecycleContext = createContext({
+  window: lifecycleWindow,
+  navigator: {
+    userAgent: "test",
+    platform: "Win32",
+    maxTouchPoints: 0,
+  },
+  document: {},
+  CustomEvent: TestEvent,
+  Event: TestEvent,
+  console,
+});
+new Script(bridgeSource).runInContext(lifecycleContext);
+assert.equal(lifecycleWindow.__PACK_DEFER_START__, true);
+assert.equal(startCount, 0);
+assert.equal(mraidListeners.has("ready"), true);
+
+mraidState = "default";
+for (const callback of mraidListeners.get("ready") ?? []) callback();
+assert.equal(startCount, 0);
+assert.equal(lifecycleWindow.__PLAYABLE_VIEWABLE__, false);
+assert.equal(lifecycleWindow.__PLAYABLE_AUDIO_VOLUME__, 100);
+assert.equal(lifecycleWindow.volumeSwitch, true);
+assert.equal(cocosEvents.some((event) => event.name === "canvas-resize"), true);
+
+mraidViewable = true;
+for (const callback of mraidListeners.get("viewableChange") ?? []) callback(true);
+assert.equal(startCount, 1);
+assert.equal(lifecycleWindow.__PACK_START_REQUESTED__, true);
+assert.equal(lifecycleWindow.__PLAYABLE_VIEWABLE__, true);
+
+mraidVolume = 0;
+for (const callback of mraidListeners.get("audioVolumeChange") ?? []) callback(0);
+assert.equal(lifecycleWindow.__PLAYABLE_AUDIO_VOLUME__, 0);
+assert.equal(lifecycleWindow.volumeAudio, 0);
+assert.equal(lifecycleWindow.volumeSwitch, false);
+
+mraidSize = { width: 1080, height: 720 };
+for (const callback of mraidListeners.get("sizeChange") ?? []) callback();
+assert.equal(
+  cocosEvents.some(
+    (event) => event.name === "canvas-resize"
+      && (event.value as { width?: number }).width === 1080,
+  ),
+  true,
+);
 
 const html = `<!doctype html><html><head></head><body><script>${runtimeSource}</script></body></html>`;
 const injected = injectChannelDownloadBridge(html, appLovinConfig);
