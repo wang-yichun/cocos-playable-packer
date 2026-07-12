@@ -4,9 +4,10 @@ import { open, readFile, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { createChannelReport } from "../channel/channel-profile.js";
 import type { BuildPlayableFunction } from "./web-job-manager.js";
 import { WebJobManager } from "./web-job-manager.js";
-import { createWebMvpIndexHtml } from "./web-ui.js";
+import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
 
 const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
 const MAX_JSON_BYTES = 64 * 1024;
@@ -184,6 +185,40 @@ async function sendFile(
   response.end(body);
 }
 
+async function sendChannelReport(
+  response: ServerResponse,
+  reportFile: string,
+  manager: WebJobManager,
+  jobId: string,
+  downloadRequested: boolean,
+): Promise<void> {
+  const info = await stat(reportFile).catch(() => null);
+  const job = manager.getJob(jobId);
+  if (!info?.isFile() || job === null) {
+    requestError(response, 404, "ARTIFACT_NOT_FOUND", "构建报告不存在。");
+    return;
+  }
+  const parsed = JSON.parse(await readFile(reportFile, "utf8")) as unknown;
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    requestError(response, 500, "REPORT_INVALID", "构建报告根节点必须是对象。");
+    return;
+  }
+  const report = parsed as Record<string, unknown>;
+  report.channel = createChannelReport(job.config.channel);
+  const body = `${JSON.stringify(report, null, 2)}\n`;
+  const headers: Record<string, string | number> = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body),
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+  };
+  if (downloadRequested) {
+    headers["Content-Disposition"] = "attachment; filename=\"game.report.json\"";
+  }
+  response.writeHead(200, headers);
+  response.end(body);
+}
+
 async function handleRequest(
   request: IncomingMessage,
   response: ServerResponse,
@@ -194,7 +229,7 @@ async function handleRequest(
   const pathname = url.pathname;
 
   if (method === "GET" && pathname === "/") {
-    sendText(response, 200, createWebMvpIndexHtml(), "text/html; charset=utf-8");
+    sendText(response, 200, createChannelWebMvpIndexHtml(), "text/html; charset=utf-8");
     return;
   }
   if (method === "GET" && pathname === "/api/health") {
@@ -262,15 +297,15 @@ async function handleRequest(
       return;
     }
     const downloadRequested = url.searchParams.get("download") === "1";
+    if (artifact.artifact === "report") {
+      await sendChannelReport(response, filePath, manager, artifact.jobId, downloadRequested);
+      return;
+    }
     await sendFile(
       response,
       filePath,
-      artifact.artifact === "html"
-        ? "text/html; charset=utf-8"
-        : "application/json; charset=utf-8",
-      downloadRequested
-        ? artifact.artifact === "html" ? "game.html" : "game.report.json"
-        : null,
+      "text/html; charset=utf-8",
+      downloadRequested ? "game.html" : null,
     );
     return;
   }
