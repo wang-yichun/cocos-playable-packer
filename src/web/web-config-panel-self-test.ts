@@ -107,6 +107,8 @@ assert.match(html, /仅合并单 HTML（不压缩）/);
 assert.match(html, /不执行图片压缩、音频压缩、Brotli 压缩或 Payload 编码/);
 assert.match(html, /FFmpeg/);
 assert.match(html, /zip-html-res-js/);
+assert.match(html, /zip-single-html/);
+assert.match(html, /下载 Liftoff ZIP/);
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -123,5 +125,6 @@ assert.match(inlineScript, /config: config/);
 assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /buildModeInput\.addEventListener/);
+assert.match(inlineScript, /job\.config\?\.channel\?\.platform === 'Liftoff'/);
 
 console.log("Playable Web config panel self-test passed.");

@@ -23,6 +23,11 @@ export type ChannelBridge =
   | "google-exit-api";
 export type ChannelStartupPolicy = "window-load" | "mraid-viewable";
 export type ChannelAnalyticsAdapter = "none" | "applovin" | "custom-beacon";
+export type ChannelIntegrationStatus =
+  | "profile-only"
+  | "download-bridge-injected"
+  | "mraid-lifecycle-injected"
+  | "channel-delivery-ready";
 
 export interface ChannelProfile {
   platform: ChannelPlatform;
@@ -55,7 +60,7 @@ export interface ChannelReport {
   requiresExternalApi: boolean;
   androidStoreUrl: string | null;
   iosStoreUrl: string | null;
-  integrationStatus: "profile-only";
+  integrationStatus: ChannelIntegrationStatus;
   warnings: readonly string[];
 }
 
@@ -138,7 +143,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     requiresExternalApi: true,
     warnings: [
       MRAID_LIFECYCLE_WARNING,
-      "历史成品交付为 ZIP，ZIP 根目录内只有 index.html；当前阶段尚未包装 ZIP。",
+      "当前实现会生成 ZIP，ZIP 根目录内仅包含 index.html；正式投放前仍需通过 Liftoff Validator。",
     ],
   },
   IronSource: {

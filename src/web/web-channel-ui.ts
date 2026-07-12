@@ -134,19 +134,19 @@ export function createChannelWebMvpIndexHtml(
             <option value="Unity">Unity Ads</option>
             <option value="Moloco">Moloco</option>
           </select>
-          <small id="channelPlatformHint">本轮只记录渠道 Profile，不改变最终产物格式。</small>
+          <small id="channelPlatformHint">根据渠道 Profile 生成下载桥和对应交付文件。</small>
         </div>
 
         <div class="field">
           <label for="androidStoreUrl">Android 商店地址</label>
           <input id="androidStoreUrl" type="url" placeholder="https://play.google.com/store/apps/details?id=...">
-          <small>后续渠道桥会把下载按钮跳转到该地址。</small>
+          <small>渠道下载桥会优先调用宿主 API，否则回退到该地址。</small>
         </div>
 
         <div class="field">
           <label for="iosStoreUrl">iOS 商店地址</label>
           <input id="iosStoreUrl" type="url" placeholder="https://apps.apple.com/app/id...">
-          <small>可以暂时留空；本轮只写入渠道报告。</small>
+          <small>可以暂时留空；未配置时会回退到另一平台地址。</small>
         </div>
 
         <div class="field">
@@ -263,7 +263,19 @@ export function createChannelWebMvpIndexHtml(
           + ' / 必需全局对象：'
           + (channelProfile.requiredGlobals.length === 0 ? '无' : channelProfile.requiredGlobals.join(', '));
         channelWarning.textContent = channelProfile.warnings.join(' ');
+        htmlLink.textContent = channelProfile.deliveryFormat === 'zip-single-html'
+          ? '下载渠道 ZIP'
+          : '下载 HTML';
       }`,
+  );
+
+  html = replaceOnce(
+    html,
+    "        htmlLink.href = job.links.html + '?download=1';",
+    `        htmlLink.href = job.links.html + '?download=1';
+        htmlLink.textContent = job.config?.channel?.platform === 'Liftoff'
+          ? '下载 Liftoff ZIP'
+          : '下载 HTML';`,
   );
 
   html = replaceOnce(

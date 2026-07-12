@@ -19,7 +19,7 @@
     "encoding:html7": "tsx src/encoding/reencode-brotli-html7.ts",
     "typecheck": "tsc --noEmit",
     "test:build-service": "tsx src/service/build-playable-service-self-test.ts",
-    "test:web-mvp": "tsx src/channel/channel-profile-self-test.ts && tsx src/channel/channel-mraid-adapter-self-test.ts && tsx src/web/web-version-info-self-test.ts && tsx src/web/web-mvp-self-test.ts && tsx src/web/web-config-panel-self-test.ts && tsx src/web/raw-single-html-self-test.ts",
+    "test:web-mvp": "tsx src/channel/channel-profile-self-test.ts && tsx src/channel/channel-mraid-adapter-self-test.ts && tsx src/channel/liftoff-delivery-self-test.ts && tsx src/web/liftoff-web-delivery-self-test.ts && tsx src/web/web-version-info-self-test.ts && tsx src/web/web-mvp-self-test.ts && tsx src/web/web-config-panel-self-test.ts && tsx src/web/raw-single-html-self-test.ts",
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
     "audio:analyze": "tsx src/audio/analyze-build-audio.ts",
     "test:audio-analysis": "tsx src/audio/analyze-build-audio-self-test.ts",

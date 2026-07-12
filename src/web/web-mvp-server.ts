@@ -4,7 +4,10 @@ import { open, readFile, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { injectChannelDownloadBridge } from "../channel/channel-download-bridge.js";
+import {
+  createChannelDownloadArtifact,
+  createChannelHtml,
+} from "../channel/liftoff-delivery.js";
 import { createChannelReport } from "../channel/channel-profile.js";
 import type { BuildPlayableFunction } from "./web-job-manager.js";
 import { WebJobManager } from "./web-job-manager.js";
@@ -189,7 +192,7 @@ async function sendChannelHtml(
   htmlFile: string,
   manager: WebJobManager,
   jobId: string,
-  downloadName: string | null,
+  downloadRequested: boolean,
 ): Promise<void> {
   const info = await stat(htmlFile).catch(() => null);
   const job = manager.getJob(jobId);
@@ -199,10 +202,20 @@ async function sendChannelHtml(
   }
 
   const source = await readFile(htmlFile, "utf8");
-  const html = injectChannelDownloadBridge(source, job.config.channel);
+  if (downloadRequested) {
+    const artifact = createChannelDownloadArtifact(source, job.config.channel);
+    response.writeHead(
+      200,
+      contentHeaders(artifact.contentType, artifact.body.length, artifact.fileName),
+    );
+    response.end(artifact.body);
+    return;
+  }
+
+  const html = createChannelHtml(source, job.config.channel);
   response.writeHead(
     200,
-    contentHeaders("text/html; charset=utf-8", Buffer.byteLength(html), downloadName),
+    contentHeaders("text/html; charset=utf-8", Buffer.byteLength(html), null),
   );
   response.end(html);
 }
@@ -229,16 +242,49 @@ async function sendChannelReport(
 
   const baseChannel = createChannelReport(job.config.channel);
   const report = parsed as Record<string, unknown>;
+  const isLiftoff = job.config.channel.platform === "Liftoff";
+  const isMraid = baseChannel.bridge === "mraid";
+  const integrationStatus = isLiftoff
+    ? "channel-delivery-ready"
+    : isMraid
+      ? "mraid-lifecycle-injected"
+      : "download-bridge-injected";
+
   report.channel = {
     ...baseChannel,
-    integrationStatus: "download-bridge-injected",
-    warnings: [
-      "已向下载和在线试玩的 HTML 注入渠道下载桥；渠道专用交付容器和启动生命周期尚未实现。",
-      ...baseChannel.warnings.filter(
-        (warning) => !warning.includes("尚未向最终产物注入渠道桥接代码"),
-      ),
-    ],
+    integrationStatus,
+    warnings: isLiftoff
+      ? [
+        "已生成根目录仅含 index.html 的 Liftoff ZIP；正式投放前仍需通过目标渠道 Validator。",
+        ...baseChannel.warnings,
+      ]
+      : [
+        isMraid
+          ? "已注入 MRAID 生命周期和下载桥；渠道专用交付容器按 Profile 状态处理。"
+          : "已向下载和在线试玩的 HTML 注入渠道下载桥；渠道专用交付容器按 Profile 状态处理。",
+        ...baseChannel.warnings,
+      ],
   };
+
+  if (isLiftoff) {
+    const htmlFile = manager.getArtifactPath(jobId, "html");
+    if (htmlFile === null) {
+      requestError(response, 404, "ARTIFACT_NOT_FOUND", "Liftoff HTML 产物不存在。");
+      return;
+    }
+    const sourceHtml = await readFile(htmlFile, "utf8");
+    const artifact = createChannelDownloadArtifact(sourceHtml, job.config.channel);
+    report.delivery = {
+      format: artifact.deliveryFormat,
+      fileName: artifact.fileName,
+      mediaType: artifact.contentType,
+      entries: [...artifact.entries],
+      bytes: artifact.body.length,
+      sha256: artifact.sha256,
+      htmlBytes: artifact.htmlBytes,
+      generatedOnDownload: true,
+    };
+  }
 
   const body = `${JSON.stringify(report, null, 2)}\n`;
   response.writeHead(
@@ -344,7 +390,7 @@ async function handleRequest(
       filePath,
       manager,
       artifact.jobId,
-      downloadRequested ? "game.html" : null,
+      downloadRequested,
     );
     return;
   }
@@ -356,7 +402,7 @@ async function handleRequest(
       requestError(response, 404, "PREVIEW_NOT_FOUND", "任务尚未完成或试玩文件不存在。");
       return;
     }
-    await sendChannelHtml(response, filePath, manager, previewId, null);
+    await sendChannelHtml(response, filePath, manager, previewId, false);
     return;
   }
 
