@@ -64,8 +64,10 @@ export const TEST_ANDROID_STORE_URL =
 export const TEST_IOS_STORE_URL =
   "https://apps.apple.com/app/google-maps/id585027354";
 
-const PROFILE_ONLY_WARNING =
-  "当前版本只记录并验证渠道 Profile，尚未向最终产物注入渠道桥接代码或改变交付容器。";
+const DELIVERY_PENDING_WARNING =
+  "已注入渠道下载桥，但尚未生成该渠道要求的专用交付容器。";
+const MRAID_LIFECYCLE_WARNING =
+  "已注入 MRAID ready/viewable、尺寸、音量和下载桥；尚未通过目标渠道最新官方 Validator。";
 
 export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>> = {
   Preview: {
@@ -78,7 +80,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     requiredGlobals: [],
     externalScripts: [],
     requiresExternalApi: false,
-    warnings: [PROFILE_ONLY_WARNING],
+    warnings: ["本地预览只验证浏览器运行，不代表任何广告渠道审核结果。"],
   },
   AppLovin: {
     platform: "AppLovin",
@@ -90,10 +92,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     requiredGlobals: ["mraid"],
     externalScripts: [],
     requiresExternalApi: true,
-    warnings: [
-      PROFILE_ONLY_WARNING,
-      "历史成品使用 MRAID ready/viewable 启动和 mraid.open 跳转；正式投放前仍需按最新渠道规范验证。",
-    ],
+    warnings: [MRAID_LIFECYCLE_WARNING],
   },
   Google: {
     platform: "Google",
@@ -108,7 +107,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     ],
     requiresExternalApi: true,
     warnings: [
-      PROFILE_ONLY_WARNING,
+      DELIVERY_PENDING_WARNING,
       "历史成品交付为 ZIP（index.html + res.js）；当前阶段尚未切换输出结构。",
     ],
   },
@@ -123,7 +122,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      PROFILE_ONLY_WARNING,
+      DELIVERY_PENDING_WARNING,
       "历史成品使用 FbPlayableAd.onCTAClick，并交付 ZIP（index.html + res.js）。",
     ],
   },
@@ -138,8 +137,8 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      PROFILE_ONLY_WARNING,
-      "历史成品交付为 ZIP，ZIP 根目录内只有 index.html。",
+      MRAID_LIFECYCLE_WARNING,
+      "历史成品交付为 ZIP，ZIP 根目录内只有 index.html；当前阶段尚未包装 ZIP。",
     ],
   },
   IronSource: {
@@ -152,7 +151,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     requiredGlobals: ["mraid"],
     externalScripts: [],
     requiresExternalApi: true,
-    warnings: [PROFILE_ONLY_WARNING],
+    warnings: [MRAID_LIFECYCLE_WARNING],
   },
   Unity: {
     platform: "Unity",
@@ -165,7 +164,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: ["mraid.js"],
     requiresExternalApi: true,
     warnings: [
-      PROFILE_ONLY_WARNING,
+      MRAID_LIFECYCLE_WARNING,
       "历史成品包含 mraid.js 占位引用但未携带该文件，不能把本地模拟器打进正式包。",
     ],
   },
@@ -180,8 +179,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      PROFILE_ONLY_WARNING,
-      "历史成品使用 FbPlayableAd.onCTAClick；需要结合 Moloco 最新官方规范复核。",
+      "已注入 CTA 下载桥；历史成品使用 FbPlayableAd.onCTAClick，仍需结合 Moloco 最新官方规范复核。",
       "历史成品中的第三方 beacon 不会作为默认实现复制。",
     ],
   },
@@ -246,7 +244,7 @@ export function createChannelReport(config: ChannelBuildConfig): ChannelReport {
   const profile = CHANNEL_PROFILES[config.platform];
   const warnings = [...profile.warnings];
   if (config.platform !== "Preview" && config.androidStoreUrl === null && config.iosStoreUrl === null) {
-    warnings.push("未配置 Android 或 iOS 商店地址；后续注入真实下载桥时将无法完成跳转。");
+    warnings.push("未配置 Android 或 iOS 商店地址；下载桥无法完成商店跳转。");
   }
   return {
     platform: profile.platform,
