@@ -109,6 +109,7 @@ assert.match(html, /FFmpeg/);
 assert.match(html, /zip-html-res-js/);
 assert.match(html, /zip-single-html/);
 assert.match(html, /下载 Liftoff ZIP/);
+assert.match(html, /下载 Facebook ZIP/);
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -125,6 +126,8 @@ assert.match(inlineScript, /config: config/);
 assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /buildModeInput\.addEventListener/);
-assert.match(inlineScript, /job\.config\?\.channel\?\.platform === 'Liftoff'/);
+assert.match(inlineScript, /const completedPlatform = job\.config\?\.channel\?\.platform/);
+assert.match(inlineScript, /completedPlatform === 'Liftoff'/);
+assert.match(inlineScript, /completedPlatform === 'Facebook'/);
 
 console.log("Playable Web config panel self-test passed.");

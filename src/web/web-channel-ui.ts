@@ -263,9 +263,12 @@ export function createChannelWebMvpIndexHtml(
           + ' / 必需全局对象：'
           + (channelProfile.requiredGlobals.length === 0 ? '无' : channelProfile.requiredGlobals.join(', '));
         channelWarning.textContent = channelProfile.warnings.join(' ');
-        htmlLink.textContent = channelProfile.deliveryFormat === 'zip-single-html'
-          ? '下载渠道 ZIP'
-          : '下载 HTML';
+        const selectedPlatform = channelPlatformInput.value;
+        htmlLink.textContent = selectedPlatform === 'Liftoff'
+          ? '下载 Liftoff ZIP'
+          : selectedPlatform === 'Facebook'
+            ? '下载 Facebook ZIP'
+            : '下载 HTML';
       }`,
   );
 
@@ -273,9 +276,12 @@ export function createChannelWebMvpIndexHtml(
     html,
     "        htmlLink.href = job.links.html + '?download=1';",
     `        htmlLink.href = job.links.html + '?download=1';
-        htmlLink.textContent = job.config?.channel?.platform === 'Liftoff'
+        const completedPlatform = job.config?.channel?.platform;
+        htmlLink.textContent = completedPlatform === 'Liftoff'
           ? '下载 Liftoff ZIP'
-          : '下载 HTML';`,
+          : completedPlatform === 'Facebook'
+            ? '下载 Facebook ZIP'
+            : '下载 HTML';`,
   );
 
   html = replaceOnce(
