@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { Script, createContext } from "node:vm";
 
 import {
@@ -54,6 +56,17 @@ assert.match(gatedRuntime, new RegExp(CHANNEL_RUNTIME_GATE_MARKER));
 assert.match(gatedRuntime, /window\.__runGame = function/);
 assert.match(gatedRuntime, /playable-runtime-ready/);
 assert.match(gatedRuntime, /playable-game-started/);
+
+for (const packerFile of ["src/pack-compressed.ts", "src/pack-uncompressed.ts"]) {
+  const packerSource = await readFile(path.resolve(packerFile), "utf8");
+  const gatedPackerSource = installRuntimeStartGate(packerSource);
+  assert.notEqual(
+    gatedPackerSource,
+    packerSource,
+    `${packerFile} 中没有匹配到运行时 boot() 调用。`,
+  );
+  assert.match(gatedPackerSource, new RegExp(CHANNEL_RUNTIME_GATE_MARKER));
+}
 
 const eventNames: string[] = [];
 const windowObject: Record<string, unknown> & {
