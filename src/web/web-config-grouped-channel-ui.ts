@@ -196,7 +196,7 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
       }
     }
 
-    queueMicrotask(groupConfigSections);
+    groupConfigSections();
     applyConfig({`,
   );
 
