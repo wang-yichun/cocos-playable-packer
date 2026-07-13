@@ -23,14 +23,21 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     "    .error { color: #fca5a5; }",
     `    .config-groups { display: grid; gap: 12px; margin-top: 18px; }
     .config-group { border: 1px solid #374151; border-radius: 11px; background: #111827; overflow: hidden; }
-    .config-group > summary { padding: 14px 16px; cursor: pointer; font-weight: 700; color: #e5e7eb; user-select: none; }
+    .config-group > summary { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; color: #e5e7eb; user-select: none; }
+    .config-group-title { flex: 0 0 auto; font-weight: 700; }
+    .config-group-state { min-width: 0; margin-left: auto; color: #9ca3af; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
     .config-group > summary:hover { background: #172033; }
     .config-group[open] > summary { border-bottom: 1px solid #374151; }
+    .config-group[open] .config-group-state { color: #cbd5e1; }
     .config-group-body { padding: 16px; }
     .config-group-body .config-grid { margin-top: 0 !important; }
     .tinypng-field[hidden] { display: none; }
     .secret-note { color: #fbbf24; }
-    .error { color: #fca5a5; }`,
+    .error { color: #fca5a5; }
+    @media (max-width: 700px) {
+      .config-group > summary { align-items: flex-start; flex-wrap: wrap; }
+      .config-group-state { width: 100%; margin-left: 0; padding-left: 20px; white-space: normal; text-align: left; }
+    }`,
   );
 
   html = replaceOnce(
@@ -147,6 +154,13 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
 
   html = replaceOnce(
     html,
+    "      audioWarning.hidden = rawMode || !audioEnabled;",
+    `      audioWarning.hidden = rawMode || !audioEnabled;
+      updateConfigGroupSummaries();`,
+  );
+
+  html = replaceOnce(
+    html,
     "    payloadEncodingInput.addEventListener('change', refreshConfigUi);",
     `    payloadEncodingInput.addEventListener('change', refreshConfigUi);
     tinyPngScopeInput.addEventListener('change', refreshConfigUi);
@@ -165,12 +179,20 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
   html = replaceOnce(
     html,
     channelDefaultInitialization,
-    `    function createConfigGroup(title, open, elements) {
+    `    function createConfigGroup(title, key, open, elements) {
       const details = document.createElement('details');
       details.className = 'config-group';
+      details.dataset.group = key;
       details.open = open;
       const summary = document.createElement('summary');
-      summary.textContent = title;
+      const titleElement = document.createElement('span');
+      titleElement.className = 'config-group-title';
+      titleElement.textContent = title;
+      const stateElement = document.createElement('span');
+      stateElement.className = 'config-group-state';
+      stateElement.id = 'configGroupState-' + key;
+      stateElement.textContent = '读取中…';
+      summary.append(titleElement, stateElement);
       const body = document.createElement('div');
       body.className = 'config-group-body';
       const grid = document.createElement('div');
@@ -183,6 +205,77 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
       return details;
     }
 
+    function abbreviateConfigUrl(value) {
+      const text = String(value || '').trim();
+      if (!text) return '未配置';
+      if (text.length <= 34) return text;
+      try {
+        const parsed = new URL(text);
+        const pathParts = parsed.pathname.split('/').filter(Boolean);
+        const tailSource = pathParts[pathParts.length - 1] || parsed.search.replace(/^\\?/, '') || '';
+        const tail = tailSource.length > 14 ? tailSource.slice(-14) : tailSource;
+        const host = parsed.hostname.length > 18 ? parsed.hostname.slice(0, 18) : parsed.hostname;
+        return parsed.protocol + '//' + host + '…' + tail;
+      } catch {
+        return text.slice(0, 18) + '…' + text.slice(-12);
+      }
+    }
+
+    function setConfigGroupState(key, value) {
+      const element = document.getElementById('configGroupState-' + key);
+      if (element) element.textContent = value;
+    }
+
+    function updateConfigGroupSummaries() {
+      const rawMode = buildModeInput.value === 'raw-single-html';
+      const imageMode = imageModeInput.value;
+      const selectedPlatforms = readSelectedPlatforms(false);
+      const platformNames = selectedPlatforms.map((platform) => channelProfiles[platform]?.displayName || platform);
+
+      setConfigGroupState('build', rawMode ? '仅合并单 HTML' : '优化并压缩');
+
+      let imageState = '不处理';
+      if (!rawMode && imageMode === 'webp') {
+        imageState = 'WebP · PNG ' + pngQualityInput.value + ' · JPEG ' + jpegQualityInput.value;
+      } else if (!rawMode && imageMode === 'squoosh') {
+        imageState = 'Squoosh · PNG ' + pngQualityInput.value + ' · JPEG ' + jpegQualityInput.value;
+      } else if (!rawMode && imageMode === 'tinypng') {
+        const scope = tinyPngScopeInput.value === 'limit'
+          ? '最多 ' + tinyPngLimitInput.value + ' 张'
+          : '全部符合条件图片';
+        const keyState = tinyPngApiKeyInput.value.trim() ? 'Key 已填写' : 'Key 未填写';
+        imageState = 'TinyPNG · ' + scope + ' · ≥ ' + tinyPngMinBytesInput.value + ' B · ' + keyState;
+      }
+      setConfigGroupState('image', imageState);
+
+      const audioState = rawMode || !audioEnabledInput.checked
+        ? '不处理'
+        : 'MP3 · ' + audioBitrateInput.value + ' kbps';
+      setConfigGroupState('audio', audioState);
+
+      setConfigGroupState(
+        'payload',
+        rawMode ? '不使用 Brotli / Payload' : payloadEncodingInput.value.toUpperCase() + ' · Brotli raw-js',
+      );
+
+      setConfigGroupState(
+        'channel',
+        platformNames.length === 0 ? '未选择渠道' : platformNames.join(' / '),
+      );
+
+      const androidUrl = abbreviateConfigUrl(androidStoreUrlInput.value);
+      const iosUrl = abbreviateConfigUrl(iosStoreUrlInput.value);
+      setConfigGroupState('links', 'Android: ' + androidUrl + ' · iOS: ' + iosUrl);
+
+      let loadingState = '关闭';
+      if (loadingScreenEnabledInput.checked) {
+        loadingState = loadingLogoDataUrl
+          ? '启用 · Logo ' + loadingLogoBytes + ' B'
+          : '启用 · 尚未选择 Logo';
+      }
+      setConfigGroupState('loading', loadingState);
+    }
+
     function groupConfigSections() {
       const configCard = recommendedPresetButton.closest('.card');
       if (!configCard || configCard.querySelector('.config-groups')) return;
@@ -190,23 +283,28 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
       const groups = document.createElement('div');
       groups.className = 'config-groups';
       groups.append(
-        createConfigGroup('基础构建', true, [field('buildMode')]),
-        createConfigGroup('图片压缩', true, [field('imageMode'), field('pngQuality'), field('jpegQuality'), tinyPngApiKeyField, tinyPngScopeField, tinyPngLimitField, tinyPngMinBytesField]),
-        createConfigGroup('音频压缩', false, [field('audioEnabled'), field('audioBitrate')]),
-        createConfigGroup('Payload 与兼容性', false, [field('payloadEncoding')]),
-        createConfigGroup('目标渠道', true, [document.getElementById('channelPlatformGroup')?.closest('.field') || null]),
-        createConfigGroup('跳转地址', false, [field('androidStoreUrl'), field('iosStoreUrl'), document.getElementById('testStoreUrlsButton')?.closest('.field') || null]),
-        createConfigGroup('加载界面', false, [document.getElementById('loadingScreenEnabled')?.closest('.field') || null, document.getElementById('loadingLogoFile')?.closest('.field') || null]),
+        createConfigGroup('基础构建', 'build', true, [field('buildMode')]),
+        createConfigGroup('图片压缩', 'image', true, [field('imageMode'), field('pngQuality'), field('jpegQuality'), tinyPngApiKeyField, tinyPngScopeField, tinyPngLimitField, tinyPngMinBytesField]),
+        createConfigGroup('音频压缩', 'audio', false, [field('audioEnabled'), field('audioBitrate')]),
+        createConfigGroup('Payload 与兼容性', 'payload', false, [field('payloadEncoding')]),
+        createConfigGroup('目标渠道', 'channel', true, [document.getElementById('channelPlatformGroup')?.closest('.field') || null]),
+        createConfigGroup('跳转地址', 'links', false, [field('androidStoreUrl'), field('iosStoreUrl'), document.getElementById('testStoreUrlsButton')?.closest('.field') || null]),
+        createConfigGroup('加载界面', 'loading', false, [document.getElementById('loadingScreenEnabled')?.closest('.field') || null, document.getElementById('loadingLogoFile')?.closest('.field') || null]),
       );
       const firstGrid = configCard.querySelector('.config-grid');
       if (firstGrid) firstGrid.before(groups);
       for (const grid of Array.from(configCard.querySelectorAll(':scope > .config-grid'))) {
         if (grid.children.length === 0) grid.remove();
       }
+      for (const id of ['configSummary', 'channelSummary', 'loadingScreenSummary']) {
+        const element = document.getElementById(id);
+        if (element) element.hidden = true;
+      }
+      updateConfigGroupSummaries();
     }
 
     groupConfigSections();
-${channelDefaultInitialization}`,
+ ${channelDefaultInitialization}`,
   );
 
   return html;
