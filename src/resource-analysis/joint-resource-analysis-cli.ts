@@ -5,6 +5,11 @@ import { pathToFileURL } from "node:url";
 
 import { extractZipArchive, findWebMobileRoot } from "../web/zip-extractor.js";
 import { analyzeJointResources, readAssetsManifest } from "./joint-resource-analysis.js";
+import {
+  createResourceAnalysisHtmlReport,
+  type CompleteResourceAnalysisReport,
+} from "./resource-analysis-report.js";
+import { analyzeResourceOptimization } from "./resource-optimization-estimates.js";
 
 function normalizedArgs(argv: readonly string[]): string[] {
   return argv.filter((value) => value !== "--");
@@ -31,12 +36,19 @@ async function main(): Promise<void> {
     const extraction = await extractZipArchive(path.resolve(zipFile), extractionDirectory);
     const buildRoot = await findWebMobileRoot(extractionDirectory);
     const manifest = await readAssetsManifest(path.resolve(manifestFile));
-    const report = await analyzeJointResources(buildRoot, manifest);
-    report.buildRoot = path.basename(buildRoot);
+    const joint = await analyzeJointResources(buildRoot, manifest);
+    joint.buildRoot = path.basename(buildRoot);
+    const optimization = await analyzeResourceOptimization(buildRoot, joint);
+    const report: CompleteResourceAnalysisReport = { ...joint, optimization };
 
     const resolvedOutput = path.resolve(outputFile);
+    const htmlOutput = resolvedOutput.replace(/\.json$/i, ".html");
+    const resolvedHtmlOutput = htmlOutput === resolvedOutput ? `${resolvedOutput}.html` : htmlOutput;
     await mkdir(path.dirname(resolvedOutput), { recursive: true });
-    await writeFile(resolvedOutput, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+    await Promise.all([
+      writeFile(resolvedOutput, `${JSON.stringify(report, null, 2)}\n`, "utf8"),
+      writeFile(resolvedHtmlOutput, createResourceAnalysisHtmlReport(report), "utf8"),
+    ]);
 
     console.log("Cocos 工程与构建资源联合分析完成");
     console.log("--------------------------------");
@@ -48,7 +60,13 @@ async function main(): Promise<void> {
     console.log(`无法通过 UUID 判断：${report.notAssessableCount}`);
     console.log(`可评估资源数量覆盖：${report.assessableIncludedPercentByCount ?? 0}%`);
     console.log(`可评估资源体积覆盖：${report.assessableIncludedPercentByBytes ?? 0}%`);
-    console.log(`报告：${resolvedOutput}`);
+    console.log(
+      `预计总构建减少：${report.optimization.totalBuildSavingsPercentMin}%–${report.optimization.totalBuildSavingsPercentMax}%`,
+    );
+    console.log(`图片实测候选：${report.optimization.measuredImageCount}`);
+    console.log(`音频参数估算候选：${report.optimization.parameterEstimatedAudioCount}`);
+    console.log(`JSON 报告：${resolvedOutput}`);
+    console.log(`HTML 报告：${resolvedHtmlOutput}`);
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
