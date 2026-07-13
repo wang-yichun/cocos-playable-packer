@@ -194,6 +194,36 @@ Web MVP 没有登录鉴权，只应在可信局域网中运行，不要通过端
 
 ## 3. 推荐：一条命令完成 Playable 构建
 
+### 使用统一配置文件（推荐）
+
+复制示例配置并按项目修改：
+
+```powershell
+Copy-Item `
+  ".\playable.config.example.json" `
+  ".\playable.config.json"
+```
+
+然后只需执行：
+
+```powershell
+npm run playable:build -- `
+  --config=".\playable.config.json"
+```
+
+配置文件可统一管理输入输出路径、图片模式与质量、音频码率、Payload 编码、Brotli 回退模式和工作区保留设置。配置中的相对路径以配置文件所在目录为基准。
+
+命令行参数优先级高于配置文件，可用于临时覆盖：
+
+```powershell
+npm run playable:build -- `
+  --config=".\playable.config.json" `
+  --payload-encoding=base64 `
+  --audio-bitrate=64
+```
+
+没有传入 `--config` 时，原有命令行形式和默认行为保持不变。完整字段、校验规则和 `extraArgs` 使用方式见 [统一构建配置说明](docs/unified-build-config.md)。
+
 ### Squoosh PNG/JPEG + MP3 48 kbps + HTML7
 
 ```powershell
@@ -462,6 +492,7 @@ workspaces/*/backups/
 
 ```powershell
 npm run typecheck
+npm run test:build-config
 npm run test:web-mvp-network
 npm run test:web-mvp
 npm run test:audio-analysis

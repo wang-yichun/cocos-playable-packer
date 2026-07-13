@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "input": "./web-mobile",
+  "output": "./dist/game.html",
+  "image": {
+    "mode": "webp",
+    "pngWebpQuality": 80,
+    "jpegWebpQuality": 80
+  },
+  "audio": {
+    "bitrate": 48,
+    "ffmpeg": "ffmpeg"
+  },
+  "compression": {
+    "payloadEncoding": "html7",
+    "brotliFallback": "raw-js"
+  },
+  "workspace": {
+    "keep": false
+  }
+}
