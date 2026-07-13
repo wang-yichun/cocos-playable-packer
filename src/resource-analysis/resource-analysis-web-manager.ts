@@ -8,7 +8,10 @@ import {
   analyzeJointResources,
   readAssetsManifest,
 } from "./joint-resource-analysis.js";
-import { measurePayloadEncodingBenchmark } from "./payload-encoding-benchmark.js";
+import {
+  measurePayloadEncodingBenchmark,
+  type PayloadEncodingBenchmark,
+} from "./payload-encoding-benchmark.js";
 import {
   enrichGeneratedNativeSourceMappings,
   finalizeResourceOptimization,
@@ -35,6 +38,7 @@ export interface PublicResourceAnalysisJob {
   completedAt: string | null;
   hasManifest: boolean;
   mode: "build-only" | "joint" | null;
+  measurePayloadEncoding: boolean;
   error: { code: string; message: string } | null;
   summary: {
     buildFileCount: number;
@@ -78,6 +82,20 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function skippedPayloadEncodingBenchmark(): PayloadEncodingBenchmark {
+  return {
+    status: "unavailable",
+    archiveRawBytes: null,
+    brotliBytes: null,
+    brotliCompressionPercent: null,
+    encodings: [],
+    warnings: [
+      "本次资源体检未启用 Playable Payload 编码体积测量。",
+      "该测量会额外执行 Brotli Q11、Base64、Base91 与 HTML7 编码，耗时明显更长；可在 Web UI 勾选后重新分析。",
+    ],
+  };
+}
+
 function cloneJob(job: InternalResourceAnalysisJob): PublicResourceAnalysisJob {
   return {
     id: job.id,
@@ -87,6 +105,7 @@ function cloneJob(job: InternalResourceAnalysisJob): PublicResourceAnalysisJob {
     completedAt: job.completedAt,
     hasManifest: job.hasManifest,
     mode: job.mode,
+    measurePayloadEncoding: job.measurePayloadEncoding,
     error: job.error === null ? null : { ...job.error },
     summary: job.summary === null ? null : { ...job.summary },
     links: {
@@ -150,6 +169,7 @@ export class ResourceAnalysisWebManager {
       completedAt: null,
       hasManifest: false,
       mode: null,
+      measurePayloadEncoding: false,
       error: null,
       summary: null,
       directory,
@@ -196,7 +216,11 @@ export class ResourceAnalysisWebManager {
     return cloneJob(job);
   }
 
-  start(jobId: string, requireManifest: boolean): PublicResourceAnalysisJob {
+  start(
+    jobId: string,
+    requireManifest: boolean,
+    measurePayloadEncoding = false,
+  ): PublicResourceAnalysisJob {
     const job = this.jobs.get(jobId);
     if (job === undefined) throw new Error("资源分析任务不存在。");
     if (job.status !== "waiting") throw new Error("资源分析任务已经开始或结束。");
@@ -204,6 +228,7 @@ export class ResourceAnalysisWebManager {
       throw new Error("完整分析必须先上传 assets-manifest.json。");
     }
     job.mode = job.hasManifest ? "joint" : "build-only";
+    job.measurePayloadEncoding = measurePayloadEncoding;
     void this.run(job);
     return cloneJob(job);
   }
@@ -236,13 +261,19 @@ export class ResourceAnalysisWebManager {
       const optimization = finalizeResourceOptimization(joint, measuredOptimization);
       const redundancy = analyzeSourceRedundancy(manifest, joint);
 
-      job.message = "正在实际测量 Brotli、Base64、Base91 与 HTML7 Payload 体积。";
-      const payloadEncoding = await measurePayloadEncodingBenchmark(
-        buildRoot,
-        path.join(job.directory, "payload-benchmark"),
-        joint.buildBytes,
-        this.projectRoot,
-      );
+      let payloadEncoding: PayloadEncodingBenchmark;
+      if (job.measurePayloadEncoding) {
+        job.message = "正在实际测量 Brotli、Base64、Base91 与 HTML7 Payload 体积；该步骤可能耗时较长。";
+        payloadEncoding = await measurePayloadEncodingBenchmark(
+          buildRoot,
+          path.join(job.directory, "payload-benchmark"),
+          joint.buildBytes,
+          this.projectRoot,
+        );
+      } else {
+        payloadEncoding = skippedPayloadEncodingBenchmark();
+      }
+
       const report: FinalResourceAnalysisReport = {
         ...joint,
         optimization,
