@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -33,8 +33,7 @@ try {
   const imagePath = path.join(nativeDirectory, `${uuid}.png`);
   await sharp(pixels, { raw: { width, height, channels: 4 } }).png().toFile(imagePath);
 
-  const imageInfo = await sharp(imagePath).metadata();
-  const imageBytes = imageInfo.size ?? 0;
+  const imageBytes = (await stat(imagePath)).size;
   const manifest: AssetsManifest = {
     version: 1,
     generatedAt: new Date().toISOString(),
