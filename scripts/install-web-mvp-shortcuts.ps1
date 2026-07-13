@@ -9,25 +9,26 @@ if ([string]::IsNullOrWhiteSpace($desktopDirectory)) {
 $items = @(
     @{
         Name = "Cocos Playable Packer - Start.lnk"
-        Target = Join-Path $projectRoot "start-web-mvp.cmd"
+        Command = Join-Path $projectRoot "start-web-mvp.cmd"
         Description = "Start Cocos Playable Packer Web MVP"
     },
     @{
         Name = "Cocos Playable Packer - Stop.lnk"
-        Target = Join-Path $projectRoot "stop-web-mvp.cmd"
+        Command = Join-Path $projectRoot "stop-web-mvp.cmd"
         Description = "Stop Cocos Playable Packer Web MVP"
     }
 )
 
 $shell = New-Object -ComObject WScript.Shell
 foreach ($item in $items) {
-    if (-not (Test-Path -LiteralPath $item.Target -PathType Leaf)) {
-        throw "Shortcut target does not exist: $($item.Target)"
+    if (-not (Test-Path -LiteralPath $item.Command -PathType Leaf)) {
+        throw "Shortcut command does not exist: $($item.Command)"
     }
 
     $shortcutPath = Join-Path $desktopDirectory $item.Name
     $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $item.Target
+    $shortcut.TargetPath = $env:ComSpec
+    $shortcut.Arguments = "/d /c `"`"$($item.Command)`"`""
     $shortcut.WorkingDirectory = $projectRoot
     $shortcut.Description = $item.Description
     $shortcut.IconLocation = "$env:SystemRoot\System32\shell32.dll,220"
