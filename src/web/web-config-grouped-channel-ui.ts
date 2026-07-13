@@ -155,7 +155,7 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
 
   html = replaceOnce(
     html,
-    "    applyConfig({",
+    "    applyConfig(defaultConfig);",
     `    function createConfigGroup(title, open, elements) {
       const details = document.createElement('details');
       details.className = 'config-group';
@@ -197,7 +197,7 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     }
 
     groupConfigSections();
-    applyConfig({`,
+    applyConfig(defaultConfig);`,
   );
 
   return html;
