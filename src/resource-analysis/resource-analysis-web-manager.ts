@@ -8,13 +8,16 @@ import {
   analyzeJointResources,
   readAssetsManifest,
 } from "./joint-resource-analysis.js";
-import { createClarifiedResourceAnalysisHtmlReport } from "./resource-analysis-clarified-report.js";
 import {
   enrichGeneratedNativeSourceMappings,
   finalizeResourceOptimization,
 } from "./resource-analysis-finalize.js";
-import type { CompleteResourceAnalysisReport } from "./resource-analysis-report.js";
+import {
+  createRedundancyResourceAnalysisHtmlReport,
+  type ExtendedResourceAnalysisReport,
+} from "./resource-analysis-redundancy-report.js";
 import { analyzeResourceOptimization } from "./resource-optimization-estimates.js";
+import { analyzeSourceRedundancy } from "./source-redundancy-analysis.js";
 
 export type ResourceAnalysisJobStatus =
   | "waiting"
@@ -44,6 +47,8 @@ export interface PublicResourceAnalysisJob {
     estimatedSavingsBytesMax: number;
     totalBuildSavingsPercentMin: number;
     totalBuildSavingsPercentMax: number;
+    duplicateGroupCount: number;
+    redundantProjectBytes: number;
   } | null;
   links: { report: string; htmlReport: string; manifestCmd: string };
 }
@@ -215,8 +220,8 @@ export class ResourceAnalysisWebManager {
 
       job.status = "analyzing";
       job.message = job.hasManifest
-        ? "正在关联源资源，并实测图片、校准音频优化空间。"
-        : "正在分析构建资源，并实测图片、校准音频优化空间。";
+        ? "正在关联源资源、检查重复内容，并实测图片与校准音频优化空间。"
+        : "正在分析构建资源，并实测图片与校准音频优化空间。";
       const manifest = job.hasManifest
         ? await readAssetsManifest(job.manifestFile)
         : emptyManifest(path.basename(buildRoot));
@@ -225,8 +230,9 @@ export class ResourceAnalysisWebManager {
       joint.buildRoot = path.basename(buildRoot);
       const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
       const optimization = finalizeResourceOptimization(joint, measuredOptimization);
-      const report: CompleteResourceAnalysisReport = { ...joint, optimization };
-      const html = createClarifiedResourceAnalysisHtmlReport(report);
+      const redundancy = analyzeSourceRedundancy(manifest, joint);
+      const report: ExtendedResourceAnalysisReport = { ...joint, optimization, redundancy };
+      const html = createRedundancyResourceAnalysisHtmlReport(report);
       await mkdir(path.dirname(job.reportFile), { recursive: true });
       await Promise.all([
         writeFile(job.reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8"),
@@ -248,6 +254,8 @@ export class ResourceAnalysisWebManager {
         estimatedSavingsBytesMax: report.optimization.estimatedSavingsBytesMax,
         totalBuildSavingsPercentMin: report.optimization.totalBuildSavingsPercentMin,
         totalBuildSavingsPercentMax: report.optimization.totalBuildSavingsPercentMax,
+        duplicateGroupCount: report.redundancy.duplicateGroupCount,
+        redundantProjectBytes: report.redundancy.redundantProjectBytes,
       };
     } catch (error) {
       job.status = "failed";
