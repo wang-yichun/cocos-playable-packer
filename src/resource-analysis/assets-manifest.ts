@@ -32,6 +32,11 @@ interface MetaSummary {
   bundleName: string | null;
 }
 
+interface DiscoveredAsset {
+  relativePath: string;
+  inheritedBundleName: string | null;
+}
+
 function normalizePath(value: string): string {
   return value.replace(/\\/g, "/");
 }
@@ -40,30 +45,47 @@ function stringField(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-function readBundleName(value: Record<string, unknown>): string | null {
+function userDataRecord(value: Record<string, unknown>): Record<string, unknown> | null {
   const userData = value.userData;
-  if (typeof userData !== "object" || userData === null || Array.isArray(userData)) {
-    return null;
-  }
-  const record = userData as Record<string, unknown>;
-  return stringField(record.bundleName) ?? stringField(record.bundle);
+  return typeof userData === "object" && userData !== null && !Array.isArray(userData)
+    ? userData as Record<string, unknown>
+    : null;
 }
 
-async function readMetaSummary(metaPath: string): Promise<MetaSummary | null> {
+function readBundleName(value: Record<string, unknown>): string | null {
+  const record = userDataRecord(value);
+  return record === null ? null : stringField(record.bundleName) ?? stringField(record.bundle);
+}
+
+async function readMetaRecord(metaPath: string): Promise<Record<string, unknown> | null> {
   try {
     const parsed = JSON.parse(await readFile(metaPath, "utf8")) as unknown;
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return { uuid: null, importer: null, bundleName: null };
-    }
-    const record = parsed as Record<string, unknown>;
-    return {
-      uuid: stringField(record.uuid),
-      importer: stringField(record.importer),
-      bundleName: readBundleName(record),
-    };
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : {};
   } catch {
     return null;
   }
+}
+
+async function readMetaSummary(metaPath: string): Promise<MetaSummary | null> {
+  const record = await readMetaRecord(metaPath);
+  if (record === null) return null;
+  return {
+    uuid: stringField(record.uuid),
+    importer: stringField(record.importer),
+    bundleName: readBundleName(record),
+  };
+}
+
+async function readDirectoryBundleName(directoryPath: string): Promise<string | null> {
+  const record = await readMetaRecord(`${directoryPath}.meta`);
+  if (record === null) return null;
+  const userData = userDataRecord(record);
+  if (userData === null) return null;
+  const configuredName = stringField(userData.bundleName) ?? stringField(userData.bundle);
+  if (configuredName !== null) return configuredName;
+  return userData.isBundle === true ? path.basename(directoryPath) : null;
 }
 
 async function sha256File(filePath: string): Promise<string> {
@@ -72,18 +94,31 @@ async function sha256File(filePath: string): Promise<string> {
     .digest("hex");
 }
 
-async function walkFiles(root: string, current: string, output: string[]): Promise<void> {
+async function walkFiles(
+  root: string,
+  current: string,
+  inheritedBundleName: string | null,
+  output: DiscoveredAsset[],
+): Promise<void> {
+  const relativeDirectory = normalizePath(path.relative(root, current));
+  let currentBundleName = inheritedBundleName;
+  if (relativeDirectory.length > 0) {
+    currentBundleName = await readDirectoryBundleName(current)
+      ?? (relativeDirectory === "resources" ? "resources" : inheritedBundleName);
+  }
+
   const items = await readdir(current, { withFileTypes: true });
   for (const item of items) {
     const absolutePath = path.join(current, item.name);
     if (item.isDirectory()) {
-      await walkFiles(root, absolutePath, output);
+      await walkFiles(root, absolutePath, currentBundleName, output);
       continue;
     }
-    if (!item.isFile() || item.name.endsWith(".meta")) {
-      continue;
-    }
-    output.push(normalizePath(path.relative(root, absolutePath)));
+    if (!item.isFile() || item.name.endsWith(".meta")) continue;
+    output.push({
+      relativePath: normalizePath(path.relative(root, absolutePath)),
+      inheritedBundleName: currentBundleName,
+    });
   }
 }
 
@@ -95,35 +130,33 @@ export async function createAssetsManifest(projectDirectory: string): Promise<As
     throw new Error(`未找到 Cocos assets 目录：${assetsRoot}`);
   }
 
-  const relativePaths: string[] = [];
-  await walkFiles(assetsRoot, assetsRoot, relativePaths);
-  relativePaths.sort((left, right) => left.localeCompare(right));
+  const discovered: DiscoveredAsset[] = [];
+  await walkFiles(assetsRoot, assetsRoot, null, discovered);
+  discovered.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
 
   const entries: AssetsManifestEntry[] = [];
   let totalBytes = 0;
   let metaCount = 0;
 
-  for (const relativePath of relativePaths) {
-    const absolutePath = path.join(assetsRoot, relativePath);
+  for (const asset of discovered) {
+    const absolutePath = path.join(assetsRoot, asset.relativePath);
     const fileStat = await stat(absolutePath);
     const metaAbsolutePath = `${absolutePath}.meta`;
     const meta = await readMetaSummary(metaAbsolutePath);
-    if (meta !== null) {
-      metaCount += 1;
-    }
+    if (meta !== null) metaCount += 1;
     totalBytes += fileStat.size;
     entries.push({
-      path: normalizePath(path.posix.join("assets", relativePath)),
-      extension: path.extname(relativePath).toLowerCase() || "[none]",
+      path: normalizePath(path.posix.join("assets", asset.relativePath)),
+      extension: path.extname(asset.relativePath).toLowerCase() || "[none]",
       bytes: fileStat.size,
       sha256: await sha256File(absolutePath),
       modifiedAt: fileStat.mtime.toISOString(),
       metaPath: meta === null
         ? null
-        : normalizePath(path.posix.join("assets", `${relativePath}.meta`)),
+        : normalizePath(path.posix.join("assets", `${asset.relativePath}.meta`)),
       uuid: meta?.uuid ?? null,
       importer: meta?.importer ?? null,
-      bundleName: meta?.bundleName ?? null,
+      bundleName: meta?.bundleName ?? asset.inheritedBundleName,
     });
   }
 
