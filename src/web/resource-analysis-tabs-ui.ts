@@ -15,6 +15,10 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
 ): string {
   let html = createRedundancyResourceAnalysisWebMvpIndexHtml(versionInfo);
   html = html.replace(
+    "可以手动选择 assets-manifest.json，也可以下载 CMD 放到 Cocos 项目根目录双击运行。",
+    "可以手动选择 assets-manifest.json；CMD 会在 Cocos 项目根目录生成并保留同名清单，然后自动上传，后续可直接重复使用。",
+  );
+  html = html.replace(
     "<h3>优先处理候选</h3>",
     "<h3>压缩收益明细</h3><div class=\"analysis-note\">这里展示打包 Pipeline 可自动处理的图片和音频压缩收益。P0/P1/P2 只表示对当前 Web Mobile 体积的影响等级，不代表必须手工修改源资源。</div>",
   );
