@@ -7,8 +7,12 @@ import type { AssetsManifest } from "./assets-manifest.js";
 import {
   analyzeJointResources,
   readAssetsManifest,
-  type JointResourceAnalysis,
 } from "./joint-resource-analysis.js";
+import {
+  createResourceAnalysisHtmlReport,
+  type CompleteResourceAnalysisReport,
+} from "./resource-analysis-report.js";
+import { analyzeResourceOptimization } from "./resource-optimization-estimates.js";
 
 export type ResourceAnalysisJobStatus =
   | "waiting"
@@ -34,8 +38,12 @@ export interface PublicResourceAnalysisJob {
     notAssessableCount: number;
     assessableIncludedPercentByCount: number | null;
     assessableIncludedPercentByBytes: number | null;
+    estimatedSavingsBytesMin: number;
+    estimatedSavingsBytesMax: number;
+    totalBuildSavingsPercentMin: number;
+    totalBuildSavingsPercentMax: number;
   } | null;
-  links: { report: string; manifestCmd: string };
+  links: { report: string; htmlReport: string; manifestCmd: string };
 }
 
 interface InternalResourceAnalysisJob extends Omit<PublicResourceAnalysisJob, "links"> {
@@ -43,6 +51,7 @@ interface InternalResourceAnalysisJob extends Omit<PublicResourceAnalysisJob, "l
   zipFile: string;
   manifestFile: string;
   reportFile: string;
+  htmlReportFile: string;
   uploadToken: string;
   tokenExpiresAt: number;
 }
@@ -73,6 +82,7 @@ function cloneJob(job: InternalResourceAnalysisJob): PublicResourceAnalysisJob {
     summary: job.summary === null ? null : { ...job.summary },
     links: {
       report: `/artifacts/resource-analysis/${job.id}/report.json`,
+      htmlReport: `/artifacts/resource-analysis/${job.id}/report.html`,
       manifestCmd: `/api/resource-analysis/jobs/${job.id}/assets-manifest.cmd`,
     },
   };
@@ -135,6 +145,7 @@ export class ResourceAnalysisWebManager {
       zipFile: finalZip,
       manifestFile: path.join(directory, "input", "assets-manifest.json"),
       reportFile: path.join(directory, "output", "resource-analysis.json"),
+      htmlReportFile: path.join(directory, "output", "resource-analysis.html"),
       uploadToken: randomUUID(),
       tokenExpiresAt: Date.now() + this.tokenLifetimeMs,
     };
@@ -186,9 +197,10 @@ export class ResourceAnalysisWebManager {
     return cloneJob(job);
   }
 
-  getReportPath(jobId: string): string | null {
+  getReportPath(jobId: string, format: "json" | "html" = "json"): string | null {
     const job = this.jobs.get(jobId);
-    return job?.status === "succeeded" ? job.reportFile : null;
+    if (job?.status !== "succeeded") return null;
+    return format === "html" ? job.htmlReportFile : job.reportFile;
   }
 
   private async run(job: InternalResourceAnalysisJob): Promise<void> {
@@ -201,15 +213,21 @@ export class ResourceAnalysisWebManager {
 
       job.status = "analyzing";
       job.message = job.hasManifest
-        ? "正在关联 Cocos 工程源资源与构建产物。"
-        : "正在分析 Web Mobile 构建资源。";
+        ? "正在关联源资源，并实测图片、估算音频优化空间。"
+        : "正在分析构建资源，并实测图片、估算音频优化空间。";
       const manifest = job.hasManifest
         ? await readAssetsManifest(job.manifestFile)
         : emptyManifest(path.basename(buildRoot));
-      const report: JointResourceAnalysis = await analyzeJointResources(buildRoot, manifest);
-      report.buildRoot = path.basename(buildRoot);
+      const joint = await analyzeJointResources(buildRoot, manifest);
+      joint.buildRoot = path.basename(buildRoot);
+      const optimization = await analyzeResourceOptimization(buildRoot, joint);
+      const report: CompleteResourceAnalysisReport = { ...joint, optimization };
+      const html = createResourceAnalysisHtmlReport(report);
       await mkdir(path.dirname(job.reportFile), { recursive: true });
-      await writeFile(job.reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+      await Promise.all([
+        writeFile(job.reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8"),
+        writeFile(job.htmlReportFile, html, "utf8"),
+      ]);
 
       job.status = "succeeded";
       job.message = job.hasManifest ? "完整资源体检完成。" : "构建资源基础体检完成。";
@@ -222,6 +240,10 @@ export class ResourceAnalysisWebManager {
         notAssessableCount: report.notAssessableCount,
         assessableIncludedPercentByCount: report.assessableIncludedPercentByCount,
         assessableIncludedPercentByBytes: report.assessableIncludedPercentByBytes,
+        estimatedSavingsBytesMin: report.optimization.estimatedSavingsBytesMin,
+        estimatedSavingsBytesMax: report.optimization.estimatedSavingsBytesMax,
+        totalBuildSavingsPercentMin: report.optimization.totalBuildSavingsPercentMin,
+        totalBuildSavingsPercentMax: report.optimization.totalBuildSavingsPercentMax,
       };
     } catch (error) {
       job.status = "failed";
