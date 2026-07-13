@@ -29,7 +29,7 @@ function encodingLabel(encoding: PayloadEncodingName): string {
   return "HTML7";
 }
 
-function renderPayloadEncoding(report: PayloadEncodingBenchmark): string {
+export function renderPayloadEncodingSummary(report: PayloadEncodingBenchmark): string {
   if (report.status !== "measured") {
     return `<h2>Playable Payload 编码体积</h2><div class="panel">${report.warnings.map(escapeHtml).join("<br>")}</div>`;
   }
@@ -106,7 +106,7 @@ export function createFinalResourceAnalysisHtmlReport(report: FinalResourceAnaly
   </script>`;
 
   html = `${prefix}${tabs}
-  <section class="report-tab-panel" data-report-panel="overview">${overviewPrimary}${renderPayloadEncoding(report.payloadEncoding)}${sourceOverview}</section>
+  <section class="report-tab-panel" data-report-panel="overview">${overviewPrimary}${renderPayloadEncodingSummary(report.payloadEncoding)}${sourceOverview}</section>
   <section class="report-tab-panel" data-report-panel="compression" hidden>${compression}</section>
   <section class="report-tab-panel" data-report-panel="duplicates" hidden>${duplicates}</section>
   <section class="report-tab-panel" data-report-panel="not-in-build" hidden>${notInBuild}</section>
