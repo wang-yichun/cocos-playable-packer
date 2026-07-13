@@ -43,7 +43,7 @@
     "tinypng:build": "node --env-file=.env --import tsx src/tinypng-build/compress-build-images.ts",
     "squoosh:test-one": "tsx src/squoosh/test-one.ts",
     "squoosh:benchmark-png": "tsx src/squoosh/benchmark-png-quantization.ts",
-    "squoosh:benchmark-build-pngs": "tsx src/squoosh/benchmark-pngs.ts",
+    "squoosh:benchmark-build-pngs": "tsx src/squoosh/benchmark-build-pngs.ts",
     "squoosh:apply-build-pngs": "tsx src/squoosh/apply-build-png-cache.ts",
     "squoosh:benchmark-build-jpegs": "tsx src/squoosh/optimize-build-jpegs.ts",
     "squoosh:apply-build-jpegs": "tsx src/squoosh/apply-build-jpeg-cache.ts",
