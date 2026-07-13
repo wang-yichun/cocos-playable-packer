@@ -9,7 +9,7 @@ import {
   RAW_SINGLE_HTML_WEB_BUILD_CONFIG,
   RECOMMENDED_WEB_BUILD_CONFIG,
 } from "./web-build-config.js";
-import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
+import { createLoadingScreenWebMvpIndexHtml } from "./loading-screen-ui.js";
 
 const previewChannel = {
   platform: "Preview",
@@ -18,11 +18,18 @@ const previewChannel = {
   iosStoreUrl: null,
 };
 
+const commonImageDefaults = {
+  pngQuality: 80,
+  jpegQuality: 80,
+  tinyPngScope: "all",
+  tinyPngLimit: null,
+  tinyPngMinBytes: 4096,
+};
+
 assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
   buildMode: "optimized",
   imageMode: "webp",
-  pngQuality: 80,
-  jpegQuality: 80,
+  ...commonImageDefaults,
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
@@ -32,8 +39,7 @@ assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
 assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
   buildMode: "optimized",
   imageMode: "webp",
-  pngQuality: 80,
-  jpegQuality: 80,
+  ...commonImageDefaults,
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
@@ -43,8 +49,7 @@ assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
 assert.deepEqual(RAW_SINGLE_HTML_WEB_BUILD_CONFIG, {
   buildMode: "raw-single-html",
   imageMode: "none",
-  pngQuality: 80,
-  jpegQuality: 80,
+  ...commonImageDefaults,
   audioBitrateKbps: null,
   payloadEncoding: "base64",
   brotliFallback: "raw-js",
@@ -53,9 +58,9 @@ assert.deepEqual(RAW_SINGLE_HTML_WEB_BUILD_CONFIG, {
 
 const normalizedRaw = normalizeWebBuildConfig({
   buildMode: "raw-single-html",
-  imageMode: "webp",
-  pngQuality: 1,
-  jpegQuality: 1,
+  imageMode: "tinypng",
+  tinyPngScope: "limit",
+  tinyPngLimit: 10,
   audioBitrateKbps: 48,
   payloadEncoding: "html7",
   brotliFallback: "gzip-packed-js",
@@ -80,6 +85,40 @@ assert.throws(
   () => normalizeWebBuildConfig({ channel: { platforms: ["Unknown"] } }),
   /channel\.platforms 只支持/,
 );
+assert.throws(
+  () => normalizeWebBuildConfig({ imageMode: "tinypng", tinyPngScope: "limit" }),
+  /tinyPngLimit/,
+);
+
+const nonTinyPngConfig = normalizeWebBuildConfig({
+  imageMode: "webp",
+  tinyPngScope: "all",
+  tinyPngLimit: null,
+  tinyPngMinBytes: null,
+});
+assert.equal(nonTinyPngConfig.imageMode, "webp");
+assert.equal(nonTinyPngConfig.tinyPngMinBytes, 4096);
+
+const tinyPngDefaults = normalizeWebBuildConfig({ imageMode: "tinypng" });
+assert.equal(tinyPngDefaults.tinyPngMinBytes, 4096);
+
+const tinyPngConfig = normalizeWebBuildConfig({
+  imageMode: "tinypng",
+  tinyPngScope: "limit",
+  tinyPngLimit: 25,
+  tinyPngMinBytes: 8192,
+});
+const tinyPngRequest = createWebBuildRequest(
+  "./web-mobile",
+  "./dist/tinypng.html",
+  "tinypng-test",
+  tinyPngConfig,
+);
+assert.deepEqual(tinyPngRequest.image, {
+  mode: "tinypng",
+  scope: { type: "limit", limit: 25 },
+  minBytes: 8192,
+});
 
 const rawRequest = createWebBuildRequest(
   "./web-mobile",
@@ -92,7 +131,7 @@ assert.equal(rawRequest.audio, null);
 assert.equal(rawRequest.payloadEncoding, "base64");
 assert.equal(rawRequest.brotliFallback, "raw-js");
 
-const html = createChannelWebMvpIndexHtml();
+const html = createLoadingScreenWebMvpIndexHtml();
 for (const id of [
   "recommendedPresetButton",
   "channelPlatformGroup",
@@ -110,9 +149,15 @@ for (const id of [
   "imageMode",
   "pngQuality",
   "jpegQuality",
+  "tinyPngApiKey",
+  "tinyPngScope",
+  "tinyPngLimit",
+  "tinyPngMinBytes",
   "audioEnabled",
   "audioBitrate",
   "payloadEncoding",
+  "loadingScreenEnabled",
+  "loadingLogoFile",
   "configSummary",
 ]) {
   assert.match(html, new RegExp(`id=["']${id}["']`));
@@ -130,38 +175,57 @@ for (const platform of CHANNEL_PLATFORMS) {
     `${platform} 渠道复选框缺失或未默认勾选。`,
   );
 }
-assert.match(html, /目标渠道（可多选）/);
+
+assert.match(html, /TinyPNG API/);
+assert.match(html, /客户自己的 TINYPNG_API_KEY/);
+assert.match(html, /默认 4 KB/);
+assert.match(html, /value="4096"/);
+assert.match(html, /仅用于本次构建/);
+assert.match(html, /config-group-state/);
+assert.match(html, /基础构建/);
+assert.match(html, /图片压缩/);
+assert.match(html, /音频压缩/);
+assert.match(html, /Payload 与兼容性/);
+assert.match(html, /目标渠道/);
+assert.match(html, /跳转地址/);
+assert.match(html, /加载界面/);
 assert.match(html, /默认全选/);
 assert.match(html, /下载渠道合集 ZIP/);
 assert.match(html, /选择试玩渠道/);
 assert.match(html, /基础资源只压缩一次/);
 assert.match(html, /应用一键推荐预设/);
-assert.match(html, /填入 Google Maps 测试链接/);
 assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
 assert.match(html, /仅合并单 HTML（不压缩）/);
-assert.match(html, /不执行图片压缩、音频压缩、Brotli 压缩或 Payload 编码/);
 assert.match(html, /FFmpeg/);
-assert.match(html, /zip-html-res-js/);
-assert.match(html, /zip-single-html/);
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
-
-assert.match(inlineScript, /const defaultConfig = .*"buildMode":"optimized"/);
-assert.match(inlineScript, /const recommendedConfig = .*"audioBitrateKbps":48/);
-assert.match(inlineScript, /buildMode: 'raw-single-html'/);
-assert.match(inlineScript, /platforms: platforms/);
-assert.match(inlineScript, /channel: channel/);
-assert.match(inlineScript, /readSelectedPlatforms/);
-assert.match(inlineScript, /channelPlatformInputs/);
-assert.match(inlineScript, /previewChannelDialog\.showModal/);
-assert.match(inlineScript, /encodeURIComponent\(previewChannelSelect\.value\)/);
-assert.match(inlineScript, /testStoreUrlsButton\.addEventListener/);
-assert.match(inlineScript, /config: config/);
-assert.match(inlineScript, /audioBitrateKbps: audioBitrateKbps/);
+assert.match(inlineScript, /TinyPNG 模式必须填写 TINYPNG_API_KEY/);
+assert.match(inlineScript, /imageMode === 'tinypng' && tinyPngScope === 'limit'/);
+assert.match(inlineScript, /tinyPngApiKey: tinyPngApiKey/);
+assert.match(inlineScript, /groupConfigSections\(\);/);
+assert.match(inlineScript, /details\.open = false/);
+assert.doesNotMatch(inlineScript, /details\.open = open/);
+assert.doesNotMatch(inlineScript, /queueMicrotask\(groupConfigSections\)/);
+assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image'/);
+assert.match(inlineScript, /updateConfigGroupSummaries/);
+assert.match(inlineScript, /abbreviateConfigUrl/);
+assert.match(inlineScript, /stateElement\.id = 'configGroupState-' \+ key/);
+assert.match(inlineScript, /setConfigGroupState\('channel'/);
+assert.match(inlineScript, /setConfigGroupState\('links'/);
+assert.match(inlineScript, /setConfigGroupState\('loading'/);
+assert.match(inlineScript, /persistedConfigStorageKey = 'cocos-playable-packer\.web-config\.v1'/);
+assert.match(inlineScript, /localStorage\.setItem\(persistedConfigStorageKey/);
+assert.match(inlineScript, /localStorage\.getItem\(persistedConfigStorageKey/);
+assert.match(inlineScript, /const initialConfig = persistedConfig \|\|/);
+assert.match(inlineScript, /\.\.\.recommendedConfig/);
+assert.match(inlineScript, /tinyPngApiKeyInput\.value = ''/);
+assert.doesNotMatch(inlineScript, /tinyPngApiKey:\s*tinyPngApiKeyInput/);
+assert.match(inlineScript, /loadingScreenEnabled: loadingScreenEnabledInput\.checked/);
+assert.match(inlineScript, /element\.hidden = true/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
-assert.match(inlineScript, /buildModeInput\.addEventListener/);
+assert.match(inlineScript, /config: config/);
 
-console.log("Playable Web multi-channel config self-test passed.");
+console.log("Playable Web grouped config and TinyPNG self-test passed.");

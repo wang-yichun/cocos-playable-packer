@@ -11,13 +11,17 @@ import {
 } from "../channel/channel-profile.js";
 
 export type WebBuildMode = "optimized" | "raw-single-html";
-export type WebImageMode = "none" | "squoosh" | "webp";
+export type WebImageMode = "none" | "tinypng" | "squoosh" | "webp";
+export type WebTinyPngScope = "all" | "limit";
 
 export interface WebBuildConfig {
   buildMode?: WebBuildMode;
   imageMode?: WebImageMode;
   pngQuality?: number;
   jpegQuality?: number;
+  tinyPngScope?: WebTinyPngScope;
+  tinyPngLimit?: number | null;
+  tinyPngMinBytes?: number | null;
   audioBitrateKbps?: number | null;
   payloadEncoding?: PlayablePayloadEncoding;
   brotliFallback?: PlayableBrotliFallbackMode;
@@ -35,6 +39,9 @@ export interface NormalizedWebBuildConfig {
   imageMode: WebImageMode;
   pngQuality: number;
   jpegQuality: number;
+  tinyPngScope: WebTinyPngScope;
+  tinyPngLimit: number | null;
+  tinyPngMinBytes: number;
   audioBitrateKbps: number | null;
   payloadEncoding: PlayablePayloadEncoding;
   brotliFallback: PlayableBrotliFallbackMode;
@@ -53,6 +60,9 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   imageMode: "webp",
   pngQuality: 80,
   jpegQuality: 80,
+  tinyPngScope: "all",
+  tinyPngLimit: null,
+  tinyPngMinBytes: 4096,
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
@@ -60,24 +70,17 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
 };
 
 export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
-  buildMode: "optimized",
-  imageMode: "webp",
-  pngQuality: 80,
-  jpegQuality: 80,
+  ...DEFAULT_WEB_BUILD_CONFIG,
   audioBitrateKbps: 48,
-  payloadEncoding: "html7",
-  brotliFallback: "raw-js",
   channel: { ...DEFAULT_CHANNEL_CONFIG, platforms: [...DEFAULT_CHANNEL_CONFIG.platforms] },
 };
 
 export const RAW_SINGLE_HTML_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
+  ...DEFAULT_WEB_BUILD_CONFIG,
   buildMode: "raw-single-html",
   imageMode: "none",
-  pngQuality: 80,
-  jpegQuality: 80,
   audioBitrateKbps: null,
   payloadEncoding: "base64",
-  brotliFallback: "raw-js",
   channel: { ...DEFAULT_CHANNEL_CONFIG, platforms: [...DEFAULT_CHANNEL_CONFIG.platforms] },
 };
 
@@ -94,9 +97,7 @@ function integerInRange(
 }
 
 function normalizeBuildMode(value: unknown): WebBuildMode {
-  if (value === undefined) {
-    return DEFAULT_WEB_BUILD_CONFIG.buildMode;
-  }
+  if (value === undefined) return DEFAULT_WEB_BUILD_CONFIG.buildMode;
   if (value !== "optimized" && value !== "raw-single-html") {
     throw new Error("buildMode 只支持 optimized 或 raw-single-html。");
   }
@@ -104,19 +105,23 @@ function normalizeBuildMode(value: unknown): WebBuildMode {
 }
 
 function normalizeImageMode(value: unknown): WebImageMode {
-  if (value === undefined) {
-    return DEFAULT_WEB_BUILD_CONFIG.imageMode;
+  if (value === undefined) return DEFAULT_WEB_BUILD_CONFIG.imageMode;
+  if (value !== "none" && value !== "tinypng" && value !== "squoosh" && value !== "webp") {
+    throw new Error("imageMode 只支持 none、tinypng、squoosh 或 webp。");
   }
-  if (value !== "none" && value !== "squoosh" && value !== "webp") {
-    throw new Error("imageMode 只支持 none、squoosh 或 webp。");
+  return value;
+}
+
+function normalizeTinyPngScope(value: unknown): WebTinyPngScope {
+  if (value === undefined || value === null) return DEFAULT_WEB_BUILD_CONFIG.tinyPngScope;
+  if (value !== "all" && value !== "limit") {
+    throw new Error("tinyPngScope 只支持 all 或 limit。");
   }
   return value;
 }
 
 function normalizePayloadEncoding(value: unknown): PlayablePayloadEncoding {
-  if (value === undefined) {
-    return DEFAULT_WEB_BUILD_CONFIG.payloadEncoding;
-  }
+  if (value === undefined) return DEFAULT_WEB_BUILD_CONFIG.payloadEncoding;
   if (value !== "base64" && value !== "base91" && value !== "html7") {
     throw new Error("payloadEncoding 只支持 base64、base91 或 html7。");
   }
@@ -124,9 +129,7 @@ function normalizePayloadEncoding(value: unknown): PlayablePayloadEncoding {
 }
 
 function normalizeBrotliFallback(value: unknown): PlayableBrotliFallbackMode {
-  if (value === undefined) {
-    return DEFAULT_WEB_BUILD_CONFIG.brotliFallback;
-  }
+  if (value === undefined) return DEFAULT_WEB_BUILD_CONFIG.brotliFallback;
   if (value !== "raw-js" && value !== "gzip-packed-js") {
     throw new Error("brotliFallback 只支持 raw-js 或 gzip-packed-js。");
   }
@@ -137,13 +140,8 @@ function normalizeChannelPlatforms(
   value: unknown,
   fallback: ChannelPlatform,
 ): readonly ChannelPlatform[] {
-  if (value === undefined || value === null) {
-    return [fallback];
-  }
-  if (!Array.isArray(value)) {
-    throw new Error("channel.platforms 必须是渠道数组。");
-  }
-
+  if (value === undefined || value === null) return [fallback];
+  if (!Array.isArray(value)) throw new Error("channel.platforms 必须是渠道数组。");
   const selected = new Set<ChannelPlatform>();
   for (const item of value) {
     if (typeof item !== "string" || !CHANNEL_PLATFORMS.includes(item as ChannelPlatform)) {
@@ -151,10 +149,7 @@ function normalizeChannelPlatforms(
     }
     selected.add(item as ChannelPlatform);
   }
-  if (selected.size === 0) {
-    throw new Error("至少需要选择一个目标渠道。");
-  }
-
+  if (selected.size === 0) throw new Error("至少需要选择一个目标渠道。");
   return CHANNEL_PLATFORMS.filter((platform) => selected.has(platform));
 }
 
@@ -165,14 +160,8 @@ function normalizeMultiChannelConfig(value: unknown): NormalizedChannelBuildConf
     : {};
   const platforms = normalizeChannelPlatforms(source.platforms, base.platform);
   const platform = platforms.includes(base.platform) ? base.platform : platforms[0];
-  if (platform === undefined) {
-    throw new Error("至少需要选择一个目标渠道。");
-  }
-  return {
-    ...base,
-    platform,
-    platforms,
-  };
+  if (platform === undefined) throw new Error("至少需要选择一个目标渠道。");
+  return { ...base, platform, platforms };
 }
 
 export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfig {
@@ -193,10 +182,7 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
   const channel = normalizeMultiChannelConfig(source.channel);
   const buildMode = normalizeBuildMode(source.buildMode);
   if (buildMode === "raw-single-html") {
-    return {
-      ...RAW_SINGLE_HTML_WEB_BUILD_CONFIG,
-      channel,
-    };
+    return { ...RAW_SINGLE_HTML_WEB_BUILD_CONFIG, channel };
   }
 
   const imageMode = normalizeImageMode(source.imageMode);
@@ -208,18 +194,26 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
     ? DEFAULT_WEB_BUILD_CONFIG.jpegQuality
     : integerInRange(source.jpegQuality, "jpegQuality", 1, 100);
 
+  let tinyPngScope = DEFAULT_WEB_BUILD_CONFIG.tinyPngScope;
+  let tinyPngLimit: number | null = DEFAULT_WEB_BUILD_CONFIG.tinyPngLimit;
+  let tinyPngMinBytes = DEFAULT_WEB_BUILD_CONFIG.tinyPngMinBytes;
+  if (imageMode === "tinypng") {
+    tinyPngScope = normalizeTinyPngScope(source.tinyPngScope);
+    tinyPngLimit = tinyPngScope === "limit"
+      ? integerInRange(source.tinyPngLimit, "tinyPngLimit", 1, 10_000)
+      : null;
+    tinyPngMinBytes = source.tinyPngMinBytes === undefined || source.tinyPngMinBytes === null
+      ? DEFAULT_WEB_BUILD_CONFIG.tinyPngMinBytes
+      : integerInRange(source.tinyPngMinBytes, "tinyPngMinBytes", 0, 1_073_741_824);
+  }
+
   let audioBitrateKbps: number | null;
   if (source.audioBitrateKbps === undefined) {
     audioBitrateKbps = DEFAULT_WEB_BUILD_CONFIG.audioBitrateKbps;
   } else if (source.audioBitrateKbps === null) {
     audioBitrateKbps = null;
   } else {
-    audioBitrateKbps = integerInRange(
-      source.audioBitrateKbps,
-      "audioBitrateKbps",
-      8,
-      320,
-    );
+    audioBitrateKbps = integerInRange(source.audioBitrateKbps, "audioBitrateKbps", 8, 320);
   }
 
   return {
@@ -227,6 +221,9 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
     imageMode,
     pngQuality,
     jpegQuality,
+    tinyPngScope,
+    tinyPngLimit,
+    tinyPngMinBytes,
     audioBitrateKbps,
     payloadEncoding: normalizePayloadEncoding(source.payloadEncoding),
     brotliFallback: normalizeBrotliFallback(source.brotliFallback),
@@ -242,17 +239,25 @@ export function createWebBuildRequest(
 ): BuildPlayableRequest {
   const image: BuildPlayableRequest["image"] = config.imageMode === "none"
     ? { mode: "none" }
-    : config.imageMode === "squoosh"
+    : config.imageMode === "tinypng"
       ? {
-          mode: "squoosh",
-          pngQuality: config.pngQuality,
-          jpegQuality: config.jpegQuality,
+          mode: "tinypng",
+          scope: config.tinyPngScope === "all"
+            ? { type: "all" }
+            : { type: "limit", limit: config.tinyPngLimit ?? 1 },
+          minBytes: config.tinyPngMinBytes,
         }
-      : {
-          mode: "webp",
-          pngQuality: config.pngQuality,
-          jpegQuality: config.jpegQuality,
-        };
+      : config.imageMode === "squoosh"
+        ? {
+            mode: "squoosh",
+            pngQuality: config.pngQuality,
+            jpegQuality: config.jpegQuality,
+          }
+        : {
+            mode: "webp",
+            pngQuality: config.pngQuality,
+            jpegQuality: config.jpegQuality,
+          };
 
   return {
     inputDirectory,

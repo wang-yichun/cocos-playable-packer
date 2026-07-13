@@ -1,4 +1,4 @@
-import { createChannelWebMvpIndexHtml } from "./web-channel-ui.js";
+import { createPresetHelpWebMvpIndexHtml } from "./web-preset-help-ui.js";
 import {
   createFallbackWebVersionInfo,
   type WebVersionInfo,
@@ -24,7 +24,7 @@ function replaceLast(source: string, search: string, replacement: string): strin
 export function createLoadingScreenWebMvpIndexHtml(
   versionInfo: WebVersionInfo = createFallbackWebVersionInfo(),
 ): string {
-  let html = createChannelWebMvpIndexHtml(versionInfo);
+  let html = createPresetHelpWebMvpIndexHtml(versionInfo);
 
   html = replaceOnce(
     html,
@@ -123,6 +123,9 @@ export function createLoadingScreenWebMvpIndexHtml(
           ? '加载界面：启用；居中 Logo + 蓝色进度条；Logo ' + loadingLogoBytes + ' B。'
           : '加载界面：已启用，但尚未选择 Logo。'
         : '加载界面：关闭。';
+      if (typeof updateConfigGroupSummaries === 'function') {
+        updateConfigGroupSummaries();
+      }
     }
 
     function inferLoadingLogoMime(file) {
