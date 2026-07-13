@@ -45,6 +45,12 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
     .analysis-subtab { border: 0; border-radius: 8px; padding: 8px 13px; background: transparent; color: #cbd5e1; cursor: pointer; }
     .analysis-subtab.active { background: #2563eb; color: #fff; }
     .analysis-subpanel[hidden] { display: none; }
+    .attention-list { display: grid; gap: 10px; margin-top: 14px; }
+    .attention-item { border: 1px solid #374151; border-left-width: 4px; border-radius: 10px; background: #111827; padding: 12px 14px; }
+    .attention-item.high { border-left-color: #ef4444; }
+    .attention-item.medium { border-left-color: #f59e0b; }
+    .attention-item summary { cursor: pointer; }
+    .attention-action { margin-top: 10px; padding: 9px 11px; border-left: 3px solid #22c55e; background: #0f172a; }
   </style>`,
   );
   html = replaceOnce(
@@ -116,6 +122,43 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
         + payload.warnings.map((warning) => '<div class="analysis-note">' + escapeAnalysisHtml(warning) + '</div>').join('');
     }
 
+    function manualAttentionCategoryLabel(value) {
+      if (value === 'large-scene') return '大型场景';
+      if (value === 'large-model') return '大型模型';
+      if (value === 'large-prefab') return '大型 Prefab';
+      if (value === 'large-font') return '大型字体';
+      if (value === 'oversized-image') return '超大像素图片';
+      return '长音频';
+    }
+
+    function renderManualAttentionSection(report) {
+      const attention = report.manualAttention;
+      if (!attention) return '';
+      if (attention.itemCount === 0) {
+        return '<h3>需人工关注</h3><div class="analysis-note">没有发现达到当前人工复核阈值的项目。该结果不代表项目不存在其他设计或运行问题。</div>';
+      }
+      const categoryCards = attention.categories.map((category) => '<div class="analysis-stat"><small>'
+        + escapeAnalysisHtml(manualAttentionCategoryLabel(category.category)) + '</small><strong>' + category.itemCount
+        + '</strong><div>高 ' + category.highCount + ' · 中 ' + category.mediumCount + '</div></div>').join('');
+      const items = attention.items.slice(0, 80).map((item, index) => {
+        const paths = item.sourcePaths.map((value) => '<div><b>源路径：</b>' + escapeAnalysisHtml(value) + '</div>')
+          .concat(item.buildPaths.map((value) => '<div><b>构建路径：</b>' + escapeAnalysisHtml(value) + '</div>')).join('');
+        const basis = item.sizeBasis === 'source' ? '源文件大小' : '构建文件大小';
+        return '<details class="attention-item ' + item.severity + '"' + (index < 5 ? ' open' : '') + '><summary><b>'
+          + (item.severity === 'high' ? '高' : '中') + '</b> · ' + escapeAnalysisHtml(item.title) + ' · ' + basis + ' '
+          + formatAnalysisBytes(item.currentBytes) + '</summary><div style="margin-top:10px">' + (paths || '没有可显示的精确路径。')
+          + '</div><p>' + escapeAnalysisHtml(item.rationale) + '</p><div class="attention-action"><b>建议：</b>'
+          + escapeAnalysisHtml(item.nextAction) + '</div></details>';
+      }).join('');
+      return '<h3>需人工关注</h3><div class="analysis-grid">'
+        + '<div class="analysis-stat"><small>关注项</small><strong>' + attention.itemCount + '</strong></div>'
+        + '<div class="analysis-stat"><small>高优先级复核</small><strong>' + attention.highCount + '</strong></div>'
+        + '<div class="analysis-stat"><small>中优先级复核</small><strong>' + attention.mediumCount + '</strong></div>'
+        + categoryCards + '</div>'
+        + attention.warnings.map((warning) => '<div class="analysis-note">' + escapeAnalysisHtml(warning) + '</div>').join('')
+        + '<div class="attention-list">' + items + '</div>';
+    }
+
     function organizeAnalysisSubTabs() {
       const actions = Array.from(analysisReport.children).find((child) => child.classList.contains('analysis-actions')) || null;
       const children = Array.from(analysisReport.children).filter((child) => child !== actions);
@@ -123,6 +166,7 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
       tabBar.className = 'analysis-subtabs';
       const definitions = [
         ['overview', '概况'],
+        ['attention', '需人工关注'],
         ['compression', '压缩收益'],
         ['duplicates', '完全重复资源'],
         ['not-in-build', '未进入构建'],
@@ -146,7 +190,8 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
       children.forEach((child) => {
         if (child.tagName === 'H3') {
           const text = (child.textContent || '').trim();
-          if (text === '压缩收益明细') current = 'compression';
+          if (text === '需人工关注') current = 'attention';
+          else if (text === '压缩收益明细') current = 'compression';
           else if (text === '完全重复的工程资源') current = 'duplicates';
           else if (text === '未在本次构建中发现的源资源') current = 'not-in-build';
           else if (text === 'Playable Payload 编码体积' || text === '图片与音频优化估算') current = 'overview';
@@ -169,7 +214,7 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
   html = replaceOnce(
     html,
     "        + renderOptimizationSection(report)",
-    "        + renderPayloadEncodingSection(report)\n        + renderOptimizationSection(report)",
+    "        + renderPayloadEncodingSection(report)\n        + renderManualAttentionSection(report)\n        + renderOptimizationSection(report)",
   );
   html = replaceOnce(
     html,
