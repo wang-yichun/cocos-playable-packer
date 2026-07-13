@@ -8,14 +8,15 @@ import {
   analyzeJointResources,
   readAssetsManifest,
 } from "./joint-resource-analysis.js";
+import { measurePayloadEncodingBenchmark } from "./payload-encoding-benchmark.js";
 import {
   enrichGeneratedNativeSourceMappings,
   finalizeResourceOptimization,
 } from "./resource-analysis-finalize.js";
 import {
-  createRedundancyResourceAnalysisHtmlReport,
-  type ExtendedResourceAnalysisReport,
-} from "./resource-analysis-redundancy-report.js";
+  createFinalResourceAnalysisHtmlReport,
+  type FinalResourceAnalysisReport,
+} from "./resource-analysis-final-report.js";
 import { analyzeResourceOptimization } from "./resource-optimization-estimates.js";
 import { analyzeSourceRedundancy } from "./source-redundancy-analysis.js";
 
@@ -65,6 +66,7 @@ interface InternalResourceAnalysisJob extends Omit<PublicResourceAnalysisJob, "l
 
 export interface ResourceAnalysisWebManagerOptions {
   rootDirectory: string;
+  projectRoot?: string;
   tokenLifetimeMs?: number;
 }
 
@@ -112,6 +114,7 @@ function emptyManifest(projectName: string): AssetsManifest {
 export class ResourceAnalysisWebManager {
   readonly rootDirectory: string;
   readonly jobsDirectory: string;
+  readonly projectRoot: string;
 
   private readonly tokenLifetimeMs: number;
   private readonly jobs = new Map<string, InternalResourceAnalysisJob>();
@@ -119,6 +122,7 @@ export class ResourceAnalysisWebManager {
   constructor(options: ResourceAnalysisWebManagerOptions) {
     this.rootDirectory = path.resolve(options.rootDirectory);
     this.jobsDirectory = path.join(this.rootDirectory, "resource-analysis", "jobs");
+    this.projectRoot = path.resolve(options.projectRoot ?? process.cwd());
     this.tokenLifetimeMs = options.tokenLifetimeMs ?? 30 * 60 * 1000;
   }
 
@@ -231,8 +235,21 @@ export class ResourceAnalysisWebManager {
       const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
       const optimization = finalizeResourceOptimization(joint, measuredOptimization);
       const redundancy = analyzeSourceRedundancy(manifest, joint);
-      const report: ExtendedResourceAnalysisReport = { ...joint, optimization, redundancy };
-      const html = createRedundancyResourceAnalysisHtmlReport(report);
+
+      job.message = "正在实际测量 Brotli、Base64、Base91 与 HTML7 Payload 体积。";
+      const payloadEncoding = await measurePayloadEncodingBenchmark(
+        buildRoot,
+        path.join(job.directory, "payload-benchmark"),
+        joint.buildBytes,
+        this.projectRoot,
+      );
+      const report: FinalResourceAnalysisReport = {
+        ...joint,
+        optimization,
+        redundancy,
+        payloadEncoding,
+      };
+      const html = createFinalResourceAnalysisHtmlReport(report);
       await mkdir(path.dirname(job.reportFile), { recursive: true });
       await Promise.all([
         writeFile(job.reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8"),
