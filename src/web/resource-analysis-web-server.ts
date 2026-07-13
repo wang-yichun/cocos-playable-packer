@@ -128,8 +128,12 @@ function analysisJobPath(pathname: string, suffix = ""): string | null {
   return pattern.exec(pathname)?.[1] ?? null;
 }
 
-function reportJobId(pathname: string): string | null {
-  return /^\/artifacts\/resource-analysis\/([0-9a-f-]{36})\/report\.json$/i.exec(pathname)?.[1] ?? null;
+function reportArtifact(pathname: string): { jobId: string; format: "json" | "html" } | null {
+  const match = /^\/artifacts\/resource-analysis\/([0-9a-f-]{36})\/report\.(json|html)$/i.exec(pathname);
+  const jobId = match?.[1];
+  const extension = match?.[2]?.toLowerCase();
+  if (jobId === undefined || (extension !== "json" && extension !== "html")) return null;
+  return { jobId, format: extension };
 }
 
 function requestBaseUrl(request: IncomingMessage): string {
@@ -256,21 +260,26 @@ export async function startResourceAnalysisWebMvpServer(
       return;
     }
 
-    const reportId = reportJobId(pathname);
-    if (method === "GET" && reportId !== null) {
-      const reportFile = analysisManager.getReportPath(reportId);
+    const report = reportArtifact(pathname);
+    if (method === "GET" && report !== null) {
+      const reportFile = analysisManager.getReportPath(report.jobId, report.format);
       const info = reportFile === null ? null : await stat(reportFile).catch(() => null);
       if (reportFile === null || !info?.isFile()) {
         requestError(response, 404, "ANALYSIS_REPORT_NOT_FOUND", "资源体检报告尚未生成。");
         return;
       }
       const body = await readFile(reportFile, "utf8");
+      const isDownload = url.searchParams.get("download") === "1";
       sendText(
         response,
         200,
         body,
-        "application/json; charset=utf-8",
-        url.searchParams.get("download") === "1" ? "resource-analysis.json" : null,
+        report.format === "html" ? "text/html; charset=utf-8" : "application/json; charset=utf-8",
+        isDownload
+          ? report.format === "html"
+            ? "resource-analysis.html"
+            : "resource-analysis.json"
+          : null,
       );
       return;
     }
