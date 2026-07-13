@@ -70,6 +70,7 @@ interface InternalWebJob extends Omit<PublicWebJob, "recentLogs"> {
   outputFile: string;
   reportFile: string;
   abortController: AbortController;
+  tinyPngApiKey: string | null;
 }
 
 export type BuildPlayableFunction = (
@@ -97,7 +98,13 @@ function clonePublicJob(job: InternalWebJob): PublicWebJob {
     createdAt: job.createdAt,
     startedAt: job.startedAt,
     completedAt: job.completedAt,
-    config: { ...job.config },
+    config: {
+      ...job.config,
+      channel: {
+        ...job.config.channel,
+        platforms: [...job.config.channel.platforms],
+      },
+    },
     outputBytes: job.outputBytes,
     outputSha256: job.outputSha256,
     error: job.error === null ? null : { ...job.error },
@@ -120,6 +127,26 @@ function errorCode(error: unknown): string {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function extractPrivateTinyPngConfig(rawConfig: unknown): {
+  publicConfig: unknown;
+  apiKey: string | null;
+} {
+  if (typeof rawConfig !== "object" || rawConfig === null || Array.isArray(rawConfig)) {
+    return { publicConfig: rawConfig, apiKey: null };
+  }
+  const source = rawConfig as Record<string, unknown>;
+  const candidate = source.tinyPngApiKey;
+  if (candidate !== undefined && candidate !== null && typeof candidate !== "string") {
+    throw new Error("tinyPngApiKey 必须是字符串。");
+  }
+  const apiKey = typeof candidate === "string" && candidate.trim().length > 0
+    ? candidate.trim()
+    : null;
+  const publicConfig = { ...source };
+  delete publicConfig.tinyPngApiKey;
+  return { publicConfig, apiKey };
 }
 
 export class WebJobManager {
@@ -188,7 +215,11 @@ export class WebJobManager {
     if (upload === undefined) {
       throw new Error("上传不存在、已被使用或服务已重启，请重新上传 ZIP。");
     }
-    const config = normalizeWebBuildConfig(rawConfig);
+    const privateConfig = extractPrivateTinyPngConfig(rawConfig);
+    const config = normalizeWebBuildConfig(privateConfig.publicConfig);
+    if (config.imageMode === "tinypng" && privateConfig.apiKey === null) {
+      throw new Error("TinyPNG 模式必须填写 TINYPNG_API_KEY。");
+    }
     const id = randomUUID();
     const jobDirectory = path.join(this.jobsDirectory, id);
     const outputFile = path.join(jobDirectory, "output", "game.html");
@@ -212,6 +243,7 @@ export class WebJobManager {
       outputFile,
       reportFile,
       abortController: new AbortController(),
+      tinyPngApiKey: config.imageMode === "tinypng" ? privateConfig.apiKey : null,
     };
     this.uploads.delete(uploadId);
     this.jobs.set(id, job);
@@ -235,17 +267,14 @@ export class WebJobManager {
 
   cancelJob(jobId: string): PublicWebJob | null {
     const job = this.jobs.get(jobId);
-    if (job === undefined) {
-      return null;
-    }
+    if (job === undefined) return null;
     if (job.status === "queued") {
       const index = this.queue.indexOf(jobId);
-      if (index >= 0) {
-        this.queue.splice(index, 1);
-      }
+      if (index >= 0) this.queue.splice(index, 1);
       job.status = "cancelled";
       job.message = "任务已取消。";
       job.completedAt = timestamp();
+      job.tinyPngApiKey = null;
       void rm(job.uploadPath, { force: true });
       return clonePublicJob(job);
     }
@@ -272,20 +301,14 @@ export class WebJobManager {
   }
 
   private async drainQueue(): Promise<void> {
-    if (this.draining) {
-      return;
-    }
+    if (this.draining) return;
     this.draining = true;
     try {
       while (this.queue.length > 0) {
         const nextId = this.queue.shift();
-        if (nextId === undefined) {
-          break;
-        }
+        if (nextId === undefined) break;
         const job = this.jobs.get(nextId);
-        if (job === undefined || job.status !== "queued") {
-          continue;
-        }
+        if (job === undefined || job.status !== "queued") continue;
         await this.runJob(job);
       }
     } finally {
@@ -323,11 +346,15 @@ export class WebJobManager {
         `web-${job.id.slice(0, 8)}`,
         job.config,
       );
+      const environment = job.tinyPngApiKey === null
+        ? process.env
+        : { ...process.env, TINYPNG_API_KEY: job.tinyPngApiKey };
       const result = await this.buildPlayableImpl(request, {
         projectRoot: this.projectRoot,
         scriptPath: job.config.buildMode === "raw-single-html"
           ? path.join(this.projectRoot, "src", "web", "raw-single-html-cli.ts")
           : undefined,
+        environment,
         signal: job.abortController.signal,
         onEvent: (event) => this.handleBuildEvent(job, event),
       });
@@ -359,6 +386,7 @@ export class WebJobManager {
       };
       this.appendLog(job, `[error] ${errorMessage(error)}`);
     } finally {
+      job.tinyPngApiKey = null;
       await rm(job.uploadPath, { force: true }).catch(() => undefined);
       await rm(job.extractionDirectory, { recursive: true, force: true }).catch(() => undefined);
     }
