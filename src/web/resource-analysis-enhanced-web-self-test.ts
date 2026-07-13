@@ -76,6 +76,9 @@ try {
   assert.match(page, /压缩收益明细/);
   assert.match(page, /data-analysis-subtab/);
   assert.match(page, /Playable Payload 编码体积/);
+  assert.match(page, /id="analysisPayloadEncoding" type="checkbox"/);
+  assert.match(page, /分析时间会明显延长/);
+  assert.match(page, /最终单 HTML（/);
   assert.match(page, /下载 HTML 报告/);
 
   const zip = createStoredZip([
@@ -89,11 +92,17 @@ try {
   }));
   const job = created.job as Record<string, unknown>;
   const jobId = String(job.id);
-  await readJson(await fetch(`${server.url}/api/resource-analysis/jobs/${jobId}/start`, {
+
+  const cmdResponse = await fetch(`${server.url}/api/resource-analysis/jobs/${jobId}/assets-manifest.cmd?measurePayloadEncoding=1`);
+  assert.equal(cmdResponse.ok, true);
+  assert.match(await cmdResponse.text(), /measurePayloadEncoding=1/);
+
+  const started = await readJson(await fetch(`${server.url}/api/resource-analysis/jobs/${jobId}/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ requireManifest: false }),
+    body: JSON.stringify({ requireManifest: false, measurePayloadEncoding: false }),
   }));
+  assert.equal((started.job as Record<string, unknown>).measurePayloadEncoding, false);
 
   let completed: Record<string, unknown> | null = null;
   for (let attempt = 0; attempt < 100; attempt += 1) {
@@ -106,10 +115,12 @@ try {
   }
   assert(completed !== null);
   assert.equal(completed.status, "succeeded", JSON.stringify(completed));
+  assert.equal(completed.measurePayloadEncoding, false);
   const links = completed.links as Record<string, unknown>;
   const reportJson = await readJson(await fetch(`${server.url}${String(links.report)}`));
   const payload = reportJson.payloadEncoding as Record<string, unknown>;
   assert.equal(payload.status, "unavailable");
+  assert.match(JSON.stringify(payload.warnings), /未启用 Playable Payload 编码体积测量/);
 
   const htmlResponse = await fetch(`${server.url}${String(links.htmlReport)}`);
   assert.equal(htmlResponse.ok, true);
@@ -119,6 +130,7 @@ try {
   assert.match(reportHtml, /data-report-tab="overview"/);
   assert.match(reportHtml, /压缩收益明细/);
   assert.match(reportHtml, /Playable Payload 编码体积/);
+  assert.match(reportHtml, /未启用 Playable Payload 编码体积测量/);
   assert.match(reportHtml, /报告不会自动修改或选择打包配置/);
   assert.doesNotMatch(reportHtml, /<script[^>]+src=/i);
 } finally {
