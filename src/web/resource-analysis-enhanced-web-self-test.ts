@@ -74,6 +74,7 @@ try {
   const page = await (await fetch(server.url)).text();
   assert.match(page, /图片与音频优化估算/);
   assert.match(page, /压缩收益明细/);
+  assert.match(page, /需人工关注/);
   assert.match(page, /data-analysis-subtab/);
   assert.match(page, /Playable Payload 编码体积/);
   assert.match(page, /id="analysisPayloadEncoding" type="checkbox"/);
@@ -121,6 +122,8 @@ try {
   const payload = reportJson.payloadEncoding as Record<string, unknown>;
   assert.equal(payload.status, "unavailable");
   assert.match(JSON.stringify(payload.warnings), /未启用 Playable Payload 编码体积测量/);
+  const attention = reportJson.manualAttention as Record<string, unknown>;
+  assert.equal(attention.itemCount, 0);
 
   const htmlResponse = await fetch(`${server.url}${String(links.htmlReport)}`);
   assert.equal(htmlResponse.ok, true);
@@ -128,6 +131,8 @@ try {
   const reportHtml = await htmlResponse.text();
   assert.match(reportHtml, /Cocos 构建资源体检报告/);
   assert.match(reportHtml, /data-report-tab="overview"/);
+  assert.match(reportHtml, /data-report-tab="attention"/);
+  assert.match(reportHtml, /需人工关注/);
   assert.match(reportHtml, /压缩收益明细/);
   assert.match(reportHtml, /Playable Payload 编码体积/);
   assert.match(reportHtml, /未启用 Playable Payload 编码体积测量/);
