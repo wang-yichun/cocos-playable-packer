@@ -157,7 +157,10 @@ export async function startResourceAnalysisWebMvpServer(
   const originalListener = listeners[0] as RequestListener;
   running.server.removeListener("request", originalListener);
 
-  const analysisManager = new ResourceAnalysisWebManager({ rootDirectory: running.manager.rootDirectory });
+  const analysisManager = new ResourceAnalysisWebManager({
+    rootDirectory: running.manager.rootDirectory,
+    projectRoot: options.projectRoot,
+  });
   await analysisManager.initialize();
   const incomingDirectory = path.join(analysisManager.rootDirectory, "resource-analysis", "incoming");
 
@@ -223,7 +226,8 @@ export async function startResourceAnalysisWebMvpServer(
         return;
       }
       const requireManifest = parsed.requireManifest === true;
-      const job = analysisManager.start(startJobId, requireManifest);
+      const measurePayloadEncoding = parsed.measurePayloadEncoding === true;
+      const job = analysisManager.start(startJobId, requireManifest, measurePayloadEncoding);
       sendJson(response, 202, { job });
       return;
     }
@@ -236,8 +240,9 @@ export async function startResourceAnalysisWebMvpServer(
         requestError(response, 404, "CMD_NOT_AVAILABLE", "工程扫描 CMD 不存在或已失效。");
         return;
       }
+      const measurePayloadEncoding = url.searchParams.get("measurePayloadEncoding") === "1";
       const baseUrl = requestBaseUrl(request);
-      const moduleUrl = `${baseUrl}/api/resource-analysis/jobs/${cmdJobId}/assets-manifest-uploader.mjs?token=${encodeURIComponent(token)}`;
+      const moduleUrl = `${baseUrl}/api/resource-analysis/jobs/${cmdJobId}/assets-manifest-uploader.mjs?token=${encodeURIComponent(token)}&measurePayloadEncoding=${measurePayloadEncoding ? "1" : "0"}`;
       const cmd = createAssetsManifestUploaderCmd(moduleUrl, `cocos-assets-manifest-${cmdJobId.slice(0, 8)}`);
       sendText(response, 200, cmd, "application/octet-stream", "upload-assets-manifest.cmd");
       return;
@@ -250,11 +255,13 @@ export async function startResourceAnalysisWebMvpServer(
         requestError(response, 403, "INVALID_UPLOAD_TOKEN", "扫描器下载令牌无效或已过期。");
         return;
       }
+      const measurePayloadEncoding = url.searchParams.get("measurePayloadEncoding") === "1";
       const baseUrl = requestBaseUrl(request);
       const module = createAssetsManifestUploaderModule(
         `${baseUrl}/api/resource-analysis/jobs/${moduleJobId}/manifest`,
         `${baseUrl}/api/resource-analysis/jobs/${moduleJobId}/start`,
         token ?? "",
+        measurePayloadEncoding,
       );
       sendText(response, 200, module, "text/javascript; charset=utf-8");
       return;
