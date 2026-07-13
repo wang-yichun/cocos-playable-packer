@@ -30,6 +30,8 @@ async function main(): Promise<void> {
   assert(module.includes(token), "扫描器应携带一次性上传令牌。");
   assert(module.includes('path.join(projectRoot, "assets")'), "扫描器只能从项目 assets 目录开始扫描。");
   assert(module.includes("sha256File"), "扫描器应计算资源 SHA-256。");
+  assert(module.includes('path.join(process.cwd(), "assets-manifest.json")'), "扫描器应在项目根目录保留 assets-manifest.json。");
+  assert(module.includes("本地清单已生成"), "扫描器应提示本地清单路径。");
   assert(!module.includes("formData.append"), "扫描器不应上传资源二进制文件。");
   assert(cmd.includes('cd /d "%~dp0"'), "CMD 应以自身所在目录作为 Cocos 项目根目录。");
   assert(cmd.includes("%SCANNER%"), "CMD 应正确引用临时扫描器路径。");
