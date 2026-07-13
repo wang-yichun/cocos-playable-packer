@@ -33,11 +33,13 @@ export function createResourceOptimizationWebMvpIndexHtml(
     .optimization-card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
     .optimization-badge { display: inline-block; padding: 3px 8px; margin-right: 6px; border-radius: 999px; background: #1e293b; font-size: 12px; }
     .optimization-badge.estimate { background: #164e63; }
+    .optimization-badge.generated { background: #4c1d95; }
     .optimization-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 12px; }
     .optimization-metric { padding: 9px; border-radius: 8px; background: #0f172a; }
     .optimization-metric small { display: block; color: #9ca3af; }
     .optimization-metric strong { display: block; margin-top: 3px; }
     .optimization-path { margin-top: 10px; color: #cbd5e1; overflow-wrap: anywhere; }
+    .optimization-source-group { margin-top: 10px; padding: 10px; border: 1px solid #374151; border-radius: 8px; background: #0f172a; max-height: 220px; overflow: auto; }
     .optimization-next { margin-top: 10px; padding: 9px 11px; border-left: 3px solid #22c55e; background: #0f172a; color: #d1d5db; }`,
   );
 
@@ -56,6 +58,22 @@ export function createResourceOptimizationWebMvpIndexHtml(
       return category;
     }
 
+    function renderOptimizationSource(item) {
+      const relation = item.metadata && item.metadata.sourcePathRelation;
+      if (relation === 'generated-group' && item.sourcePaths.length > 0) {
+        const preview = item.sourcePaths.slice(0, 8);
+        const remaining = item.sourcePaths.length - preview.length;
+        const root = item.metadata.generatedSourceGroupRoot;
+        return '<div class="optimization-source-group"><b>可能关联的源图片组（' + item.sourcePaths.length + ' 项）：</b>'
+          + (root ? '<div>' + escapeAnalysisHtml(root) + '</div>' : '')
+          + '<div>' + preview.map(escapeAnalysisHtml).join('<br>') + '</div>'
+          + (remaining > 0 ? '<div class="analysis-upload-note">其余 ' + remaining + ' 项请查看 JSON 报告。</div>' : '')
+          + '<div class="analysis-upload-note">这是生成资源与源图片组的关联，不是一对一映射。</div></div>';
+      }
+      const source = item.sourcePaths.length === 0 ? '未恢复源路径' : item.sourcePaths.map(escapeAnalysisHtml).join('<br>');
+      return '<div class="optimization-path"><b>源资源：</b>' + source + '</div>';
+    }
+
     function renderOptimizationSection(report) {
       const optimization = report.optimization;
       if (!optimization) return '';
@@ -70,8 +88,10 @@ export function createResourceOptimizationWebMvpIndexHtml(
           + '<div class="analysis-upload-note">候选 ' + item.candidateCount + '/' + item.fileCount + '；预计影响总构建 ' + item.totalBuildImpactPercentMin.toFixed(2) + '%–' + item.totalBuildImpactPercentMax.toFixed(2) + '%。</div></div>';
       }).join('');
       const cards = optimization.candidates.slice(0, 24).map((item) => {
-        const source = item.sourcePaths.length === 0 ? '未恢复源路径' : item.sourcePaths.join('<br>');
         const estimate = item.estimateKind === 'measured' ? '实测' : '参数估算';
+        const generated = item.metadata && item.metadata.sourcePathRelation === 'generated-group'
+          ? '<span class="optimization-badge generated">生成资源组</span>'
+          : '';
         const selfPercent = item.savingsPercentMin === item.savingsPercentMax
           ? item.savingsPercentMin.toFixed(2) + '%'
           : item.savingsPercentMin.toFixed(2) + '%–' + item.savingsPercentMax.toFixed(2) + '%';
@@ -79,23 +99,23 @@ export function createResourceOptimizationWebMvpIndexHtml(
           ? item.totalBuildImpactPercentMin.toFixed(2) + '%'
           : item.totalBuildImpactPercentMin.toFixed(2) + '%–' + item.totalBuildImpactPercentMax.toFixed(2) + '%';
         return '<article class="optimization-card ' + item.priority.toLowerCase() + '">'
-          + '<div class="optimization-card-head"><div><span class="optimization-badge">' + item.priority + '</span><span class="optimization-badge estimate">' + estimate + '</span></div><strong>' + escapeAnalysisHtml(item.title) + '</strong></div>'
+          + '<div class="optimization-card-head"><div><span class="optimization-badge">' + item.priority + '</span><span class="optimization-badge estimate">' + estimate + '</span>' + generated + '</div><strong>' + escapeAnalysisHtml(item.title) + '</strong></div>'
           + '<div class="optimization-metrics">'
           + '<div class="optimization-metric"><small>当前大小</small><strong>' + formatAnalysisBytes(item.currentBytes) + '</strong></div>'
           + '<div class="optimization-metric"><small>预计处理后</small><strong>' + optimizationRange(item.estimatedAfterBytesMin, item.estimatedAfterBytesMax) + '</strong></div>'
           + '<div class="optimization-metric"><small>自身减少</small><strong>' + selfPercent + '</strong></div>'
           + '<div class="optimization-metric"><small>对总构建影响</small><strong>' + impact + '</strong></div>'
           + '</div><div class="optimization-path"><b>构建路径：</b>' + escapeAnalysisHtml(item.buildPath) + '</div>'
-          + '<div class="optimization-path"><b>源资源：</b>' + source.split('<br>').map(escapeAnalysisHtml).join('<br>') + '</div>'
+          + renderOptimizationSource(item)
           + '<div class="optimization-next"><b>建议：</b>' + escapeAnalysisHtml(item.nextAction) + '</div></article>';
       }).join('');
       return '<h3>图片与音频优化估算</h3>'
-        + '<div class="analysis-grid"><div class="analysis-stat"><small>预计优化后构建大小</small><strong>' + optimizationRange(optimizedMin, optimizedMax) + '</strong></div>'
-        + '<div class="analysis-stat"><small>预计总构建减少</small><strong>' + optimization.totalBuildSavingsPercentMin.toFixed(2) + '%–' + optimization.totalBuildSavingsPercentMax.toFixed(2) + '%</strong></div>'
+        + '<div class="analysis-grid"><div class="analysis-stat"><small>预计 Web Mobile 优化后</small><strong>' + optimizationRange(optimizedMin, optimizedMax) + '</strong></div>'
+        + '<div class="analysis-stat"><small>Web Mobile 原始体积预计减少</small><strong>' + optimization.totalBuildSavingsPercentMin.toFixed(2) + '%–' + optimization.totalBuildSavingsPercentMax.toFixed(2) + '%</strong></div>'
         + '<div class="analysis-stat"><small>图片实测候选</small><strong>' + optimization.measuredImageCount + '</strong></div>'
         + '<div class="analysis-stat"><small>音频参数估算候选</small><strong>' + optimization.parameterEstimatedAudioCount + '</strong></div></div>'
         + '<div class="optimization-comparison">' + comparisons + '</div>'
-        + '<div class="analysis-note">图片为 WebP 80 临时转码实测；音频为 48 kbps 参数估算。这里只提供诊断，不会自动修改打包配置或资源文件。</div>'
+        + '<div class="analysis-note">图片为 WebP 80 临时转码实测；音频为 48 kbps 参数估算。这里只提供诊断，不会自动修改打包配置或资源文件。这里的百分比针对解压后的 Web Mobile，不等同于最终 Brotli Payload 或单 HTML 降幅。</div>'
         + (cards.length === 0 ? '' : '<h3>优先处理候选</h3><div class="optimization-card-list">' + cards + '</div>');
     }
 
