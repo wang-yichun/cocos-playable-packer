@@ -22,40 +22,31 @@ https://ffmpeg.org/download.html
 - Web MVP 保持音频压缩关闭；
 - 只执行图片压缩、Brotli 打包或 Payload 编码。
 
-## 2. 推荐：使用 Winget 自动安装
+## 2. 推荐：使用 Chocolatey 自动安装（公司电脑已验证）
 
-Windows 11 或已安装 Windows Package Manager 的系统，推荐直接在 PowerShell 中执行：
+当前公司电脑已验证可在 PowerShell 中执行：
 
 ```powershell
-winget install --id Gyan.FFmpeg -e --source winget
+choco install ffmpeg
 ```
 
-参数含义：
-
-- `--id Gyan.FFmpeg`：指定 FFmpeg 软件包 ID；
-- `-e`：要求软件包 ID 精确匹配；
-- `--source winget`：明确使用 Winget 公共软件源。
+当前公司环境中 `winget install` 无法使用，原因尚未定位，因此不要将 Winget 作为公司电脑的默认安装方式。
 
 安装完成后，关闭并重新打开 PowerShell、VS Code 终端以及已经启动的 Web MVP 服务，然后执行后文的验证命令。
 
-已经安装过 FFmpeg 时，可以通过以下命令检查并升级：
+已经安装过 FFmpeg 时，可以通过以下命令升级：
 
 ```powershell
-winget upgrade --id Gyan.FFmpeg -e --source winget
+choco upgrade ffmpeg
 ```
 
-如果系统无法识别 `winget`，先确认 Windows Package Manager 是否可用：
+如果系统无法识别 `choco`，先确认 Chocolatey 是否可用：
 
 ```powershell
-winget --version
+choco --version
 ```
 
-如果软件源异常，可尝试：
-
-```powershell
-winget source update
-winget search --id Gyan.FFmpeg -e --source winget
-```
+如果公司电脑没有安装 Chocolatey，或 Chocolatey 软件源不可用，请改用后文的手动安装方式。
 
 ## 3. 备用：Windows 手动安装
 
@@ -160,7 +151,7 @@ where.exe ffmpeg
 ffmpeg -version
 ```
 
-如果刚刚通过 Winget 安装 FFmpeg，或刚刚修改过 `Path`：
+如果刚刚通过 Chocolatey 安装 FFmpeg，或刚刚修改过 `Path`：
 
 1. 停止当前服务；
 2. 关闭当前 PowerShell 或 VS Code 终端；
@@ -185,10 +176,10 @@ node --version
 npm --version
 npm ci
 npm run typecheck
-winget install --id Gyan.FFmpeg -e --source winget
+choco install ffmpeg
 where.exe ffmpeg
 ffmpeg -version
 ffmpeg -encoders | Select-String libmp3lame
 ```
 
-不使用音频压缩时，FFmpeg 安装和最后三项检查可以跳过。
+当前公司环境不要依赖 `winget install`。不使用音频压缩时，FFmpeg 安装和最后三项检查可以跳过。
