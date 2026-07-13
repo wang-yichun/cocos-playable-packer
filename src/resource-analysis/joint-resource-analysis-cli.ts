@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 
 import { extractZipArchive, findWebMobileRoot } from "../web/zip-extractor.js";
 import { analyzeJointResources, readAssetsManifest } from "./joint-resource-analysis.js";
+import { analyzeManualAttention } from "./manual-attention-analysis.js";
 import { measurePayloadEncodingBenchmark } from "./payload-encoding-benchmark.js";
 import {
   enrichGeneratedNativeSourceMappings,
@@ -56,6 +57,7 @@ async function main(): Promise<void> {
     const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
     const optimization = finalizeResourceOptimization(joint, measuredOptimization);
     const redundancy = analyzeSourceRedundancy(manifest, joint);
+    const manualAttention = analyzeManualAttention(joint, optimization);
     console.log("正在实际测量 Brotli、Base64、Base91 与 HTML7 Payload 体积……");
     const payloadEncoding = await measurePayloadEncodingBenchmark(
       buildRoot,
@@ -68,6 +70,7 @@ async function main(): Promise<void> {
       optimization,
       redundancy,
       payloadEncoding,
+      manualAttention,
     };
 
     const resolvedOutput = path.resolve(outputFile);
@@ -96,6 +99,7 @@ async function main(): Promise<void> {
     console.log("提示：上述百分比不等于最终 Brotli Payload 或单 HTML 的降幅。");
     console.log(`图片实测候选：${report.optimization.measuredImageCount}`);
     console.log(`音频参数估算候选：${report.optimization.parameterEstimatedAudioCount}`);
+    console.log(`需人工关注：${report.manualAttention.itemCount}；其中高优先级复核 ${report.manualAttention.highCount}`);
     console.log(`完全重复资源组：${report.redundancy.duplicateGroupCount}`);
     console.log(`工程理论重复字节：${formatKiB(report.redundancy.redundantProjectBytes)}`);
     console.log("提示：工程理论重复字节不等于最终构建或单 HTML 可减少的字节。");
