@@ -93,6 +93,14 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
 
   html = replaceOnce(
     html,
+    "    let busy = false;",
+    `    const persistedConfigStorageKey = 'cocos-playable-packer.web-config.v1';
+    let configPersistenceReady = false;
+    let busy = false;`,
+  );
+
+  html = replaceOnce(
+    html,
     "      const audioBitrateKbps = audioEnabledInput.checked",
     `      const tinyPngApiKey = imageMode === 'tinypng' ? tinyPngApiKeyInput.value.trim() : null;
       if (imageMode === 'tinypng' && !tinyPngApiKey) {
@@ -156,7 +164,8 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     html,
     "      audioWarning.hidden = rawMode || !audioEnabled;",
     `      audioWarning.hidden = rawMode || !audioEnabled;
-      updateConfigGroupSummaries();`,
+      updateConfigGroupSummaries();
+      persistCurrentConfig();`,
   );
 
   html = replaceOnce(
@@ -179,11 +188,11 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
   html = replaceOnce(
     html,
     channelDefaultInitialization,
-    `    function createConfigGroup(title, key, open, elements) {
+    `    function createConfigGroup(title, key, elements) {
       const details = document.createElement('details');
       details.className = 'config-group';
       details.dataset.group = key;
-      details.open = open;
+      details.open = false;
       const summary = document.createElement('summary');
       const titleElement = document.createElement('span');
       titleElement.className = 'config-group-title';
@@ -224,6 +233,56 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     function setConfigGroupState(key, value) {
       const element = document.getElementById('configGroupState-' + key);
       if (element) element.textContent = value;
+    }
+
+    function createPersistedConfigSnapshot() {
+      const selectedPlatforms = readSelectedPlatforms(false);
+      const pngQuality = Number(pngQualityInput.value);
+      const jpegQuality = Number(jpegQualityInput.value);
+      const tinyPngLimit = Number(tinyPngLimitInput.value);
+      const tinyPngMinBytes = Number(tinyPngMinBytesInput.value);
+      const audioBitrate = Number(audioBitrateInput.value);
+      return {
+        schemaVersion: 1,
+        buildMode: buildModeInput.value,
+        imageMode: imageModeInput.value,
+        pngQuality: Number.isFinite(pngQuality) ? pngQuality : 80,
+        jpegQuality: Number.isFinite(jpegQuality) ? jpegQuality : 80,
+        tinyPngScope: tinyPngScopeInput.value,
+        tinyPngLimit: Number.isFinite(tinyPngLimit) ? tinyPngLimit : 50,
+        tinyPngMinBytes: Number.isFinite(tinyPngMinBytes) ? tinyPngMinBytes : 4096,
+        audioBitrateKbps: audioEnabledInput.checked && Number.isFinite(audioBitrate) ? audioBitrate : null,
+        payloadEncoding: payloadEncodingInput.value,
+        brotliFallback: 'raw-js',
+        loadingScreenEnabled: loadingScreenEnabledInput.checked,
+        channel: {
+          platform: selectedPlatforms[0] || 'Preview',
+          platforms: selectedPlatforms.length > 0 ? selectedPlatforms : channelPlatforms,
+          androidStoreUrl: androidStoreUrlInput.value.trim() || null,
+          iosStoreUrl: iosStoreUrlInput.value.trim() || null,
+        },
+      };
+    }
+
+    function persistCurrentConfig() {
+      if (!configPersistenceReady) return;
+      try {
+        localStorage.setItem(persistedConfigStorageKey, JSON.stringify(createPersistedConfigSnapshot()));
+      } catch {
+        // 浏览器禁用 localStorage 或存储空间不足时，不影响构建功能。
+      }
+    }
+
+    function loadPersistedConfig() {
+      try {
+        const source = localStorage.getItem(persistedConfigStorageKey);
+        if (!source) return null;
+        const parsed = JSON.parse(source);
+        if (!parsed || typeof parsed !== 'object' || parsed.schemaVersion !== 1) return null;
+        return parsed;
+      } catch {
+        return null;
+      }
     }
 
     function updateConfigGroupSummaries() {
@@ -283,13 +342,13 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
       const groups = document.createElement('div');
       groups.className = 'config-groups';
       groups.append(
-        createConfigGroup('基础构建', 'build', true, [field('buildMode')]),
-        createConfigGroup('图片压缩', 'image', true, [field('imageMode'), field('pngQuality'), field('jpegQuality'), tinyPngApiKeyField, tinyPngScopeField, tinyPngLimitField, tinyPngMinBytesField]),
-        createConfigGroup('音频压缩', 'audio', false, [field('audioEnabled'), field('audioBitrate')]),
-        createConfigGroup('Payload 与兼容性', 'payload', false, [field('payloadEncoding')]),
-        createConfigGroup('目标渠道', 'channel', true, [document.getElementById('channelPlatformGroup')?.closest('.field') || null]),
-        createConfigGroup('跳转地址', 'links', false, [field('androidStoreUrl'), field('iosStoreUrl'), document.getElementById('testStoreUrlsButton')?.closest('.field') || null]),
-        createConfigGroup('加载界面', 'loading', false, [document.getElementById('loadingScreenEnabled')?.closest('.field') || null, document.getElementById('loadingLogoFile')?.closest('.field') || null]),
+        createConfigGroup('基础构建', 'build', [field('buildMode')]),
+        createConfigGroup('图片压缩', 'image', [field('imageMode'), field('pngQuality'), field('jpegQuality'), tinyPngApiKeyField, tinyPngScopeField, tinyPngLimitField, tinyPngMinBytesField]),
+        createConfigGroup('音频压缩', 'audio', [field('audioEnabled'), field('audioBitrate')]),
+        createConfigGroup('Payload 与兼容性', 'payload', [field('payloadEncoding')]),
+        createConfigGroup('目标渠道', 'channel', [document.getElementById('channelPlatformGroup')?.closest('.field') || null]),
+        createConfigGroup('跳转地址', 'links', [field('androidStoreUrl'), field('iosStoreUrl'), document.getElementById('testStoreUrlsButton')?.closest('.field') || null]),
+        createConfigGroup('加载界面', 'loading', [document.getElementById('loadingScreenEnabled')?.closest('.field') || null, document.getElementById('loadingLogoFile')?.closest('.field') || null]),
       );
       const firstGrid = configCard.querySelector('.config-grid');
       if (firstGrid) firstGrid.before(groups);
@@ -304,7 +363,20 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     }
 
     groupConfigSections();
- ${channelDefaultInitialization}`,
+    const persistedConfig = loadPersistedConfig();
+    const initialConfig = persistedConfig || {
+      ...recommendedConfig,
+      channel: {
+        ...recommendedConfig.channel,
+        platform: 'Preview',
+        platforms: channelPlatforms,
+      },
+    };
+    applyConfig(initialConfig);
+    loadingScreenEnabledInput.checked = persistedConfig?.loadingScreenEnabled === true;
+    configPersistenceReady = true;
+    refreshConfigUi();
+    updateLoadingScreenUi();`,
   );
 
   return html;
