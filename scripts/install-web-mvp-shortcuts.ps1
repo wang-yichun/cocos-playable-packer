@@ -28,7 +28,7 @@ foreach ($item in $items) {
     $shortcutPath = Join-Path $desktopDirectory $item.Name
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $env:ComSpec
-    $shortcut.Arguments = "/d /c `"`"$($item.Command)`"`""
+    $shortcut.Arguments = '/d /c ""{0}""' -f $item.Command
     $shortcut.WorkingDirectory = $projectRoot
     $shortcut.Description = $item.Description
     $shortcut.IconLocation = "$env:SystemRoot\System32\shell32.dll,220"
