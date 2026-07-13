@@ -8,10 +8,12 @@ import {
   analyzeJointResources,
   readAssetsManifest,
 } from "./joint-resource-analysis.js";
+import { createClarifiedResourceAnalysisHtmlReport } from "./resource-analysis-clarified-report.js";
 import {
-  createResourceAnalysisHtmlReport,
-  type CompleteResourceAnalysisReport,
-} from "./resource-analysis-report.js";
+  enrichGeneratedNativeSourceMappings,
+  finalizeResourceOptimization,
+} from "./resource-analysis-finalize.js";
+import type { CompleteResourceAnalysisReport } from "./resource-analysis-report.js";
 import { analyzeResourceOptimization } from "./resource-optimization-estimates.js";
 
 export type ResourceAnalysisJobStatus =
@@ -213,16 +215,18 @@ export class ResourceAnalysisWebManager {
 
       job.status = "analyzing";
       job.message = job.hasManifest
-        ? "正在关联源资源，并实测图片、估算音频优化空间。"
-        : "正在分析构建资源，并实测图片、估算音频优化空间。";
+        ? "正在关联源资源，并实测图片、校准音频优化空间。"
+        : "正在分析构建资源，并实测图片、校准音频优化空间。";
       const manifest = job.hasManifest
         ? await readAssetsManifest(job.manifestFile)
         : emptyManifest(path.basename(buildRoot));
       const joint = await analyzeJointResources(buildRoot, manifest);
+      await enrichGeneratedNativeSourceMappings(buildRoot, joint);
       joint.buildRoot = path.basename(buildRoot);
-      const optimization = await analyzeResourceOptimization(buildRoot, joint);
+      const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
+      const optimization = finalizeResourceOptimization(joint, measuredOptimization);
       const report: CompleteResourceAnalysisReport = { ...joint, optimization };
-      const html = createResourceAnalysisHtmlReport(report);
+      const html = createClarifiedResourceAnalysisHtmlReport(report);
       await mkdir(path.dirname(job.reportFile), { recursive: true });
       await Promise.all([
         writeFile(job.reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8"),
