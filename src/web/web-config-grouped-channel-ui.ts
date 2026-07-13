@@ -153,9 +153,18 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     tinyPngApiKeyInput.addEventListener('input', refreshConfigUi);`,
   );
 
+  const channelDefaultInitialization = `    applyConfig({
+      ...defaultConfig,
+      channel: {
+        ...defaultConfig.channel,
+        platform: 'Preview',
+        platforms: channelPlatforms,
+      },
+    });`;
+
   html = replaceOnce(
     html,
-    "    applyConfig(defaultConfig);",
+    channelDefaultInitialization,
     `    function createConfigGroup(title, open, elements) {
       const details = document.createElement('details');
       details.className = 'config-group';
@@ -197,7 +206,7 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
     }
 
     groupConfigSections();
-    applyConfig(defaultConfig);`,
+${channelDefaultInitialization}`,
   );
 
   return html;
