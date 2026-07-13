@@ -152,6 +152,118 @@ try {
   assert.equal(finalized.candidates[0]?.id, "audio:high.mp3");
   assert.equal(finalized.categories.find((item) => item.category === "audio")?.candidateCount, 1);
   assert(finalized.warnings.some((warning) => warning.includes("不等同于最终 Brotli Payload")));
+
+  const atlasJoint: JointResourceAnalysis = {
+    ...joint,
+    buildBytes: 1_000_000,
+    mappings: [
+      {
+        path: "assets/ui/atlas/button.png",
+        extension: ".png",
+        bytes: 80_000,
+        uuid: "22345678-1234-4234-8234-123456789abc",
+        importer: "image",
+        sourceBundleName: null,
+        status: "included",
+        reason: "在构建 Bundle 配置中找到相同 UUID。",
+        evidence: "bundle-config",
+        buildBundleNames: ["resources"],
+        buildPaths: [],
+      },
+      {
+        path: "assets/ui/atlas/icon.png",
+        extension: ".png",
+        bytes: 40_000,
+        uuid: "32345678-1234-4234-8234-123456789abc",
+        importer: "image",
+        sourceBundleName: null,
+        status: "included",
+        reason: "在构建 Bundle 配置中找到相同 UUID。",
+        evidence: "bundle-config",
+        buildBundleNames: ["resources"],
+        buildPaths: [],
+      },
+    ],
+  };
+  const atlasOptimization: ResourceOptimizationReport = {
+    imageTarget: { format: "webp", quality: 80 },
+    audioTarget: { format: "mp3", bitrateKbps: 48 },
+    imageFileCount: 1,
+    measuredImageCount: 1,
+    audioFileCount: 0,
+    parameterEstimatedAudioCount: 0,
+    currentBytes: 500_000,
+    estimatedAfterBytesMin: 100_000,
+    estimatedAfterBytesMax: 100_000,
+    estimatedSavingsBytesMin: 400_000,
+    estimatedSavingsBytesMax: 400_000,
+    totalBuildSavingsPercentMin: 40,
+    totalBuildSavingsPercentMax: 40,
+    categories: [
+      {
+        category: "image",
+        fileCount: 1,
+        candidateCount: 1,
+        currentBytes: 500_000,
+        estimatedAfterBytesMin: 100_000,
+        estimatedAfterBytesMax: 100_000,
+        estimatedSavingsBytesMin: 400_000,
+        estimatedSavingsBytesMax: 400_000,
+        savingsPercentMin: 80,
+        savingsPercentMax: 80,
+        totalBuildImpactPercentMin: 40,
+        totalBuildImpactPercentMax: 40,
+      },
+      {
+        category: "audio",
+        fileCount: 0,
+        candidateCount: 0,
+        currentBytes: 0,
+        estimatedAfterBytesMin: 0,
+        estimatedAfterBytesMax: 0,
+        estimatedSavingsBytesMin: 0,
+        estimatedSavingsBytesMax: 0,
+        savingsPercentMin: 0,
+        savingsPercentMax: 0,
+        totalBuildImpactPercentMin: 0,
+        totalBuildImpactPercentMax: 0,
+      },
+    ],
+    candidates: [{
+      id: "image:assets/resources/native/ab/abc123def.png",
+      category: "image",
+      priority: "P0",
+      buildPath: "assets/resources/native/ab/abc123def.png",
+      sourcePaths: [],
+      bundleName: "resources",
+      extension: ".png",
+      currentBytes: 500_000,
+      estimatedAfterBytesMin: 100_000,
+      estimatedAfterBytesMax: 100_000,
+      estimatedSavingsBytesMin: 400_000,
+      estimatedSavingsBytesMax: 400_000,
+      savingsPercentMin: 80,
+      savingsPercentMax: 80,
+      percentOfBuildBytes: 50,
+      totalBuildImpactPercentMin: 40,
+      totalBuildImpactPercentMax: 40,
+      estimateKind: "measured",
+      confidence: "high",
+      title: "fixture atlas",
+      rationale: "fixture",
+      nextAction: "fixture",
+      metadata: {},
+    }],
+    warnings: [],
+  };
+  const atlasFinalized = finalizeResourceOptimization(atlasJoint, atlasOptimization);
+  const atlasCandidate = atlasFinalized.candidates[0];
+  assert.equal(atlasCandidate?.metadata.sourcePathRelation, "generated-group");
+  assert.equal(atlasCandidate?.metadata.generatedResourceKind, "probable-atlas-page");
+  assert.equal(atlasCandidate?.metadata.generatedSourceGroupCount, 2);
+  assert.deepEqual(atlasCandidate?.sourcePaths, ["assets/ui/atlas/button.png", "assets/ui/atlas/icon.png"]);
+  assert.match(atlasCandidate?.rationale ?? "", /疑似合图页/);
+  assert(atlasFinalized.warnings.some((warning) => warning.includes("不能保证合图页与源图是一对一关系")));
 } finally {
   await rm(root, { recursive: true, force: true });
 }
