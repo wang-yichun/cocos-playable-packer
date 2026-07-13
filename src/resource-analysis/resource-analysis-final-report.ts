@@ -33,11 +33,15 @@ function renderPayloadEncoding(report: PayloadEncodingBenchmark): string {
   if (report.status !== "measured") {
     return `<h2>Playable Payload 编码体积</h2><div class="panel">${report.warnings.map(escapeHtml).join("<br>")}</div>`;
   }
+  const byEncoding = new Map(report.encodings.map((item) => [item.encoding, item]));
+  const finalHtmlCard = (encoding: PayloadEncodingName): string => {
+    const item = byEncoding.get(encoding);
+    if (item === undefined) return "";
+    return `<div class="stat"><span>最终单 HTML（${encodingLabel(encoding)}）</span><strong>${formatBytes(item.htmlBytes)}（${item.htmlPercentOfBuildBytes.toFixed(2)}%）</strong></div>`;
+  };
   const rows = report.encodings.map((item) => `<tr>
     <td><b>${encodingLabel(item.encoding)}</b></td>
     <td>${formatBytes(item.payloadBytes)}</td>
-    <td>${formatBytes(item.htmlBytes)}</td>
-    <td>${item.htmlPercentOfBuildBytes.toFixed(2)}%</td>
     <td>${item.encoding === "base64" ? "基准" : `${formatBytes(item.savingsVsBase64Bytes)} · ${item.savingsVsBase64Percent.toFixed(2)}%`}</td>
   </tr>`).join("");
   return `<h2>Playable Payload 编码体积</h2>
@@ -45,8 +49,11 @@ function renderPayloadEncoding(report: PayloadEncodingBenchmark): string {
     <div class="stat"><span>归档原始字节</span><strong>${formatBytes(report.archiveRawBytes ?? 0)}</strong></div>
     <div class="stat"><span>Brotli Q11 二进制</span><strong>${formatBytes(report.brotliBytes ?? 0)}</strong></div>
     <div class="stat"><span>Brotli 压缩率</span><strong>${(report.brotliCompressionPercent ?? 0).toFixed(2)}%</strong></div>
+    ${finalHtmlCard("base64")}
+    ${finalHtmlCard("base91")}
+    ${finalHtmlCard("html7")}
   </div>
-  <div class="table-wrap"><table><thead><tr><th>编码</th><th>编码 Payload</th><th>最终单 HTML</th><th>占当前 Web Mobile</th><th>相对 Base64 减少</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="table-wrap"><table><thead><tr><th>编码</th><th>编码 Payload</th><th>相对 Base64 最终 HTML 减少</th></tr></thead><tbody>${rows}</tbody></table></div>
   ${report.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}`;
 }
 
