@@ -90,11 +90,71 @@ TINYPNG_API_KEY=你的TinyPNG_API_Key
 
 ## 2. Web MVP（浏览器界面）
 
-启动：
+### Windows 一键启动
+
+首次使用先完成依赖安装：
+
+```powershell
+npm ci
+```
+
+然后双击项目根目录中的：
+
+```text
+start-web-mvp.cmd
+```
+
+启动器会自动检查 Node.js、npm 和项目依赖，后台启动 Web MVP，等待健康检查完成，并打开本机浏览器。关闭启动器窗口不会停止后台服务。
+
+重复双击启动文件不会创建第二个服务；启动器会检测已有实例并重新打开浏览器。
+
+### 停止服务
+
+双击：
+
+```text
+stop-web-mvp.cmd
+```
+
+也可以在 PowerShell 中执行：
+
+```powershell
+npm run web:mvp:stop
+```
+
+### 桌面快捷方式
+
+双击：
+
+```text
+install-web-mvp-shortcuts.cmd
+```
+
+会在当前用户桌面创建 Web MVP 的启动和停止快捷方式。
+
+### 命令行控制
+
+```powershell
+npm run web:mvp:start
+npm run web:mvp:status
+npm run web:mvp:stop
+```
+
+只启动服务但不自动打开浏览器：
+
+```powershell
+node ./scripts/web-mvp-launcher.mjs start --no-open
+```
+
+### 前台调试方式
+
+需要在当前终端直接查看实时日志时，可以运行：
 
 ```powershell
 npm run web:mvp
 ```
+
+该方式会占用当前终端，按 `Ctrl+C` 停止。不要再使用一键停止脚本结束并非由启动器管理的前台实例。
 
 默认监听：
 
@@ -118,19 +178,19 @@ npm run web:mvp
 
 ```powershell
 $env:PLAYABLE_WEB_HOST = "127.0.0.1"
-npm run web:mvp
+npm run web:mvp:start
 ```
 
 修改端口：
 
 ```powershell
 $env:PLAYABLE_WEB_PORT = "5173"
-npm run web:mvp
+npm run web:mvp:start
 ```
 
 Web MVP 没有登录鉴权，只应在可信局域网中运行，不要通过端口转发暴露到公网。
 
-完整的启动、局域网、防火墙、构建模式、API 和排查说明见 [Web MVP 使用说明](docs/web-mvp.md)。
+一键启动器的 PID、日志、重复启动保护和桌面快捷方式说明见 [Web MVP 一键启动说明](docs/web-mvp-one-click-launcher.md)。完整的构建、局域网、防火墙、API 和排查说明见 [Web MVP 使用说明](docs/web-mvp.md)。
 
 ## 3. 推荐：一条命令完成 Playable 构建
 
