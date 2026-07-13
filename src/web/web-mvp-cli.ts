@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 
-import { startResourceAnalysisWebMvpServer } from "./resource-analysis-web-server.js";
+import { startEnhancedResourceAnalysisWebMvpServer } from "./resource-analysis-enhanced-web-server.js";
 import {
   createWebMvpAccessUrls,
   isWildcardWebMvpHost,
@@ -10,7 +10,7 @@ import {
 
 async function main(): Promise<void> {
   const host = normalizeWebMvpHost(process.env.PLAYABLE_WEB_HOST);
-  const server = await startResourceAnalysisWebMvpServer({
+  const server = await startEnhancedResourceAnalysisWebMvpServer({
     host,
     port: parseWebMvpPort(process.env.PLAYABLE_WEB_PORT),
     rootDirectory: process.env.PLAYABLE_WEB_ROOT,
@@ -35,7 +35,7 @@ async function main(): Promise<void> {
   console.log(`监听：${server.host}:${server.port}`);
   console.log(`数据目录：${server.manager.rootDirectory}`);
   console.log("加载界面：支持内嵌 Logo 与蓝色进度条");
-  console.log("资源体检：支持构建 ZIP 基础分析与 assets 清单联合分析");
+  console.log("资源体检：支持源资源映射、WebP 实测、音频参数估算与独立 HTML 报告");
   console.log("安全提示：Web MVP 没有登录鉴权，仅应在可信局域网中运行。");
 }
 
