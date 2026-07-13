@@ -15,6 +15,13 @@ web-mobile/
 scan-report.json
 compression-report.json
 entry-report.json
+module-report.json
+resource-optimization-report.json
+solid-compression-report.json
+encoding-report.json
+webp-benchmark-report.json
+audio-analysis-report.json
+audio-benchmark-report.json
 
 *.log
 
