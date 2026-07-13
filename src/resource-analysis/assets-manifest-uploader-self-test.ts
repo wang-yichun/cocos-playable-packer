@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const manifestUrl = "http://127.0.0.1:4173/api/resource-analysis/jobs/test/manifest";
   const startUrl = "http://127.0.0.1:4173/api/resource-analysis/jobs/test/start";
   const token = "single-use-token";
-  const module = createAssetsManifestUploaderModule(manifestUrl, startUrl, token);
+  const module = createAssetsManifestUploaderModule(manifestUrl, startUrl, token, true);
   const cmd = createAssetsManifestUploaderCmd(
     "http://127.0.0.1:4173/scanner.mjs?token=single-use-token",
     "fixture-scanner",
@@ -28,6 +28,8 @@ async function main(): Promise<void> {
   assert(module.includes(manifestUrl), "扫描器应绑定资源清单上传接口。");
   assert(module.includes(startUrl), "扫描器应在上传后启动完整分析。");
   assert(module.includes(token), "扫描器应携带一次性上传令牌。");
+  assert(module.includes("const measurePayloadEncoding = true"), "扫描器应保留 Payload 测量选择。");
+  assert(module.includes("{ requireManifest: true, measurePayloadEncoding }"), "扫描器启动任务时应传递 Payload 测量选择。");
   assert(module.includes('path.join(projectRoot, "assets")'), "扫描器只能从项目 assets 目录开始扫描。");
   assert(module.includes("sha256File"), "扫描器应计算资源 SHA-256。");
   assert(module.includes('path.join(process.cwd(), "assets-manifest.json")'), "扫描器应在项目根目录保留 assets-manifest.json。");
