@@ -73,6 +73,9 @@ const server = await startEnhancedResourceAnalysisWebMvpServer({
 try {
   const page = await (await fetch(server.url)).text();
   assert.match(page, /图片与音频优化估算/);
+  assert.match(page, /压缩收益明细/);
+  assert.match(page, /data-analysis-subtab/);
+  assert.match(page, /Playable Payload 编码体积/);
   assert.match(page, /下载 HTML 报告/);
 
   const zip = createStoredZip([
@@ -104,13 +107,20 @@ try {
   assert(completed !== null);
   assert.equal(completed.status, "succeeded", JSON.stringify(completed));
   const links = completed.links as Record<string, unknown>;
+  const reportJson = await readJson(await fetch(`${server.url}${String(links.report)}`));
+  const payload = reportJson.payloadEncoding as Record<string, unknown>;
+  assert.equal(payload.status, "unavailable");
+
   const htmlResponse = await fetch(`${server.url}${String(links.htmlReport)}`);
   assert.equal(htmlResponse.ok, true);
   assert.match(htmlResponse.headers.get("content-type") ?? "", /text\/html/);
   const reportHtml = await htmlResponse.text();
   assert.match(reportHtml, /Cocos 构建资源体检报告/);
+  assert.match(reportHtml, /data-report-tab="overview"/);
+  assert.match(reportHtml, /压缩收益明细/);
+  assert.match(reportHtml, /Playable Payload 编码体积/);
   assert.match(reportHtml, /报告不会自动修改或选择打包配置/);
-  assert.doesNotMatch(reportHtml, /<script\b/i);
+  assert.doesNotMatch(reportHtml, /<script[^>]+src=/i);
 } finally {
   await server.close();
   await rm(root, { recursive: true, force: true });
