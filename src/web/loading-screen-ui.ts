@@ -1,4 +1,4 @@
-import { createGroupedChannelWebMvpIndexHtml } from "./web-config-grouped-channel-ui.js";
+import { createPresetHelpWebMvpIndexHtml } from "./web-preset-help-ui.js";
 import {
   createFallbackWebVersionInfo,
   type WebVersionInfo,
@@ -24,7 +24,7 @@ function replaceLast(source: string, search: string, replacement: string): strin
 export function createLoadingScreenWebMvpIndexHtml(
   versionInfo: WebVersionInfo = createFallbackWebVersionInfo(),
 ): string {
-  let html = createGroupedChannelWebMvpIndexHtml(versionInfo);
+  let html = createPresetHelpWebMvpIndexHtml(versionInfo);
 
   html = replaceOnce(
     html,
