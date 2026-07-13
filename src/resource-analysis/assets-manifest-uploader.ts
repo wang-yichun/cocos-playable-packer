@@ -6,6 +6,7 @@ export function createAssetsManifestUploaderModule(
   manifestUploadUrl: string,
   startUrl: string,
   uploadToken: string,
+  measurePayloadEncoding = false,
 ): string {
   return `import { createHash } from "node:crypto";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
@@ -14,6 +15,7 @@ import path from "node:path";
 const manifestUploadUrl = ${json(manifestUploadUrl)};
 const startUrl = ${json(startUrl)};
 const uploadToken = ${json(uploadToken)};
+const measurePayloadEncoding = ${measurePayloadEncoding ? "true" : "false"};
 
 function normalizePath(value) {
   return value.replace(/\\\\/g, "/");
@@ -143,8 +145,10 @@ console.log("本地清单已生成：" + manifestPath);
 console.log("以后可以直接在资源体检页面手动选择这份 JSON。");
 console.log("正在上传资源清单……");
 await postJson(manifestUploadUrl, manifest, { "x-analysis-upload-token": uploadToken });
-await postJson(startUrl, { requireManifest: true });
-console.log("上传成功，完整资源体检已经开始。请返回浏览器查看结果。");
+await postJson(startUrl, { requireManifest: true, measurePayloadEncoding });
+console.log(measurePayloadEncoding
+  ? "上传成功，完整资源体检已经开始，并将计算 Playable Payload 编码体积。"
+  : "上传成功，完整资源体检已经开始。请返回浏览器查看结果。");
 `;
 }
 
