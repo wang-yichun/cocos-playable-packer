@@ -8,6 +8,7 @@ import {
   analyzeJointResources,
   readAssetsManifest,
 } from "./joint-resource-analysis.js";
+import { analyzeManualAttention } from "./manual-attention-analysis.js";
 import {
   measurePayloadEncodingBenchmark,
   type PayloadEncodingBenchmark,
@@ -54,6 +55,8 @@ export interface PublicResourceAnalysisJob {
     totalBuildSavingsPercentMax: number;
     duplicateGroupCount: number;
     redundantProjectBytes: number;
+    manualAttentionCount: number;
+    manualAttentionHighCount: number;
   } | null;
   links: { report: string; htmlReport: string; manifestCmd: string };
 }
@@ -249,8 +252,8 @@ export class ResourceAnalysisWebManager {
 
       job.status = "analyzing";
       job.message = job.hasManifest
-        ? "正在关联源资源、检查重复内容，并实测图片与校准音频优化空间。"
-        : "正在分析构建资源，并实测图片与校准音频优化空间。";
+        ? "正在关联源资源、检查重复内容、识别人工关注项，并实测图片与校准音频优化空间。"
+        : "正在分析构建资源、识别人工关注项，并实测图片与校准音频优化空间。";
       const manifest = job.hasManifest
         ? await readAssetsManifest(job.manifestFile)
         : emptyManifest(path.basename(buildRoot));
@@ -260,6 +263,7 @@ export class ResourceAnalysisWebManager {
       const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
       const optimization = finalizeResourceOptimization(joint, measuredOptimization);
       const redundancy = analyzeSourceRedundancy(manifest, joint);
+      const manualAttention = analyzeManualAttention(joint, optimization);
 
       let payloadEncoding: PayloadEncodingBenchmark;
       if (job.measurePayloadEncoding) {
@@ -279,6 +283,7 @@ export class ResourceAnalysisWebManager {
         optimization,
         redundancy,
         payloadEncoding,
+        manualAttention,
       };
       const html = createFinalResourceAnalysisHtmlReport(report);
       await mkdir(path.dirname(job.reportFile), { recursive: true });
@@ -304,6 +309,8 @@ export class ResourceAnalysisWebManager {
         totalBuildSavingsPercentMax: report.optimization.totalBuildSavingsPercentMax,
         duplicateGroupCount: report.redundancy.duplicateGroupCount,
         redundantProjectBytes: report.redundancy.redundantProjectBytes,
+        manualAttentionCount: report.manualAttention.itemCount,
+        manualAttentionHighCount: report.manualAttention.highCount,
       };
     } catch (error) {
       job.status = "failed";
