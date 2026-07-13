@@ -16,6 +16,10 @@ assert.match(html, /最终单 HTML（/);
 assert.match(html, /finalHtmlCard\('base64'\)/);
 assert.match(html, /finalHtmlCard\('base91'\)/);
 assert.match(html, /finalHtmlCard\('html7'\)/);
+assert.match(html, /\['attention', '需人工关注'\]/);
+assert.match(html, /renderManualAttentionSection\(report\)/);
+assert.match(html, /超大像素图片/);
+assert.match(html, /长音频/);
 assert.match(html, /data-analysis-subtab/);
 assert.match(html, /压缩收益明细/);
 
