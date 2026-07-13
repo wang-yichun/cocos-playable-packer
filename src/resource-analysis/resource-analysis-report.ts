@@ -55,13 +55,33 @@ function impactText(candidate: ResourceOptimizationCandidate): string {
   return minimum === maximum ? `${minimum}%` : `${minimum}%–${maximum}%`;
 }
 
+function metadataString(candidate: ResourceOptimizationCandidate, key: string): string | null {
+  const value = candidate.metadata[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function renderCandidateSource(candidate: ResourceOptimizationCandidate): string {
+  const relation = metadataString(candidate, "sourcePathRelation");
+  if (relation === "generated-group" && candidate.sourcePaths.length > 0) {
+    const root = metadataString(candidate, "generatedSourceGroupRoot");
+    const preview = candidate.sourcePaths.slice(0, 12);
+    const remaining = candidate.sourcePaths.length - preview.length;
+    return `<div class="source-group"><p><b>可能关联的源图片组（${candidate.sourcePaths.length} 项）：</b>${root === null ? "" : `<br><code>${escapeHtml(root)}</code>`}</p>
+      <div class="source-group-list">${preview.map((value) => `<code>${escapeHtml(value)}</code>`).join("<br>")}</div>
+      ${remaining > 0 ? `<p class="muted">其余 ${remaining} 项请在 JSON 报告的 <code>sourcePaths</code> 中查看。</p>` : ""}
+      <p class="muted">这是生成资源到源图片组的关联，不表示每个合图页与某一张源图一对一对应。</p></div>`;
+  }
+  if (candidate.sourcePaths.length === 0) return "<p><b>源资源：</b>未恢复源路径</p>";
+  return `<p><b>源资源：</b>${candidate.sourcePaths.map((value) => `<code>${escapeHtml(value)}</code>`).join("<br>")}</p>`;
+}
+
 function renderCandidate(candidate: ResourceOptimizationCandidate): string {
-  const source = candidate.sourcePaths.length === 0
-    ? "未恢复源路径"
-    : candidate.sourcePaths.map((value) => `<code>${escapeHtml(value)}</code>`).join("<br>");
+  const generatedBadge = metadataString(candidate, "sourcePathRelation") === "generated-group"
+    ? '<span class="estimate generated">生成资源组</span>'
+    : "";
   return `<article class="issue-card priority-${candidate.priority.toLowerCase()}">
     <div class="issue-head">
-      <div><span class="priority">${candidate.priority}</span><span class="estimate">${estimateLabel(candidate.estimateKind)}</span></div>
+      <div><span class="priority">${candidate.priority}</span><span class="estimate">${estimateLabel(candidate.estimateKind)}</span>${generatedBadge}</div>
       <strong>${escapeHtml(candidate.title)}</strong>
     </div>
     <dl class="issue-metrics">
@@ -71,7 +91,7 @@ function renderCandidate(candidate: ResourceOptimizationCandidate): string {
       <div><dt>对总构建影响</dt><dd>${impactText(candidate)}</dd></div>
     </dl>
     <p><b>构建路径：</b><code>${escapeHtml(candidate.buildPath)}</code></p>
-    <p><b>源资源：</b>${source}</p>
+    ${renderCandidateSource(candidate)}
     <p>${escapeHtml(candidate.rationale)}</p>
     <p class="next-action"><b>建议：</b>${escapeHtml(candidate.nextAction)}</p>
   </article>`;
@@ -88,7 +108,6 @@ function renderBuildComposition(report: CompleteResourceAnalysisReport): string 
 function renderOptimizationComparison(report: CompleteResourceAnalysisReport): string {
   return report.optimization.categories.map((category) => {
     const current = Math.max(1, category.currentBytes);
-    const minimumWidth = category.estimatedAfterBytesMin / current * 100;
     const maximumWidth = category.estimatedAfterBytesMax / current * 100;
     return `<section class="comparison-card">
       <h3>${categoryLabel(category.category)}</h3>
@@ -128,7 +147,7 @@ export function createResourceAnalysisHtmlReport(report: CompleteResourceAnalysi
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(report.projectName)} - Cocos 构建资源体检报告</title>
 <style>
-:root{font-family:Inter,"Segoe UI",sans-serif;color-scheme:light dark}*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e5e7eb}main{max-width:1180px;margin:auto;padding:36px 22px 72px}h1{font-size:30px;margin:0 0 8px}h2{margin:34px 0 14px;font-size:21px}h3{margin:0 0 12px}p{color:#cbd5e1;line-height:1.6}code{font-family:Consolas,monospace;overflow-wrap:anywhere}.muted{color:#94a3b8}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.stat,.panel,.comparison-card,.issue-card{border:1px solid #334155;border-radius:13px;background:#111827}.stat{padding:16px}.stat span{display:block;color:#94a3b8;font-size:13px}.stat strong{display:block;margin-top:5px;font-size:23px}.panel{padding:20px;margin-top:14px}.bars{display:grid;gap:10px}.bar-row,.comparison-line{display:grid;grid-template-columns:minmax(85px,150px) minmax(160px,1fr) minmax(120px,auto);gap:10px;align-items:center}.track{height:13px;background:#020617;border-radius:999px;overflow:hidden}.fill{height:100%;background:#3b82f6;border-radius:inherit}.fill.current{background:#64748b}.fill.after{background:#22c55e}.fill.included{background:#14b8a6}.comparison-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}.comparison-card{padding:18px}.issue-list{display:grid;gap:14px}.issue-card{padding:18px;border-left-width:5px}.priority-p0{border-left-color:#ef4444}.priority-p1{border-left-color:#f59e0b}.priority-p2{border-left-color:#3b82f6}.issue-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.priority,.estimate{display:inline-block;padding:3px 8px;margin-right:6px;border-radius:999px;background:#1e293b;font-size:12px}.estimate{background:#164e63}.issue-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.issue-metrics div{padding:10px;background:#0f172a;border-radius:9px}.issue-metrics dt{color:#94a3b8;font-size:12px}.issue-metrics dd{margin:4px 0 0;font-weight:700}.next-action{padding:11px;border-left:3px solid #22c55e;background:#0f172a}.notice{padding:12px 14px;border-left:3px solid #f59e0b;background:#111827;color:#d1d5db}.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 10px;border-bottom:1px solid #334155;text-align:left;vertical-align:top}th{color:#94a3b8}.footer{margin-top:38px;padding-top:18px;border-top:1px solid #334155;color:#94a3b8;font-size:12px}@media(max-width:700px){.bar-row,.comparison-line{grid-template-columns:85px 1fr}.bar-row>span:last-child,.comparison-line>span:last-child{grid-column:2}.issue-head{display:block}.issue-head strong{display:block;margin-top:10px}}
+:root{font-family:Inter,"Segoe UI",sans-serif;color-scheme:light dark}*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e5e7eb}main{max-width:1180px;margin:auto;padding:36px 22px 72px}h1{font-size:30px;margin:0 0 8px}h2{margin:34px 0 14px;font-size:21px}h3{margin:0 0 12px}p{color:#cbd5e1;line-height:1.6}code{font-family:Consolas,monospace;overflow-wrap:anywhere}.muted{color:#94a3b8}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.stat,.panel,.comparison-card,.issue-card{border:1px solid #334155;border-radius:13px;background:#111827}.stat{padding:16px}.stat span{display:block;color:#94a3b8;font-size:13px}.stat strong{display:block;margin-top:5px;font-size:23px}.panel{padding:20px;margin-top:14px}.bars{display:grid;gap:10px}.bar-row,.comparison-line{display:grid;grid-template-columns:minmax(85px,150px) minmax(160px,1fr) minmax(120px,auto);gap:10px;align-items:center}.track{height:13px;background:#020617;border-radius:999px;overflow:hidden}.fill{height:100%;background:#3b82f6;border-radius:inherit}.fill.current{background:#64748b}.fill.after{background:#22c55e}.fill.included{background:#14b8a6}.comparison-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}.comparison-card{padding:18px}.issue-list{display:grid;gap:14px}.issue-card{padding:18px;border-left-width:5px}.priority-p0{border-left-color:#ef4444}.priority-p1{border-left-color:#f59e0b}.priority-p2{border-left-color:#3b82f6}.issue-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.priority,.estimate{display:inline-block;padding:3px 8px;margin-right:6px;border-radius:999px;background:#1e293b;font-size:12px}.estimate{background:#164e63}.estimate.generated{background:#4c1d95}.issue-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.issue-metrics div{padding:10px;background:#0f172a;border-radius:9px}.issue-metrics dt{color:#94a3b8;font-size:12px}.issue-metrics dd{margin:4px 0 0;font-weight:700}.source-group{padding:11px 13px;border:1px solid #334155;border-radius:9px;background:#0f172a}.source-group p{margin:0 0 8px}.source-group p:last-child{margin-bottom:0}.source-group-list{max-height:210px;overflow:auto;line-height:1.6}.next-action{padding:11px;border-left:3px solid #22c55e;background:#0f172a}.notice{padding:12px 14px;border-left:3px solid #f59e0b;background:#111827;color:#d1d5db}.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 10px;border-bottom:1px solid #334155;text-align:left;vertical-align:top}th{color:#94a3b8}.footer{margin-top:38px;padding-top:18px;border-top:1px solid #334155;color:#94a3b8;font-size:12px}@media(max-width:700px){.bar-row,.comparison-line{grid-template-columns:85px 1fr}.bar-row>span:last-child,.comparison-line>span:last-child{grid-column:2}.issue-head{display:block}.issue-head strong{display:block;margin-top:10px}}
 </style>
 </head>
 <body><main>
