@@ -24,12 +24,59 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
   );
   html = replaceOnce(
     html,
+    `        <small>可以手动选择 assets-manifest.json；CMD 会在 Cocos 项目根目录生成并保留同名清单，然后自动上传，后续可直接重复使用。</small>
+      </div>
+      <div class="analysis-actions">`,
+    `        <small>可以手动选择 assets-manifest.json；CMD 会在 Cocos 项目根目录生成并保留同名清单，然后自动上传，后续可直接重复使用。</small>
+      </div>
+      <div class="field" style="margin-top: 16px;">
+        <div class="check-row">
+          <input id="analysisPayloadEncoding" type="checkbox">
+          <label for="analysisPayloadEncoding">计算 Playable Payload 编码体积</label>
+        </div>
+        <small>可选。会额外执行一次 Brotli Q11，以及 Base64、Base91、HTML7 三种实际编码，分析时间会明显延长。</small>
+      </div>
+      <div class="analysis-actions">`,
+  );
+  html = replaceOnce(
+    html,
     "  </style>",
     `    .analysis-subtabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 14px; padding: 5px; border: 1px solid #374151; border-radius: 11px; background: #0f172a; width: fit-content; }
     .analysis-subtab { border: 0; border-radius: 8px; padding: 8px 13px; background: transparent; color: #cbd5e1; cursor: pointer; }
     .analysis-subtab.active { background: #2563eb; color: #fff; }
     .analysis-subpanel[hidden] { display: none; }
   </style>`,
+  );
+  html = replaceOnce(
+    html,
+    "    const analyzeBuildOnlyButton = document.getElementById('analyzeBuildOnlyButton');",
+    `    const analysisPayloadEncodingInput = document.getElementById('analysisPayloadEncoding');
+    const analyzeBuildOnlyButton = document.getElementById('analyzeBuildOnlyButton');`,
+  );
+  html = replaceOnce(
+    html,
+    "      downloadManifestCmdButton.disabled = value;",
+    `      downloadManifestCmdButton.disabled = value;
+      analysisPayloadEncodingInput.disabled = value;`,
+  );
+  html = replaceOnce(
+    html,
+    `      analysisStatus.textContent = requireManifest ? '正在启动完整分析……' : '正在启动基础分析……';
+      analysisProgress.value = 35;`,
+    `      const measurePayloadEncoding = analysisPayloadEncodingInput.checked;
+      analysisStatus.textContent = (requireManifest ? '正在启动完整分析……' : '正在启动基础分析……')
+        + (measurePayloadEncoding ? ' 完成常规分析后还会执行耗时较长的 Payload 编码测量。' : '');
+      analysisProgress.value = 35;`,
+  );
+  html = replaceOnce(
+    html,
+    "        body: JSON.stringify({ requireManifest }),",
+    "        body: JSON.stringify({ requireManifest, measurePayloadEncoding }),",
+  );
+  html = replaceOnce(
+    html,
+    "        window.location.href = job.links.manifestCmd + '?download=1';",
+    "        window.location.href = job.links.manifestCmd + '?download=1&measurePayloadEncoding=' + (analysisPayloadEncodingInput.checked ? '1' : '0');",
   );
   html = replaceOnce(
     html,
@@ -47,18 +94,24 @@ export function createTabbedResourceAnalysisWebMvpIndexHtml(
         return '<h3>Playable Payload 编码体积</h3><div class="analysis-note">'
           + payload.warnings.map(escapeAnalysisHtml).join('<br>') + '</div>';
       }
+      const encodingFor = (name) => payload.encodings.find((item) => item.encoding === name);
+      const finalHtmlCard = (name) => {
+        const item = encodingFor(name);
+        if (!item) return '';
+        return '<div class="analysis-stat"><small>最终单 HTML（' + payloadEncodingLabel(name) + '）</small><strong>'
+          + formatAnalysisBytes(item.htmlBytes) + '（' + item.htmlPercentOfBuildBytes.toFixed(2) + '%）</strong></div>';
+      };
       const rows = payload.encodings.map((item) => '<tr><td><b>' + payloadEncodingLabel(item.encoding)
         + '</b></td><td>' + formatAnalysisBytes(item.payloadBytes)
-        + '</td><td>' + formatAnalysisBytes(item.htmlBytes)
-        + '</td><td>' + item.htmlPercentOfBuildBytes.toFixed(2) + '%</td><td>'
-        + (item.encoding === 'base64' ? '基准' : formatAnalysisBytes(item.savingsVsBase64Bytes) + ' · ' + item.savingsVsBase64Percent.toFixed(2) + '%')
+        + '</td><td>' + (item.encoding === 'base64' ? '基准' : formatAnalysisBytes(item.savingsVsBase64Bytes) + ' · ' + item.savingsVsBase64Percent.toFixed(2) + '%')
         + '</td></tr>').join('');
       return '<h3>Playable Payload 编码体积</h3>'
         + '<div class="analysis-grid">'
         + '<div class="analysis-stat"><small>归档原始字节</small><strong>' + formatAnalysisBytes(payload.archiveRawBytes || 0) + '</strong></div>'
         + '<div class="analysis-stat"><small>Brotli Q11 二进制</small><strong>' + formatAnalysisBytes(payload.brotliBytes || 0) + '</strong></div>'
         + '<div class="analysis-stat"><small>Brotli 压缩率</small><strong>' + (payload.brotliCompressionPercent || 0).toFixed(2) + '%</strong></div>'
-        + '</div><div class="analysis-table-wrap"><table class="analysis-table"><thead><tr><th>编码</th><th>编码 Payload</th><th>最终单 HTML</th><th>占 Web Mobile</th><th>相对 Base64 减少</th></tr></thead><tbody>'
+        + finalHtmlCard('base64') + finalHtmlCard('base91') + finalHtmlCard('html7')
+        + '</div><div class="analysis-table-wrap"><table class="analysis-table"><thead><tr><th>编码</th><th>编码 Payload</th><th>相对 Base64 最终 HTML 减少</th></tr></thead><tbody>'
         + rows + '</tbody></table></div>'
         + payload.warnings.map((warning) => '<div class="analysis-note">' + escapeAnalysisHtml(warning) + '</div>').join('');
     }
