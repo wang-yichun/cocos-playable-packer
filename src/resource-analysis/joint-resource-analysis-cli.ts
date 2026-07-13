@@ -5,10 +5,12 @@ import { pathToFileURL } from "node:url";
 
 import { extractZipArchive, findWebMobileRoot } from "../web/zip-extractor.js";
 import { analyzeJointResources, readAssetsManifest } from "./joint-resource-analysis.js";
+import { createClarifiedResourceAnalysisHtmlReport } from "./resource-analysis-clarified-report.js";
 import {
-  createResourceAnalysisHtmlReport,
-  type CompleteResourceAnalysisReport,
-} from "./resource-analysis-report.js";
+  enrichGeneratedNativeSourceMappings,
+  finalizeResourceOptimization,
+} from "./resource-analysis-finalize.js";
+import type { CompleteResourceAnalysisReport } from "./resource-analysis-report.js";
 import { analyzeResourceOptimization } from "./resource-optimization-estimates.js";
 
 function normalizedArgs(argv: readonly string[]): string[] {
@@ -37,8 +39,10 @@ async function main(): Promise<void> {
     const buildRoot = await findWebMobileRoot(extractionDirectory);
     const manifest = await readAssetsManifest(path.resolve(manifestFile));
     const joint = await analyzeJointResources(buildRoot, manifest);
+    const generatedMappingCount = await enrichGeneratedNativeSourceMappings(buildRoot, joint);
     joint.buildRoot = path.basename(buildRoot);
-    const optimization = await analyzeResourceOptimization(buildRoot, joint);
+    const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
+    const optimization = finalizeResourceOptimization(joint, measuredOptimization);
     const report: CompleteResourceAnalysisReport = { ...joint, optimization };
 
     const resolvedOutput = path.resolve(outputFile);
@@ -47,22 +51,24 @@ async function main(): Promise<void> {
     await mkdir(path.dirname(resolvedOutput), { recursive: true });
     await Promise.all([
       writeFile(resolvedOutput, `${JSON.stringify(report, null, 2)}\n`, "utf8"),
-      writeFile(resolvedHtmlOutput, createResourceAnalysisHtmlReport(report), "utf8"),
+      writeFile(resolvedHtmlOutput, createClarifiedResourceAnalysisHtmlReport(report), "utf8"),
     ]);
 
     console.log("Cocos 工程与构建资源联合分析完成");
     console.log("--------------------------------");
     console.log(`ZIP 文件数量：${extraction.fileCount}`);
-    console.log(`构建资源大小：${formatMiB(report.buildBytes)}`);
+    console.log(`Web Mobile 原始大小：${formatMiB(report.buildBytes)}`);
     console.log(`源资源数量：${report.sourceResourceCount}`);
     console.log(`确认进入构建：${report.includedCount}`);
     console.log(`未在本次构建中发现：${report.notInBuildCount}`);
     console.log(`无法通过 UUID 判断：${report.notAssessableCount}`);
+    console.log(`生成资源路径补充：${generatedMappingCount}`);
     console.log(`可评估资源数量覆盖：${report.assessableIncludedPercentByCount ?? 0}%`);
     console.log(`可评估资源体积覆盖：${report.assessableIncludedPercentByBytes ?? 0}%`);
     console.log(
-      `预计总构建减少：${report.optimization.totalBuildSavingsPercentMin}%–${report.optimization.totalBuildSavingsPercentMax}%`,
+      `Web Mobile 原始体积预计减少：${report.optimization.totalBuildSavingsPercentMin}%–${report.optimization.totalBuildSavingsPercentMax}%`,
     );
+    console.log("提示：上述百分比不等于最终 Brotli Payload 或单 HTML 的降幅。");
     console.log(`图片实测候选：${report.optimization.measuredImageCount}`);
     console.log(`音频参数估算候选：${report.optimization.parameterEstimatedAudioCount}`);
     console.log(`JSON 报告：${resolvedOutput}`);
