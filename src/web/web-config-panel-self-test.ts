@@ -23,7 +23,7 @@ const commonImageDefaults = {
   jpegQuality: 80,
   tinyPngScope: "all",
   tinyPngLimit: null,
-  tinyPngMinBytes: 1024,
+  tinyPngMinBytes: 4096,
 };
 
 assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
@@ -90,11 +90,23 @@ assert.throws(
   /tinyPngLimit/,
 );
 
+const nonTinyPngConfig = normalizeWebBuildConfig({
+  imageMode: "webp",
+  tinyPngScope: "all",
+  tinyPngLimit: null,
+  tinyPngMinBytes: null,
+});
+assert.equal(nonTinyPngConfig.imageMode, "webp");
+assert.equal(nonTinyPngConfig.tinyPngMinBytes, 4096);
+
+const tinyPngDefaults = normalizeWebBuildConfig({ imageMode: "tinypng" });
+assert.equal(tinyPngDefaults.tinyPngMinBytes, 4096);
+
 const tinyPngConfig = normalizeWebBuildConfig({
   imageMode: "tinypng",
   tinyPngScope: "limit",
   tinyPngLimit: 25,
-  tinyPngMinBytes: 2048,
+  tinyPngMinBytes: 8192,
 });
 const tinyPngRequest = createWebBuildRequest(
   "./web-mobile",
@@ -105,7 +117,7 @@ const tinyPngRequest = createWebBuildRequest(
 assert.deepEqual(tinyPngRequest.image, {
   mode: "tinypng",
   scope: { type: "limit", limit: 25 },
-  minBytes: 2048,
+  minBytes: 8192,
 });
 
 const rawRequest = createWebBuildRequest(
@@ -166,6 +178,8 @@ for (const platform of CHANNEL_PLATFORMS) {
 
 assert.match(html, /TinyPNG API/);
 assert.match(html, /客户自己的 TINYPNG_API_KEY/);
+assert.match(html, /默认 4 KB/);
+assert.match(html, /value="4096"/);
 assert.match(html, /仅用于本次构建/);
 assert.match(html, /config-group/);
 assert.match(html, /基础构建/);
@@ -189,6 +203,7 @@ assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
 assert.match(inlineScript, /TinyPNG 模式必须填写 TINYPNG_API_KEY/);
+assert.match(inlineScript, /imageMode === 'tinypng' && tinyPngScope === 'limit'/);
 assert.match(inlineScript, /tinyPngApiKey: tinyPngApiKey/);
 assert.match(inlineScript, /groupConfigSections\(\);/);
 assert.doesNotMatch(inlineScript, /queueMicrotask\(groupConfigSections\)/);
