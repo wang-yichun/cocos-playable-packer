@@ -16,11 +16,11 @@ export function createRedundancyResourceAnalysisWebMvpIndexHtml(
   let html = createClarifiedResourceAnalysisWebMvpIndexHtml(versionInfo);
   html = replaceOnce(
     html,
-    "  </style>",
-    `    .redundancy-groups { display: grid; gap: 9px; margin-top: 12px; }
+    "    .optimization-next { margin-top: 10px; padding: 9px 11px; border-left: 3px solid #22c55e; background: #0f172a; color: #d1d5db; }",
+    `    .optimization-next { margin-top: 10px; padding: 9px 11px; border-left: 3px solid #22c55e; background: #0f172a; color: #d1d5db; }
+    .redundancy-groups { display: grid; gap: 9px; margin-top: 12px; }
     .redundancy-group { padding: 11px 13px; border: 1px solid #374151; border-radius: 9px; background: #111827; }
-    .redundancy-group summary { cursor: pointer; }
-  </style>`,
+    .redundancy-group summary { cursor: pointer; }`,
   );
   html = replaceOnce(
     html,
