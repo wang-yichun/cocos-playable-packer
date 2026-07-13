@@ -181,7 +181,7 @@ assert.match(html, /客户自己的 TINYPNG_API_KEY/);
 assert.match(html, /默认 4 KB/);
 assert.match(html, /value="4096"/);
 assert.match(html, /仅用于本次构建/);
-assert.match(html, /config-group/);
+assert.match(html, /config-group-state/);
 assert.match(html, /基础构建/);
 assert.match(html, /图片压缩/);
 assert.match(html, /音频压缩/);
@@ -207,7 +207,13 @@ assert.match(inlineScript, /imageMode === 'tinypng' && tinyPngScope === 'limit'/
 assert.match(inlineScript, /tinyPngApiKey: tinyPngApiKey/);
 assert.match(inlineScript, /groupConfigSections\(\);/);
 assert.doesNotMatch(inlineScript, /queueMicrotask\(groupConfigSections\)/);
-assert.match(inlineScript, /createConfigGroup\('图片压缩'/);
+assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image'/);
+assert.match(inlineScript, /updateConfigGroupSummaries/);
+assert.match(inlineScript, /abbreviateConfigUrl/);
+assert.match(inlineScript, /configGroupState-channel/);
+assert.match(inlineScript, /configGroupState-links/);
+assert.match(inlineScript, /configGroupState-loading/);
+assert.match(inlineScript, /element\.hidden = true/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /config: config/);
 
