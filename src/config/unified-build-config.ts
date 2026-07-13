@@ -53,7 +53,11 @@ function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function assertKnownKeys(value: JsonObject, allowed: ReadonlySet<string>, source: string): void {
+function assertKnownKeys(
+  value: JsonObject,
+  allowed: ReadonlySet<string>,
+  source: string,
+): void {
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) {
       throw new Error(`${source} 包含未知字段：${key}`);
@@ -80,7 +84,11 @@ function optionalInteger(
   if (value === undefined) {
     return undefined;
   }
-  if (!Number.isInteger(value) || (value as number) < minimum || (value as number) > maximum) {
+  if (
+    !Number.isInteger(value) ||
+    (value as number) < minimum ||
+    (value as number) > maximum
+  ) {
     throw new Error(`${source} 必须是 ${minimum} 到 ${maximum} 之间的整数。`);
   }
   return value as number;
@@ -100,7 +108,10 @@ function optionalEnum<T extends string>(
   return value as T;
 }
 
-export function validateBuildConfig(value: unknown, source = "配置文件"): PlayableBuildConfig {
+export function validateBuildConfig(
+  value: unknown,
+  source = "配置文件",
+): PlayableBuildConfig {
   if (!isObject(value)) {
     throw new Error(`${source} 根节点必须是对象。`);
   }
@@ -123,15 +134,46 @@ export function validateBuildConfig(value: unknown, source = "配置文件"): Pl
     }
     assertKnownKeys(
       value.image,
-      new Set(["mode", "pngQuality", "jpegQuality", "pngWebpQuality", "jpegWebpQuality"]),
+      new Set([
+        "mode",
+        "pngQuality",
+        "jpegQuality",
+        "pngWebpQuality",
+        "jpegWebpQuality",
+      ]),
       `${source}.image`,
     );
     config.image = {
-      mode: optionalEnum(value.image.mode, `${source}.image.mode`, ["none", "tinypng", "squoosh", "webp"]),
-      pngQuality: optionalInteger(value.image.pngQuality, `${source}.image.pngQuality`, 0, 100),
-      jpegQuality: optionalInteger(value.image.jpegQuality, `${source}.image.jpegQuality`, 1, 100),
-      pngWebpQuality: optionalInteger(value.image.pngWebpQuality, `${source}.image.pngWebpQuality`, 0, 100),
-      jpegWebpQuality: optionalInteger(value.image.jpegWebpQuality, `${source}.image.jpegWebpQuality`, 0, 100),
+      mode: optionalEnum(value.image.mode, `${source}.image.mode`, [
+        "none",
+        "tinypng",
+        "squoosh",
+        "webp",
+      ]),
+      pngQuality: optionalInteger(
+        value.image.pngQuality,
+        `${source}.image.pngQuality`,
+        0,
+        100,
+      ),
+      jpegQuality: optionalInteger(
+        value.image.jpegQuality,
+        `${source}.image.jpegQuality`,
+        1,
+        100,
+      ),
+      pngWebpQuality: optionalInteger(
+        value.image.pngWebpQuality,
+        `${source}.image.pngWebpQuality`,
+        0,
+        100,
+      ),
+      jpegWebpQuality: optionalInteger(
+        value.image.jpegWebpQuality,
+        `${source}.image.jpegWebpQuality`,
+        0,
+        100,
+      ),
     };
   }
 
@@ -141,7 +183,12 @@ export function validateBuildConfig(value: unknown, source = "配置文件"): Pl
     }
     assertKnownKeys(value.audio, new Set(["bitrate", "ffmpeg"]), `${source}.audio`);
     config.audio = {
-      bitrate: optionalInteger(value.audio.bitrate, `${source}.audio.bitrate`, 8, 320),
+      bitrate: optionalInteger(
+        value.audio.bitrate,
+        `${source}.audio.bitrate`,
+        8,
+        320,
+      ),
       ffmpeg: optionalString(value.audio.ffmpeg, `${source}.audio.ffmpeg`),
     };
   }
@@ -174,27 +221,50 @@ export function validateBuildConfig(value: unknown, source = "配置文件"): Pl
       throw new Error(`${source}.workspace 必须是对象。`);
     }
     assertKnownKeys(value.workspace, new Set(["keep"]), `${source}.workspace`);
-    if (value.workspace.keep !== undefined && typeof value.workspace.keep !== "boolean") {
+    if (
+      value.workspace.keep !== undefined &&
+      typeof value.workspace.keep !== "boolean"
+    ) {
       throw new Error(`${source}.workspace.keep 必须是布尔值。`);
     }
     config.workspace = { keep: value.workspace.keep as boolean | undefined };
   }
 
   if (value.extraArgs !== undefined) {
-    if (!Array.isArray(value.extraArgs) || value.extraArgs.some((item) => typeof item !== "string")) {
-      throw new Error(`${source}.extraArgs 必须是字符串数组。`);
+    if (
+      !Array.isArray(value.extraArgs) ||
+      value.extraArgs.some(
+        (item) =>
+          typeof item !== "string" ||
+          !item.startsWith("--") ||
+          item.startsWith("--config"),
+      )
+    ) {
+      throw new Error(
+        `${source}.extraArgs 必须是以 -- 开头的参数字符串数组，且不能包含 --config。`,
+      );
     }
     config.extraArgs = [...value.extraArgs] as string[];
   }
 
-  if (config.image?.mode !== "squoosh" &&
-      (config.image?.pngQuality !== undefined || config.image?.jpegQuality !== undefined)) {
-    throw new Error(`${source} 中 pngQuality 和 jpegQuality 只适用于 image.mode=squoosh。`);
+  if (
+    config.image?.mode !== "squoosh" &&
+    (config.image?.pngQuality !== undefined ||
+      config.image?.jpegQuality !== undefined)
+  ) {
+    throw new Error(
+      `${source} 中 pngQuality 和 jpegQuality 只适用于 image.mode=squoosh。`,
+    );
   }
 
-  if (config.image?.mode !== "webp" &&
-      (config.image?.pngWebpQuality !== undefined || config.image?.jpegWebpQuality !== undefined)) {
-    throw new Error(`${source} 中 WebP 质量参数只适用于 image.mode=webp。`);
+  if (
+    config.image?.mode !== "webp" &&
+    (config.image?.pngWebpQuality !== undefined ||
+      config.image?.jpegWebpQuality !== undefined)
+  ) {
+    throw new Error(
+      `${source} 中 WebP 质量参数只适用于 image.mode=webp。`,
+    );
   }
 
   return config;
@@ -208,8 +278,15 @@ function optionKey(argument: string): string | null {
   return equals === -1 ? argument : argument.slice(0, equals);
 }
 
-function mergeOptions(base: readonly string[], overrides: readonly string[]): string[] {
-  const overrideKeys = new Set(overrides.map(optionKey).filter((key): key is string => key !== null));
+function mergeOptions(
+  base: readonly string[],
+  overrides: readonly string[],
+): string[] {
+  const overrideKeys = new Set(
+    overrides
+      .map(optionKey)
+      .filter((key): key is string => key !== null),
+  );
   return [
     ...base.filter((argument) => {
       const key = optionKey(argument);
@@ -219,7 +296,10 @@ function mergeOptions(base: readonly string[], overrides: readonly string[]): st
   ];
 }
 
-function configToArguments(config: PlayableBuildConfig, baseDirectory: string): string[] {
+function configToArguments(
+  config: PlayableBuildConfig,
+  baseDirectory: string,
+): string[] {
   const args: string[] = [];
   if (config.input !== undefined) {
     args.push(path.resolve(baseDirectory, config.input));
@@ -263,12 +343,17 @@ function configToArguments(config: PlayableBuildConfig, baseDirectory: string): 
   return args;
 }
 
-function extractConfigArgument(argv: readonly string[]): { configPath: string | null; remaining: string[] } {
+function extractConfigArgument(
+  argv: readonly string[],
+): { configPath: string | null; remaining: string[] } {
   const remaining: string[] = [];
   let configPath: string | null = null;
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
+    if (argument === undefined) {
+      continue;
+    }
     if (argument === "--") {
       continue;
     }
@@ -315,15 +400,21 @@ export async function resolveBuildArguments(
     parsed = JSON.parse(await readFile(configFile, "utf8")) as unknown;
   } catch (error) {
     throw new Error(
-      `无法读取配置文件 ${configFile}：${error instanceof Error ? error.message : String(error)}`,
+      `无法读取配置文件 ${configFile}：${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
 
   const config = validateBuildConfig(parsed, configFile);
   const configArgs = configToArguments(config, path.dirname(configFile));
-  const configPositionals = configArgs.filter((argument) => !argument.startsWith("-"));
+  const configPositionals = configArgs.filter(
+    (argument) => !argument.startsWith("-"),
+  );
   const configOptions = configArgs.filter((argument) => argument.startsWith("-"));
-  const cliPositionals = extracted.remaining.filter((argument) => !argument.startsWith("-"));
+  const cliPositionals = extracted.remaining.filter(
+    (argument) => !argument.startsWith("-"),
+  );
   const cliOptions = extracted.remaining.filter((argument) => argument.startsWith("-"));
 
   if (cliPositionals.length > 2) {
