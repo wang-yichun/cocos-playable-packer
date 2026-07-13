@@ -21,7 +21,7 @@ export interface WebBuildConfig {
   jpegQuality?: number;
   tinyPngScope?: WebTinyPngScope;
   tinyPngLimit?: number | null;
-  tinyPngMinBytes?: number;
+  tinyPngMinBytes?: number | null;
   audioBitrateKbps?: number | null;
   payloadEncoding?: PlayablePayloadEncoding;
   brotliFallback?: PlayableBrotliFallbackMode;
@@ -62,7 +62,7 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   jpegQuality: 80,
   tinyPngScope: "all",
   tinyPngLimit: null,
-  tinyPngMinBytes: 1024,
+  tinyPngMinBytes: 4096,
   audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
@@ -113,7 +113,7 @@ function normalizeImageMode(value: unknown): WebImageMode {
 }
 
 function normalizeTinyPngScope(value: unknown): WebTinyPngScope {
-  if (value === undefined) return DEFAULT_WEB_BUILD_CONFIG.tinyPngScope;
+  if (value === undefined || value === null) return DEFAULT_WEB_BUILD_CONFIG.tinyPngScope;
   if (value !== "all" && value !== "limit") {
     throw new Error("tinyPngScope 只支持 all 或 limit。");
   }
@@ -193,13 +193,19 @@ export function normalizeWebBuildConfig(value: unknown): NormalizedWebBuildConfi
   const jpegQuality = source.jpegQuality === undefined
     ? DEFAULT_WEB_BUILD_CONFIG.jpegQuality
     : integerInRange(source.jpegQuality, "jpegQuality", 1, 100);
-  const tinyPngScope = normalizeTinyPngScope(source.tinyPngScope);
-  const tinyPngLimit = tinyPngScope === "limit"
-    ? integerInRange(source.tinyPngLimit, "tinyPngLimit", 1, 10_000)
-    : null;
-  const tinyPngMinBytes = source.tinyPngMinBytes === undefined
-    ? DEFAULT_WEB_BUILD_CONFIG.tinyPngMinBytes
-    : integerInRange(source.tinyPngMinBytes, "tinyPngMinBytes", 0, 1_073_741_824);
+
+  let tinyPngScope = DEFAULT_WEB_BUILD_CONFIG.tinyPngScope;
+  let tinyPngLimit: number | null = DEFAULT_WEB_BUILD_CONFIG.tinyPngLimit;
+  let tinyPngMinBytes = DEFAULT_WEB_BUILD_CONFIG.tinyPngMinBytes;
+  if (imageMode === "tinypng") {
+    tinyPngScope = normalizeTinyPngScope(source.tinyPngScope);
+    tinyPngLimit = tinyPngScope === "limit"
+      ? integerInRange(source.tinyPngLimit, "tinyPngLimit", 1, 10_000)
+      : null;
+    tinyPngMinBytes = source.tinyPngMinBytes === undefined || source.tinyPngMinBytes === null
+      ? DEFAULT_WEB_BUILD_CONFIG.tinyPngMinBytes
+      : integerInRange(source.tinyPngMinBytes, "tinyPngMinBytes", 0, 1_073_741_824);
+  }
 
   let audioBitrateKbps: number | null;
   if (source.audioBitrateKbps === undefined) {
