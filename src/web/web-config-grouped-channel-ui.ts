@@ -63,8 +63,8 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
         </div>
         <div id="tinyPngMinBytesField" class="field tinypng-field" hidden>
           <label for="tinyPngMinBytes">最小图片大小（B）</label>
-          <input id="tinyPngMinBytes" type="number" min="0" max="1073741824" step="1" value="1024">
-          <small>小于该大小的图片不调用 TinyPNG API。</small>
+          <input id="tinyPngMinBytes" type="number" min="0" max="1073741824" step="1" value="4096">
+          <small>默认 4 KB；小于该大小的图片不调用 TinyPNG API。</small>
         </div>
       </div>
       <div id="channelSummary" class="summary"></div>`,
@@ -92,7 +92,7 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
         throw new Error('TinyPNG 模式必须填写 TINYPNG_API_KEY。');
       }
       const tinyPngScope = tinyPngScopeInput.value;
-      const tinyPngLimit = tinyPngScope === 'limit'
+      const tinyPngLimit = imageMode === 'tinypng' && tinyPngScope === 'limit'
         ? parseInteger(tinyPngLimitInput, 'TinyPNG 最多处理数量', 1, 10000)
         : null;
       const tinyPngMinBytes = imageMode === 'tinypng'
@@ -119,7 +119,7 @@ export function createGroupedChannelWebMvpIndexHtml(versionInfo: WebVersionInfo)
       tinyPngApiKeyInput.value = '';
       tinyPngScopeInput.value = config.tinyPngScope || 'all';
       tinyPngLimitInput.value = String(config.tinyPngLimit || 50);
-      tinyPngMinBytesInput.value = String(config.tinyPngMinBytes ?? 1024);`,
+      tinyPngMinBytesInput.value = String(config.tinyPngMinBytes ?? 4096);`,
   );
 
   html = replaceOnce(
