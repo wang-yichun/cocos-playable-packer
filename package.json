@@ -33,6 +33,8 @@
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
     "assets:manifest": "tsx src/resource-analysis/assets-manifest-cli.ts",
     "test:assets-manifest": "tsx src/resource-analysis/assets-manifest-self-test.ts",
+    "analyze:joint": "tsx src/resource-analysis/joint-resource-analysis-cli.ts",
+    "test:joint-analysis": "tsx src/resource-analysis/joint-resource-analysis-self-test.ts",
     "audio:analyze": "tsx src/audio/analyze-build-audio.ts",
     "test:audio-analysis": "tsx src/audio/analyze-build-audio-self-test.ts",
     "audio:benchmark": "tsx src/audio/benchmark-build-audio.ts",
