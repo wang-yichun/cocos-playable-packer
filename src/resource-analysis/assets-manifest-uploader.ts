@@ -8,7 +8,7 @@ export function createAssetsManifestUploaderModule(
   uploadToken: string,
 ): string {
   return `import { createHash } from "node:crypto";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const manifestUploadUrl = ${json(manifestUploadUrl)};
@@ -135,8 +135,12 @@ async function postJson(url, body, headers = {}) {
 console.log("Cocos Playable Packer - 工程资源清单上传");
 console.log("项目目录：" + process.cwd());
 const manifest = await createManifest(process.cwd());
+const manifestPath = path.join(process.cwd(), "assets-manifest.json");
+await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\\n", "utf8");
 console.log("资源数量：" + manifest.resourceCount);
 console.log("资源总大小：" + manifest.totalBytes + " B");
+console.log("本地清单已生成：" + manifestPath);
+console.log("以后可以直接在资源体检页面手动选择这份 JSON。");
 console.log("正在上传资源清单……");
 await postJson(manifestUploadUrl, manifest, { "x-analysis-upload-token": uploadToken });
 await postJson(startUrl, { requireManifest: true });
