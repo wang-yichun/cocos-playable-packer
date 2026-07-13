@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   collectLanIPv4,
@@ -68,5 +70,24 @@ assert.notEqual(normalizeLauncherState({
   logFile: "C:/test/project/.packer-web/launcher/web-mvp.log",
   startedAt: "2026-07-13T00:00:00.000Z",
 }), null);
+
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(scriptDirectory, "..");
+const packageJson = JSON.parse(readFileSync(path.join(projectRoot, "package.json"), "utf8"));
+assert.equal(packageJson.scripts["web:mvp:start"], "node scripts/web-mvp-launcher.mjs start");
+assert.equal(packageJson.scripts["web:mvp:stop"], "node scripts/web-mvp-launcher.mjs stop");
+assert.equal(packageJson.scripts["web:mvp:status"], "node scripts/web-mvp-launcher.mjs status");
+assert.match(packageJson.scripts["test:web-mvp"], /test:web-mvp-launcher/);
+
+for (const relativePath of [
+  "start-web-mvp.cmd",
+  "stop-web-mvp.cmd",
+  "install-web-mvp-shortcuts.cmd",
+  "scripts/install-web-mvp-shortcuts.ps1",
+]) {
+  assert.equal(existsSync(path.join(projectRoot, relativePath)), true, `Missing ${relativePath}`);
+}
+assert.match(readFileSync(path.join(projectRoot, "start-web-mvp.cmd"), "utf8"), /web-mvp-launcher\.mjs" start/);
+assert.match(readFileSync(path.join(projectRoot, "stop-web-mvp.cmd"), "utf8"), /web-mvp-launcher\.mjs" stop/);
 
 console.log("Web MVP launcher self-test passed.");
