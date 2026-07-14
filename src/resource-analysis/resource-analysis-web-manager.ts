@@ -252,8 +252,8 @@ export class ResourceAnalysisWebManager {
 
       job.status = "analyzing";
       job.message = job.hasManifest
-        ? "正在关联源资源、检查重复内容、识别人工关注项，并实测图片与校准音频优化空间。"
-        : "正在分析构建资源、识别人工关注项，并实测图片与校准音频优化空间。";
+        ? "正在关联源资源、检查重复内容、分析构建大文件、识别人工关注项，并实测图片与校准音频优化空间。"
+        : "正在分析构建资源和大文件、识别人工关注项，并实测图片与校准音频优化空间。";
       const manifest = job.hasManifest
         ? await readAssetsManifest(job.manifestFile)
         : emptyManifest(path.basename(buildRoot));
@@ -263,7 +263,7 @@ export class ResourceAnalysisWebManager {
       const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
       const optimization = finalizeResourceOptimization(joint, measuredOptimization);
       const redundancy = analyzeSourceRedundancy(manifest, joint);
-      const manualAttention = analyzeManualAttention(joint, optimization);
+      const manualAttention = await analyzeManualAttention(buildRoot, joint, optimization);
 
       let payloadEncoding: PayloadEncodingBenchmark;
       if (job.measurePayloadEncoding) {
