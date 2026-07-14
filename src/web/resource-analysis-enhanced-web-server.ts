@@ -1,6 +1,6 @@
 import type { RequestListener } from "node:http";
 
-import { createBuildFilesResourceAnalysisWebMvpIndexHtml } from "./resource-analysis-build-files-ui.js";
+import { createOverviewResourceAnalysisWebMvpIndexHtml } from "./resource-analysis-overview-ui.js";
 import { startResourceAnalysisWebMvpServer } from "./resource-analysis-web-server.js";
 import type { RunningWebMvpServer, WebMvpServerOptions } from "./web-mvp-server.js";
 
@@ -19,7 +19,7 @@ export async function startEnhancedResourceAnalysisWebMvpServer(
     const method = request.method ?? "GET";
     const url = new URL(request.url ?? "/", "http://localhost");
     if (method === "GET" && url.pathname === "/") {
-      const body = createBuildFilesResourceAnalysisWebMvpIndexHtml(running.versionInfo);
+      const body = createOverviewResourceAnalysisWebMvpIndexHtml(running.versionInfo);
       response.writeHead(200, {
         "Content-Type": "text/html; charset=utf-8",
         "Content-Length": Buffer.byteLength(body),
