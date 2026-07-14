@@ -1,6 +1,6 @@
 {
   "name": "cocos-playable-packer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -31,6 +31,11 @@
     "test:clean-generated": "node scripts/clean-generated-self-test.mjs",
     "test:web-mvp": "npm run test:web-mvp-network && npm run test:web-mvp-launcher && tsx src/channel/channel-profile-self-test.ts && tsx src/channel/channel-mraid-adapter-self-test.ts && tsx src/channel/liftoff-delivery-self-test.ts && tsx src/channel/facebook-delivery-self-test.ts && tsx src/channel/remaining-channel-delivery-self-test.ts && tsx src/channel/multi-channel-delivery-self-test.ts && tsx src/web/liftoff-web-delivery-self-test.ts && tsx src/web/facebook-web-delivery-self-test.ts && tsx src/web/remaining-channel-web-delivery-self-test.ts && tsx src/web/multi-channel-web-delivery-self-test.ts && tsx src/web/multi-channel-ui-self-test.ts && tsx src/web/web-version-info-self-test.ts && tsx src/web/web-mvp-self-test.ts && tsx src/web/web-config-panel-self-test.ts && tsx src/web/raw-single-html-self-test.ts && tsx src/web/loading-screen-self-test.ts",
     "analyze:resources": "tsx src/analyze-resource-optimization.ts",
+    "assets:manifest": "tsx src/resource-analysis/assets-manifest-cli.ts",
+    "test:assets-manifest": "tsx src/resource-analysis/assets-manifest-self-test.ts",
+    "analyze:joint": "tsx src/resource-analysis/joint-resource-analysis-cli.ts",
+    "test:joint-analysis": "tsx src/resource-analysis/joint-resource-analysis-self-test.ts",
+    "test:resource-analysis": "npm run test:assets-manifest && npm run test:joint-analysis && tsx src/resource-analysis/assets-manifest-uploader-self-test.ts && tsx src/resource-analysis/resource-optimization-self-test.ts && tsx src/resource-analysis/resource-analysis-finalize-self-test.ts && tsx src/resource-analysis/source-redundancy-analysis-self-test.ts && tsx src/resource-analysis/payload-encoding-benchmark-self-test.ts && tsx src/resource-analysis/manual-attention-analysis-self-test.ts && tsx src/resource-analysis/build-artifact-explanations-self-test.ts && tsx src/resource-analysis/resource-analysis-overview-report-self-test.ts && tsx src/web/resource-analysis-ui-self-test.ts && tsx src/web/resource-analysis-optimization-ui-self-test.ts && tsx src/web/resource-analysis-clarity-ui-self-test.ts && tsx src/web/resource-analysis-redundancy-ui-self-test.ts && tsx src/web/resource-analysis-tabs-ui-self-test.ts && tsx src/web/resource-analysis-build-files-ui-self-test.ts && tsx src/web/resource-analysis-overview-ui-self-test.ts && tsx src/web/resource-analysis-web-self-test.ts && tsx src/web/resource-analysis-enhanced-web-self-test.ts",
     "audio:analyze": "tsx src/audio/analyze-build-audio.ts",
     "test:audio-analysis": "tsx src/audio/analyze-build-audio-self-test.ts",
     "audio:benchmark": "tsx src/audio/benchmark-build-audio.ts",
