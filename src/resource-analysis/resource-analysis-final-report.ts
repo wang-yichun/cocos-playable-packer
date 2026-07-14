@@ -1,3 +1,4 @@
+import { explainBuildArtifact } from "./build-artifact-explanations.js";
 import type { ManualAttentionCategory, ManualAttentionReport } from "./manual-attention-analysis.js";
 import type { PayloadEncodingBenchmark, PayloadEncodingName } from "./payload-encoding-benchmark.js";
 import {
@@ -75,16 +76,20 @@ export function renderPayloadEncodingSummary(report: PayloadEncodingBenchmark): 
 
 function renderLargestBuildFiles(report: ManualAttentionReport): string {
   if (report.largestBuildFiles.length === 0) return "";
-  const rows = report.largestBuildFiles.map((file) => `<tr>
-    <td><code>${escapeHtml(file.path)}</code></td>
-    <td>${escapeHtml(file.extension)}</td>
-    <td>${formatBytes(file.bytes)}</td>
-    <td>${file.percentOfBuildBytes.toFixed(2)}%</td>
-    <td>${file.sourcePaths.length === 0 ? "—" : file.sourcePaths.slice(0, 5).map((value) => `<code>${escapeHtml(value)}</code>`).join("<br>")}</td>
-  </tr>`).join("");
+  const rows = report.largestBuildFiles.map((file) => {
+    const explanation = explainBuildArtifact(file.path, file.extension, file.sourcePaths);
+    return `<tr>
+      <td><code>${escapeHtml(file.path)}</code></td>
+      <td>${escapeHtml(file.extension)}</td>
+      <td>${formatBytes(file.bytes)}</td>
+      <td>${file.percentOfBuildBytes.toFixed(2)}%</td>
+      <td>${file.sourcePaths.length === 0 ? "—" : file.sourcePaths.slice(0, 5).map((value) => `<code>${escapeHtml(value)}</code>`).join("<br>")}</td>
+      <td><b>${escapeHtml(explanation.label)}</b><br><small>${escapeHtml(explanation.explanation)} · 可信度 ${escapeHtml(explanation.confidence)}</small></td>
+    </tr>`;
+  }).join("");
   return `<h3>构建产物大文件排行</h3>
-  <div class="notice">这里按实际 Web Mobile 文件大小排序。排行本身不表示文件异常；只有超过分类阈值的项目才会同时进入下面的人工关注列表。</div>
-  <div class="table-wrap"><table><thead><tr><th>构建路径</th><th>类型</th><th>大小</th><th>占 Web Mobile</th><th>关联源资源</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  <div class="notice">这里按实际 Web Mobile 文件大小排序。排行本身不表示文件异常；只有超过分类阈值的项目才会同时进入下面的人工关注列表。经验判断用于解释无法精确关联源资源的构建产物，不应当作绝对结论。</div>
+  <div class="table-wrap"><table><thead><tr><th>构建路径</th><th>类型</th><th>大小</th><th>占 Web Mobile</th><th>关联源资源</th><th>经验判断</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderManualAttention(report: ManualAttentionReport): string {
