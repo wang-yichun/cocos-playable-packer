@@ -173,6 +173,6 @@ export function applyOverviewResourceLayout(
     throw new Error("资源体检概况报告缺少内容拆分点。");
   }
   const preserved = currentOverview.slice(optimizationStart, sourceStart);
-  html = `${html.slice(0, bodyStart)}${renderOverviewResourceInsights(report)}${preserved}${html.slice(overviewEnd)}`;
+  html = `${html.slice(0, bodyStart)}${renderOverviewResourceInsights(report)}${preserved}</section>\n  ${html.slice(overviewEnd)}`;
   return html;
 }
