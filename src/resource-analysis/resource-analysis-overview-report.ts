@@ -2,12 +2,8 @@ import type {
   BuildExtensionSummary,
   SourceCategorySummary,
 } from "./joint-resource-analysis.js";
-import {
-  createFinalResourceAnalysisHtmlReport,
-  type FinalResourceAnalysisReport,
-} from "./resource-analysis-final-report.js";
 
-interface OverviewReportData {
+export interface OverviewReportData {
   buildBytes: number;
   buildExtensions: BuildExtensionSummary[];
   sourceCategories: SourceCategorySummary[];
@@ -157,10 +153,11 @@ function insertOverviewStyles(html: string): string {
   return `${html.slice(0, index)}${styles}${html.slice(index)}`;
 }
 
-export function createOverviewResourceAnalysisHtmlReport(
-  report: FinalResourceAnalysisReport,
+export function applyOverviewResourceLayout(
+  report: OverviewReportData,
+  sourceHtml: string,
 ): string {
-  let html = insertOverviewStyles(createFinalResourceAnalysisHtmlReport(report));
+  let html = insertOverviewStyles(sourceHtml);
   const overviewMarker = '<section class="report-tab-panel" data-report-panel="overview">';
   const attentionMarker = '<section class="report-tab-panel" data-report-panel="attention" hidden>';
   const overviewStart = html.indexOf(overviewMarker);
