@@ -1,6 +1,7 @@
 import { explainBuildArtifact } from "./build-artifact-explanations.js";
 import type { ManualAttentionCategory, ManualAttentionReport } from "./manual-attention-analysis.js";
 import type { PayloadEncodingBenchmark, PayloadEncodingName } from "./payload-encoding-benchmark.js";
+import { applyOverviewResourceLayout } from "./resource-analysis-overview-report.js";
 import {
   createRedundancyResourceAnalysisHtmlReport,
   type ExtendedResourceAnalysisReport,
@@ -184,5 +185,6 @@ export function createFinalResourceAnalysisHtmlReport(report: FinalResourceAnaly
   <section class="report-tab-panel" data-report-panel="duplicates" hidden>${duplicates}</section>
   <section class="report-tab-panel" data-report-panel="not-in-build" hidden>${notInBuild}</section>
   ${suffix}`;
-  return html.replace("</body>", `${script}</body>`);
+  const tabbedHtml = html.replace("</body>", `${script}</body>`);
+  return applyOverviewResourceLayout(report, tabbedHtml);
 }
