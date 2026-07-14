@@ -10,7 +10,6 @@ import type { ResourceOptimizationReport } from "./resource-optimization-estimat
 const root = await mkdtemp(path.join(os.tmpdir(), "manual-attention-test-"));
 try {
   await mkdir(path.join(root, "assets", "main", "native"), { recursive: true });
-  await mkdir(path.join(root, "assets", "main"), { recursive: true });
   await writeFile(path.join(root, "assets", "main", "index.js"), Buffer.alloc(3_500_000));
   await writeFile(path.join(root, "assets", "main", "config.json"), Buffer.alloc(1_500_000));
   await writeFile(path.join(root, "assets", "main", "native", "hero.bin"), Buffer.alloc(300_000));
@@ -155,12 +154,12 @@ try {
   assert.equal(report.mediumCount, 2);
   assert.deepEqual(
     report.items.map((item) => item.category),
-    ["large-scene", "large-build-script", "oversized-image", "long-audio", "large-build-json", "large-model"],
+    ["large-build-script", "large-scene", "oversized-image", "long-audio", "large-build-json", "large-model"],
   );
-  assert.equal(report.items[0]?.sizeBasis, "source");
-  assert.equal(report.items[1]?.sizeBasis, "build");
+  assert.equal(report.items[0]?.sizeBasis, "build");
+  assert.equal(report.items[1]?.sizeBasis, "source");
   assert.equal(report.items.some((item) => item.sourcePaths.includes("assets/small.prefab")), false);
-  assert.match(report.items[0]?.nextAction ?? "", /重新构建并试玩/);
+  assert.match(report.items[1]?.nextAction ?? "", /重新构建并试玩/);
   const model = report.items.find((item) => item.category === "large-model");
   assert.equal(model?.metadata.mappedBuildBytes, 300_000);
   assert.equal(report.largestBuildFiles[0]?.path, "assets/main/index.js");
