@@ -37,7 +37,12 @@ function attentionCategoryLabel(category: ManualAttentionCategory): string {
   if (category === "large-prefab") return "大型 Prefab";
   if (category === "large-font") return "大型字体";
   if (category === "oversized-image") return "超大像素图片";
-  return "长音频";
+  if (category === "long-audio") return "长音频";
+  if (category === "large-build-script") return "大型构建脚本";
+  if (category === "large-build-json") return "大型构建 JSON";
+  if (category === "large-build-binary") return "大型构建二进制";
+  if (category === "large-build-wasm") return "大型 WASM";
+  return "大型构建字体";
 }
 
 export function renderPayloadEncodingSummary(report: PayloadEncodingBenchmark): string {
@@ -68,9 +73,24 @@ export function renderPayloadEncodingSummary(report: PayloadEncodingBenchmark): 
   ${report.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}`;
 }
 
+function renderLargestBuildFiles(report: ManualAttentionReport): string {
+  if (report.largestBuildFiles.length === 0) return "";
+  const rows = report.largestBuildFiles.map((file) => `<tr>
+    <td><code>${escapeHtml(file.path)}</code></td>
+    <td>${escapeHtml(file.extension)}</td>
+    <td>${formatBytes(file.bytes)}</td>
+    <td>${file.percentOfBuildBytes.toFixed(2)}%</td>
+    <td>${file.sourcePaths.length === 0 ? "—" : file.sourcePaths.slice(0, 5).map((value) => `<code>${escapeHtml(value)}</code>`).join("<br>")}</td>
+  </tr>`).join("");
+  return `<h3>构建产物大文件排行</h3>
+  <div class="notice">这里按实际 Web Mobile 文件大小排序。排行本身不表示文件异常；只有超过分类阈值的项目才会同时进入下面的人工关注列表。</div>
+  <div class="table-wrap"><table><thead><tr><th>构建路径</th><th>类型</th><th>大小</th><th>占 Web Mobile</th><th>关联源资源</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 function renderManualAttention(report: ManualAttentionReport): string {
+  const largest = renderLargestBuildFiles(report);
   if (report.itemCount === 0) {
-    return `<h2>需人工关注</h2><div class="panel">没有发现达到当前人工复核阈值的项目。该结果不代表项目不存在其他设计或运行问题。</div>`;
+    return `<h2>需人工关注</h2><div class="panel">没有发现达到当前人工复核阈值的项目。该结果不代表项目不存在其他设计或运行问题。</div>${largest}`;
   }
   const categoryCards = report.categories.map((category) => `<div class="stat"><span>${escapeHtml(attentionCategoryLabel(category.category))}</span><strong>${category.itemCount}</strong><small>高 ${category.highCount} · 中 ${category.mediumCount}</small></div>`).join("");
   const items = report.items.slice(0, 80).map((item, index) => {
@@ -79,8 +99,12 @@ function renderManualAttention(report: ManualAttentionReport): string {
       ...item.buildPaths.map((value) => `<div><b>构建路径：</b><code>${escapeHtml(value)}</code></div>`),
     ].join("");
     const basis = item.sizeBasis === "source" ? "源文件大小" : "构建文件大小";
+    const mappedBuildBytes = typeof item.metadata.mappedBuildBytes === "number" ? item.metadata.mappedBuildBytes : 0;
+    const mappedBuild = item.sizeBasis === "source" && mappedBuildBytes > 0
+      ? ` · 映射构建 ${formatBytes(mappedBuildBytes)}`
+      : "";
     return `<details class="attention-item attention-${item.severity}"${index < 5 ? " open" : ""}>
-      <summary><b>${item.severity === "high" ? "高" : "中"}</b> · ${escapeHtml(item.title)} · ${basis} ${formatBytes(item.currentBytes)}</summary>
+      <summary><b>${item.severity === "high" ? "高" : "中"}</b> · ${escapeHtml(item.title)} · ${basis} ${formatBytes(item.currentBytes)}${mappedBuild}</summary>
       <div class="attention-paths">${pathRows || "<div>没有可显示的精确路径。</div>"}</div>
       <p>${escapeHtml(item.rationale)}</p>
       <div class="attention-action"><b>建议：</b>${escapeHtml(item.nextAction)}</div>
@@ -94,6 +118,8 @@ function renderManualAttention(report: ManualAttentionReport): string {
     ${categoryCards}
   </div>
   ${report.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}
+  ${largest}
+  <h3>达到人工复核阈值的项目</h3>
   <div class="attention-list">${items}</div>`;
 }
 
