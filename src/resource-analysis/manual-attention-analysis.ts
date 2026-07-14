@@ -1,3 +1,4 @@
+import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { JointResourceAnalysis, SourceBuildMapping } from "./joint-resource-analysis.js";
@@ -13,7 +14,12 @@ export type ManualAttentionCategory =
   | "large-prefab"
   | "large-font"
   | "oversized-image"
-  | "long-audio";
+  | "long-audio"
+  | "large-build-script"
+  | "large-build-json"
+  | "large-build-binary"
+  | "large-build-wasm"
+  | "large-build-font";
 
 export interface ManualAttentionItem {
   id: string;
@@ -36,19 +42,75 @@ export interface ManualAttentionCategorySummary {
   mediumCount: number;
 }
 
+export interface LargestBuildFile {
+  path: string;
+  extension: string;
+  bytes: number;
+  percentOfBuildBytes: number;
+  bundleName: string | null;
+  sourcePaths: string[];
+}
+
 export interface ManualAttentionReport {
   itemCount: number;
   highCount: number;
   mediumCount: number;
   categories: ManualAttentionCategorySummary[];
+  largestBuildFiles: LargestBuildFile[];
   items: ManualAttentionItem[];
   warnings: string[];
+}
+
+interface BuildFile {
+  absolutePath: string;
+  path: string;
+  extension: string;
+  bytes: number;
+  bundleName: string | null;
 }
 
 const KIB = 1024;
 const MIB = 1024 * KIB;
 const MODEL_EXTENSIONS = new Set([".fbx", ".gltf", ".glb"]);
 const FONT_EXTENSIONS = new Set([".ttf", ".otf", ".woff", ".woff2"]);
+
+function normalizePath(value: string): string {
+  return value.replace(/\\/g, "/");
+}
+
+function round(value: number, digits = 2): number {
+  const scale = 10 ** digits;
+  return Math.round(value * scale) / scale;
+}
+
+function percent(part: number, total: number): number {
+  return total > 0 ? round(part / total * 100) : 0;
+}
+
+function buildBundleName(relativePath: string): string | null {
+  const segments = normalizePath(relativePath).split("/");
+  return segments[0] === "assets" && segments.length > 1 ? segments[1] ?? null : null;
+}
+
+async function walkBuildFiles(root: string, current: string, output: BuildFile[]): Promise<void> {
+  for (const entry of await readdir(current, { withFileTypes: true })) {
+    const absolutePath = path.join(current, entry.name);
+    if (entry.isDirectory()) {
+      await walkBuildFiles(root, absolutePath, output);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    const info = await stat(absolutePath);
+    const relativePath = normalizePath(path.relative(root, absolutePath));
+    output.push({
+      absolutePath,
+      path: relativePath,
+      extension: path.extname(relativePath).toLowerCase() || "[none]",
+      bytes: info.size,
+      bundleName: buildBundleName(relativePath),
+    });
+  }
+}
 
 function numericMetadata(
   candidate: ResourceOptimizationCandidate,
@@ -104,13 +166,20 @@ function sourceThreshold(mapping: SourceBuildMapping): {
   return null;
 }
 
-function sourceItems(joint: JointResourceAnalysis): ManualAttentionItem[] {
+function sourceItems(
+  joint: JointResourceAnalysis,
+  buildFileByPath: ReadonlyMap<string, BuildFile>,
+): ManualAttentionItem[] {
   const items: ManualAttentionItem[] = [];
   for (const mapping of joint.mappings) {
     if (mapping.status !== "included") continue;
     const threshold = sourceThreshold(mapping);
     if (threshold === null || mapping.bytes < threshold.mediumBytes) continue;
     const severity: ManualAttentionSeverity = mapping.bytes >= threshold.highBytes ? "high" : "medium";
+    const mappedFiles = mapping.buildPaths
+      .map((buildPath) => buildFileByPath.get(buildPath))
+      .filter((file): file is BuildFile => file !== undefined);
+    const mappedBuildBytes = mappedFiles.reduce((sum, file) => sum + file.bytes, 0);
     items.push({
       id: `${threshold.category}:${mapping.path}`,
       severity,
@@ -120,14 +189,121 @@ function sourceItems(joint: JointResourceAnalysis): ManualAttentionItem[] {
       currentBytes: mapping.bytes,
       sourcePaths: [mapping.path],
       buildPaths: [...mapping.buildPaths],
-      rationale: `该资源的源文件大小达到人工复核阈值。源文件大小不等同于最终 Web Mobile 或单 HTML 中的实际占用。`,
+      rationale: "该资源的源文件大小达到人工复核阈值。源文件大小不等同于最终 Web Mobile 或单 HTML 中的实际占用。",
       nextAction: threshold.nextAction,
       metadata: {
         extension: mapping.extension,
         sourceBytes: mapping.bytes,
+        mappedBuildBytes,
+        mappedBuildFileCount: mappedFiles.length,
+        mappedBuildPercent: percent(mappedBuildBytes, joint.buildBytes),
         mediumThresholdBytes: threshold.mediumBytes,
         highThresholdBytes: threshold.highBytes,
         evidence: mapping.evidence,
+      },
+    });
+  }
+  return items;
+}
+
+function buildThreshold(file: BuildFile): {
+  category: ManualAttentionCategory;
+  mediumBytes: number;
+  highBytes: number;
+  label: string;
+  nextAction: string;
+} | null {
+  if ([".js", ".mjs", ".cjs"].includes(file.extension)) {
+    return {
+      category: "large-build-script",
+      mediumBytes: 1 * MIB,
+      highBytes: 3 * MIB,
+      label: "构建脚本文件较大",
+      nextAction: "检查是否包含未使用模块、重复运行时、调试代码或可移除功能；修改脚本或构建配置后必须重新构建并完整试玩。",
+    };
+  }
+  if (file.extension === ".json") {
+    return {
+      category: "large-build-json",
+      mediumBytes: 1 * MIB,
+      highBytes: 3 * MIB,
+      label: "构建 JSON 文件较大",
+      nextAction: "确认该文件属于 Bundle 配置、序列化场景还是其他运行时数据，并结合内容来源检查是否存在异常膨胀；不要直接编辑构建产物。",
+    };
+  }
+  if ([".bin", ".cconb"].includes(file.extension)) {
+    return {
+      category: "large-build-binary",
+      mediumBytes: 512 * KIB,
+      highBytes: 2 * MIB,
+      label: "构建二进制资源较大",
+      nextAction: "根据关联源路径检查模型网格、动画、场景序列化或其他二进制内容；以源资源和导入配置为修改入口。",
+    };
+  }
+  if (file.extension === ".wasm") {
+    return {
+      category: "large-build-wasm",
+      mediumBytes: 1 * MIB,
+      highBytes: 3 * MIB,
+      label: "WASM 模块较大",
+      nextAction: "确认模块是否确实需要、是否存在更精简构建或可裁剪功能；物理与解码模块的体积应结合运行兼容性评估。",
+    };
+  }
+  if (FONT_EXTENSIONS.has(file.extension)) {
+    return {
+      category: "large-build-font",
+      mediumBytes: 512 * KIB,
+      highBytes: 2 * MIB,
+      label: "构建字体文件较大",
+      nextAction: "确认字体字符集覆盖范围和本地化需求；字体子集化必须覆盖所有动态文本。",
+    };
+  }
+  return null;
+}
+
+function sourcePathsByBuildPath(joint: JointResourceAnalysis): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  for (const mapping of joint.mappings) {
+    for (const buildPath of mapping.buildPaths) {
+      const values = result.get(buildPath) ?? [];
+      if (!values.includes(mapping.path)) values.push(mapping.path);
+      result.set(buildPath, values);
+    }
+  }
+  for (const values of result.values()) values.sort();
+  return result;
+}
+
+function buildItems(
+  files: readonly BuildFile[],
+  buildBytes: number,
+  sourcesByBuildPath: ReadonlyMap<string, string[]>,
+): ManualAttentionItem[] {
+  const items: ManualAttentionItem[] = [];
+  for (const file of files) {
+    const threshold = buildThreshold(file);
+    if (threshold === null || file.bytes < threshold.mediumBytes) continue;
+    const severity: ManualAttentionSeverity = file.bytes >= threshold.highBytes ? "high" : "medium";
+    const sourcePaths = [...(sourcesByBuildPath.get(file.path) ?? [])];
+    items.push({
+      id: `${threshold.category}:${file.path}`,
+      severity,
+      category: threshold.category,
+      title: threshold.label,
+      sizeBasis: "build",
+      currentBytes: file.bytes,
+      sourcePaths,
+      buildPaths: [file.path],
+      rationale: `该构建文件达到分类复核阈值，占当前 Web Mobile 原始体积 ${percent(file.bytes, buildBytes).toFixed(2)}%。构建文件大小不等于最终 Brotli Payload 或单 HTML 中的独立占用。`,
+      nextAction: threshold.nextAction,
+      metadata: {
+        extension: file.extension,
+        bundleName: file.bundleName,
+        buildBytes: file.bytes,
+        buildPercent: percent(file.bytes, buildBytes),
+        associatedSourceCount: sourcePaths.length,
+        mediumThresholdBytes: threshold.mediumBytes,
+        highThresholdBytes: threshold.highBytes,
       },
     });
   }
@@ -222,26 +398,47 @@ function categorySummaries(items: readonly ManualAttentionItem[]): ManualAttenti
       || left.category.localeCompare(right.category));
 }
 
-export function analyzeManualAttention(
+export async function analyzeManualAttention(
+  buildDirectory: string,
   joint: JointResourceAnalysis,
   optimization: ResourceOptimizationReport,
-): ManualAttentionReport {
-  const items = [...sourceItems(joint), ...optimizationItems(optimization)];
+): Promise<ManualAttentionReport> {
+  const root = path.resolve(buildDirectory);
+  const files: BuildFile[] = [];
+  await walkBuildFiles(root, root, files);
+  files.sort((left, right) => right.bytes - left.bytes || left.path.localeCompare(right.path));
+  const buildFileByPath = new Map(files.map((file) => [file.path, file]));
+  const sourcesByBuildPath = sourcePathsByBuildPath(joint);
+  const items = [
+    ...sourceItems(joint, buildFileByPath),
+    ...buildItems(files, joint.buildBytes, sourcesByBuildPath),
+    ...optimizationItems(optimization),
+  ];
   items.sort((left, right) => {
     const severityOrder: Record<ManualAttentionSeverity, number> = { high: 0, medium: 1 };
     return severityOrder[left.severity] - severityOrder[right.severity]
       || right.currentBytes - left.currentBytes
       || left.id.localeCompare(right.id);
   });
+  const largestBuildFiles = files.slice(0, 20).map((file) => ({
+    path: file.path,
+    extension: file.extension,
+    bytes: file.bytes,
+    percentOfBuildBytes: percent(file.bytes, joint.buildBytes),
+    bundleName: file.bundleName,
+    sourcePaths: [...(sourcesByBuildPath.get(file.path) ?? [])],
+  }));
   return {
     itemCount: items.length,
     highCount: items.filter((item) => item.severity === "high").length,
     mediumCount: items.filter((item) => item.severity === "medium").length,
     categories: categorySummaries(items),
+    largestBuildFiles,
     items,
     warnings: [
       "这些项目达到保守的人工复核阈值，不代表资源一定有错误，也不会被工具自动修改。",
-      "场景、Prefab、模型和字体显示的是源文件大小；其数值不能直接当作最终 Web Mobile、Brotli Payload 或单 HTML 的可减少字节。",
+      "场景、Prefab、模型和字体显示的是源文件大小；模型等存在精确构建路径时，同时统计对应 bin/cconb 的实际构建字节。",
+      "构建脚本、JSON、二进制、WASM 与字体异常项使用实际 Web Mobile 文件大小；该值仍不等于 Brotli Payload 或单 HTML 中的独立占用。",
     ],
   };
 }
