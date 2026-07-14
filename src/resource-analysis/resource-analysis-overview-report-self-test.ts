@@ -46,5 +46,15 @@ assert.match(applied, /保留优化内容/);
 assert.doesNotMatch(applied, /旧构成/);
 assert.doesNotMatch(applied, /旧比例/);
 assert.match(applied, /@media\(max-width:920px\)/);
+assert.match(
+  applied,
+  /<\/section>\s*<section class="report-tab-panel" data-report-panel="attention" hidden>/,
+  "概况和需人工关注面板必须保持为同级 section。",
+);
+assert.equal(
+  (applied.match(/<section class="report-tab-panel"/g) ?? []).length,
+  2,
+  "概况重排不应丢失或嵌套报告面板。",
+);
 
 console.log("resource analysis overview report self-test passed");
