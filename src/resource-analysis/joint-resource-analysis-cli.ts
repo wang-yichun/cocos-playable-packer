@@ -57,7 +57,7 @@ async function main(): Promise<void> {
     const measuredOptimization = await analyzeResourceOptimization(buildRoot, joint);
     const optimization = finalizeResourceOptimization(joint, measuredOptimization);
     const redundancy = analyzeSourceRedundancy(manifest, joint);
-    const manualAttention = analyzeManualAttention(joint, optimization);
+    const manualAttention = await analyzeManualAttention(buildRoot, joint, optimization);
     console.log("正在实际测量 Brotli、Base64、Base91 与 HTML7 Payload 体积……");
     const payloadEncoding = await measurePayloadEncodingBenchmark(
       buildRoot,
@@ -100,6 +100,10 @@ async function main(): Promise<void> {
     console.log(`图片实测候选：${report.optimization.measuredImageCount}`);
     console.log(`音频参数估算候选：${report.optimization.parameterEstimatedAudioCount}`);
     console.log(`需人工关注：${report.manualAttention.itemCount}；其中高优先级复核 ${report.manualAttention.highCount}`);
+    const largestBuildFile = report.manualAttention.largestBuildFiles[0];
+    if (largestBuildFile !== undefined) {
+      console.log(`最大构建文件：${largestBuildFile.path}；${formatBytes(largestBuildFile.bytes)}；占 Web Mobile ${largestBuildFile.percentOfBuildBytes}%`);
+    }
     console.log(`完全重复资源组：${report.redundancy.duplicateGroupCount}`);
     console.log(`工程理论重复字节：${formatKiB(report.redundancy.redundantProjectBytes)}`);
     console.log("提示：工程理论重复字节不等于最终构建或单 HTML 可减少的字节。");
