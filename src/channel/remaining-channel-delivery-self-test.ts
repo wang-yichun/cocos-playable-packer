@@ -132,4 +132,35 @@ const unityHtml = createChannelDownloadArtifact(sourceHtml, config("Unity")).bod
 assert.doesNotMatch(unityHtml, /<script[^>]+src=["']mraid\.js["']/i);
 assert.match(unityHtml, /isMraidPlatform = true/);
 
+const molocoHtml = createChannelDownloadArtifact(sourceHtml, config("Moloco")).body.toString("utf8");
+assert.doesNotMatch(molocoHtml, /openStoreFallback|selectStoreUrl/);
+assert.doesNotMatch(
+  molocoHtml,
+  /\bwindow\.open\s*\(|\bwindow\.location\.href\s*=|\blocation\.(?:assign|replace)\s*\(/,
+);
+assert.doesNotMatch(molocoHtml, /\bmraid\.open\s*\(/);
+
+const molocoBridgePattern = new RegExp(
+  `<script ${CHANNEL_DOWNLOAD_BRIDGE_MARKER}>\\n([\\s\\S]*?)\\n<\\/script>`,
+);
+const molocoBridgeMatch = molocoBridgePattern.exec(molocoHtml);
+assert.notEqual(molocoBridgeMatch, null);
+const molocoBridgeSource = molocoBridgeMatch?.[1] ?? "";
+let molocoCtaCalls = 0;
+const molocoWindow: Record<string, unknown> = {
+  xsd_playable: {},
+  FbPlayableAd: {
+    onCTAClick() {
+      molocoCtaCalls += 1;
+    },
+  },
+};
+new Script(molocoBridgeSource).runInNewContext({
+  window: molocoWindow,
+  console: { warn() {} },
+});
+const molocoBridge = molocoWindow.xsd_playable as { download?: () => void };
+molocoBridge.download?.();
+assert.equal(molocoCtaCalls, 1);
+
 console.log("Remaining channel delivery self-test passed.");
