@@ -213,7 +213,7 @@ assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image'/);
 assert.match(inlineScript, /updateConfigGroupSummaries/);
 assert.match(inlineScript, /abbreviateConfigUrl/);
 assert.match(inlineScript, /stateElement\.id = 'configGroupState-' \+ key/);
-assert.match(inlineScript, /setConfigGroupState\('channel'/);
+assert.match(inlineScript, /setConfigGroupState\(\s*'channel'/);
 assert.match(inlineScript, /setConfigGroupState\('links'/);
 assert.match(inlineScript, /setConfigGroupState\('loading'/);
 assert.match(inlineScript, /persistedConfigStorageKey = 'cocos-playable-packer\.web-config\.v1'/);
