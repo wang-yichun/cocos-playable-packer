@@ -14,16 +14,26 @@
 
 ### 游戏侧门面
 
-文件：
+仓库源文件：
 
 - `src/sdk/playable-sdk.ts`
 - `src/sdk/playable-sdk-types.ts`
 - `src/sdk/playable-runtime-global.d.ts`
 
+网站“目标渠道”区域提供对应的下载文件：
+
+- `PlayableSDK.ts`
+- `PlayableSDKTypes.ts`
+- `PlayableSDKGlobal.d.ts`
+
+三个下载文件应放在 Cocos 项目的同一脚本目录。网站会根据仓库中的 SDK 源码动态生成下载内容，并调整文件间的导入路径，避免网站版本与仓库版本分叉。
+
 游戏侧稳定入口：
 
 ```ts
-import { PlayableSDK } from "./PlayableSDK";
+import PlayableSDK, {
+  PlayablePlatform,
+} from "./PlayableSDK";
 
 PlayableSDK.ready();
 PlayableSDK.setLoadingProgress(0.5);
@@ -34,6 +44,38 @@ PlayableSDK.end({ result: "completed", score: 100 });
 ```
 
 当前加载进度契约使用 `0` 到 `1` 的比例值。门面会把有限数值限制在这个范围内。
+
+### 渠道字符串枚举
+
+已知渠道通过字符串枚举提供，便于游戏逻辑安全地执行少量渠道差异处理：
+
+```ts
+if (PlayableSDK.platform === PlayablePlatform.AppLovin) {
+  // AppLovin 专用游戏逻辑。
+}
+```
+
+当前枚举包括：
+
+- `Unknown`
+- `Preview`
+- `AppLovin`
+- `Google`
+- `Facebook`
+- `Liftoff`
+- `IronSource`
+- `Unity`
+- `Moloco`
+
+`PlayableSDK.platform` 返回归一化后的 `PlayablePlatform`。尚未加入枚举的新渠道返回 `PlayablePlatform.Unknown`，原始字符串仍可通过 `PlayableSDK.platformName` 读取：
+
+```ts
+if (PlayableSDK.platform === PlayablePlatform.Unknown) {
+  console.warn("未识别渠道：", PlayableSDK.platformName);
+}
+```
+
+渠道差异代码应保持少量且明确。CTA、生命周期、音量、尺寸和渠道 SDK 调用仍应由打包器适配层处理，不应重新散落到游戏业务代码中。
 
 ### 中立运行时
 
@@ -72,9 +114,25 @@ window.__COCOS_PLAYABLE__
 
 - `ready`、`openStore`、`end`、`interacted`、`track` 安全降级为 no-op；
 - `getConfig` 返回调用方提供的 fallback；
-- `platform` 优先读取运行时，其次读取现有 `window.__PLATFORM`，最后返回 `Preview`。
+- 原始平台名优先读取运行时，其次读取现有 `window.__PLATFORM`，最后返回 `Preview`；
+- 平台枚举无法识别原始字符串时返回 `Unknown`。
 
 这样同一份 Cocos 项目代码可以继续在编辑器、本地 Web Mobile 和最终 Playable HTML 中运行。
+
+## 门面源码注释
+
+`PlayableSDK.ts` 的类注释和公开方法注释均带有 `@example`：
+
+- 基础生命周期；
+- 加载进度；
+- CTA 跳转；
+- 游戏结束；
+- 事件发送；
+- 配置读取；
+- 已知渠道枚举判断；
+- 未知渠道诊断。
+
+下载文件后可以直接在 VSCode 或 Cocos Creator 的类型提示中查看调用样例。
 
 ## 旧接口迁移原则
 
