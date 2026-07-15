@@ -166,17 +166,16 @@ function checkNoExternalResources(
   }
 }
 
-function checkNoXhr(
+function checkXhrReference(
   issues: ChannelValidationIssue[],
   files: Readonly<Record<string, string>>,
-  severity: ChannelValidationSeverity,
 ): void {
   const file = matchingFile(files, XHR_REFERENCE);
   if (file !== undefined) {
     pushIssue(issues, {
-      code: "XMLHTTPREQUEST_PRESENT",
-      severity,
-      message: "产物包含 XMLHttpRequest；该渠道不允许依赖运行时网络请求。",
+      code: "XMLHTTPREQUEST_REFERENCE_PRESENT",
+      severity: "warning",
+      message: "产物文本包含 XMLHttpRequest 符号；这可能只是 Cocos 或第三方库的未执行兼容分支，静态扫描不能证明运行时会发起网络请求，需通过渠道预览或运行时网络监控确认。",
       file,
     });
   }
@@ -272,7 +271,7 @@ export function validateChannelArtifact(
     case "AppLovin":
       checkMraidBridge(issues, source);
       checkNoExternalResources(issues, input.textFiles, "error");
-      checkNoXhr(issues, input.textFiles, "error");
+      checkXhrReference(issues, input.textFiles);
       checkNoMraidScript(issues, input.textFiles, "error");
       pushIssue(issues, {
         code: "AUDIO_POLICY_REQUIRES_RUNTIME_TEST",
@@ -343,7 +342,7 @@ export function validateChannelArtifact(
     case "Unity":
       checkMraidBridge(issues, source);
       checkNoExternalResources(issues, input.textFiles, "error");
-      checkNoXhr(issues, input.textFiles, "error");
+      checkXhrReference(issues, input.textFiles);
       checkNoMraidScript(issues, input.textFiles, "error");
       pushIssue(issues, {
         code: "UNITY_DEVICE_TEST_REQUIRED",
@@ -361,7 +360,7 @@ export function validateChannelArtifact(
         });
       }
       checkNoExternalResources(issues, input.textFiles, "error");
-      checkNoXhr(issues, input.textFiles, "error");
+      checkXhrReference(issues, input.textFiles);
       checkNoMraidScript(issues, input.textFiles, "error");
       const redirectFile = matchingFile(input.textFiles, JAVASCRIPT_REDIRECT);
       if (redirectFile !== undefined) {
