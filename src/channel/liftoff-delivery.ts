@@ -90,7 +90,7 @@ function createDeterministicZip(entries: readonly ZipEntry[]): Buffer {
     localHeader.writeUInt16LE(ZIP_UTF8_FLAG, 6);
     localHeader.writeUInt16LE(method, 8);
     localHeader.writeUInt16LE(0, 10);
-    localHeader.writeUInt16LE(0, 12);
+    localHeader.writeUInt16LE(ZIP_DOS_DATE_1980_01_01, 12);
     localHeader.writeUInt32LE(crc32, 14);
     localHeader.writeUInt32LE(compressed.length, 18);
     localHeader.writeUInt32LE(entry.content.length, 22);
