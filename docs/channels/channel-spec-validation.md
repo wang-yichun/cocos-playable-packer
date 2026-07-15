@@ -38,6 +38,8 @@ Liftoff
 IronSource
 Unity
 Moloco
+Pangle
+TikTok
 ```
 
 ## 退出码
@@ -56,6 +58,8 @@ Cocos Creator 和第三方运行库可能保留 `XMLHttpRequest` 兼容分支，
 - 该警告不会单独导致 `valid: false`；
 - 真正的违规应由渠道预览、浏览器网络面板或后续运行时网络拦截测试确认；
 - 外部 URL、外部脚本和远程资源引用仍属于高置信度静态问题，可继续判为错误。
+
+Pangle 与 TikTok 是当前静态扫描的例外：这两个初版适配明确依赖样例中的远程 Playable SDK，因此只允许并检查各自配置的 SDK URL，不把这条预期外部脚本当作通用违规。
 
 ## 当前规则
 
@@ -106,6 +110,36 @@ Cocos Creator 和第三方运行库可能保留 `XMLHttpRequest` 兼容分支，
 - 禁止外部资源和自行打包 `mraid.js`；
 - `XMLHttpRequest` 文本引用先记为静态警告；
 - 仍需 Moloco Ads Manager Preview 验证。
+
+### Pangle 与 TikTok
+
+当前支持是根据用户提供的两个真实渠道样例实现的，尚未取得可公开核验的最新官方 Playable 接入规范，因此报告中的 `specificationStatus` 为 `unverified`。
+
+共同实现：
+
+- 当前 Packer 输出单 HTML；
+- 复用共享的 ByteDance Playable SDK 注入与 CTA 委托层；
+- SDK 使用同步 `<script src="...">` 加载，保证委托桥在游戏运行前完成安装；
+- 注入前记录 Packer 原有的 `xsd_playable.download/install`；
+- SDK 加载后只接受 SDK 新增或替换的 `xsd_playable.download/install`；
+- 游戏 CTA 最终委托给 SDK 方法；
+- SDK 未加载或未提供 CTA 时只输出控制台警告，不调用 `window.open()` 或本地商店地址回退；
+- Android/iOS 商店地址不是这两个渠道当前适配的必填项；
+- 必须通过对应广告后台预览、上传校验和真实设备网络监控。
+
+Pangle 样例 SDK：
+
+```text
+https://sf-tb-sg.ibytedtos.com/obj/ttfe-malisg/playable/sdk/index.b5662ec443f458c8a87e.js
+```
+
+TikTok 样例 SDK：
+
+```text
+https://sf16-muse-va.ibytedtos.com/obj/union-fe-nc-i18n/playable/sdk/playable-sdk.js
+```
+
+这些 URL 可能与地区、账号、产品线或 SDK 版本绑定。在后台验证前，不应把当前实现描述为官方长期稳定接入。
 
 ### Facebook 与 IronSource
 
