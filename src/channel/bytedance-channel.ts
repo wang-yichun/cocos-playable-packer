@@ -8,10 +8,18 @@ export const BYTEDANCE_PLAYABLE_SDK_MARKER =
 export const BYTEDANCE_PLAYABLE_BRIDGE_MARKER =
   "data-cocos-playable-bytedance-bridge";
 
+const CHANNEL_DOWNLOAD_BRIDGE_MARKER =
+  "data-cocos-playable-channel-download-bridge";
 const BYTEDANCE_SNAPSHOT_GLOBAL =
   "__COCOS_PLAYABLE_BYTE_DANCE_SNAPSHOT__";
 
 export type ByteDanceChannelPlatform = "Pangle" | "TikTok";
+
+export interface ByteDanceChannelConfig {
+  platform: ByteDanceChannelPlatform;
+  androidStoreUrl: string | null;
+  iosStoreUrl: string | null;
+}
 
 export function isByteDanceChannel(
   platform: string,
@@ -27,6 +35,14 @@ export function getByteDancePlayableSdkUrl(
     : TIKTOK_PLAYABLE_SDK_URL;
 }
 
+function safeJson(value: unknown): string {
+  const json = JSON.stringify(value);
+  if (json === undefined) {
+    throw new Error("无法序列化字节系渠道配置。");
+  }
+  return json.replace(/</g, "\\u003c");
+}
+
 function injectBeforeHeadClose(
   html: string,
   source: string,
@@ -36,6 +52,33 @@ function injectBeforeHeadClose(
     return `${html.slice(0, headClose.index)}${source}\n${html.slice(headClose.index)}`;
   }
   return `${source}\n${html}`;
+}
+
+function createBootstrapSource(
+  config: ByteDanceChannelConfig,
+): string {
+  return `(() => {
+  const config = ${safeJson(config)};
+  window.__PLATFORM = config.platform;
+  window.__PLAYABLE_CHANNEL_CONFIG__ = config;
+})();`;
+}
+
+function replaceGenericChannelBridge(
+  html: string,
+  config: ByteDanceChannelConfig,
+): string {
+  const pattern = new RegExp(
+    `<script\\s+${CHANNEL_DOWNLOAD_BRIDGE_MARKER}>[\\s\\S]*?<\\/script>`,
+    "i",
+  );
+  if (!pattern.test(html)) {
+    throw new Error(`${config.platform} 交付缺少通用渠道桥插入点。`);
+  }
+  return html.replace(
+    pattern,
+    `<script ${CHANNEL_DOWNLOAD_BRIDGE_MARKER}>\n${createBootstrapSource(config)}\n</script>`,
+  );
 }
 
 function createCaptureSource(): string {
@@ -97,18 +140,19 @@ function createDelegateSource(
 
 export function injectByteDancePlayableSdk(
   html: string,
-  platform: ByteDanceChannelPlatform,
+  config: ByteDanceChannelConfig,
 ): string {
   if (html.includes(BYTEDANCE_PLAYABLE_SDK_MARKER)) {
     return html;
   }
 
-  const sdkUrl = getByteDancePlayableSdkUrl(platform);
+  const bootstrapHtml = replaceGenericChannelBridge(html, config);
+  const sdkUrl = getByteDancePlayableSdkUrl(config.platform);
   const source = [
     `<script ${BYTEDANCE_PLAYABLE_BRIDGE_MARKER}="capture">\n${createCaptureSource()}\n</script>`,
     `<script ${BYTEDANCE_PLAYABLE_SDK_MARKER} src="${sdkUrl}"></script>`,
-    `<script ${BYTEDANCE_PLAYABLE_BRIDGE_MARKER}="delegate">\n${createDelegateSource(platform)}\n</script>`,
+    `<script ${BYTEDANCE_PLAYABLE_BRIDGE_MARKER}="delegate">\n${createDelegateSource(config.platform)}\n</script>`,
   ].join("\n");
 
-  return injectBeforeHeadClose(html, source);
+  return injectBeforeHeadClose(bootstrapHtml, source);
 }
