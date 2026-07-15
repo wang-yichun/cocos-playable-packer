@@ -5,6 +5,13 @@ import path from "node:path";
 import { Script } from "node:vm";
 
 import {
+  BYTEDANCE_PLAYABLE_BRIDGE_MARKER,
+  BYTEDANCE_PLAYABLE_SDK_MARKER,
+  PANGLE_PLAYABLE_SDK_URL,
+  TIKTOK_PLAYABLE_SDK_URL,
+  type ByteDanceChannelPlatform,
+} from "./bytedance-channel.js";
+import {
   CHANNEL_DOWNLOAD_BRIDGE_MARKER,
   CHANNEL_RUNTIME_GATE_MARKER,
 } from "./channel-download-bridge.js";
@@ -138,6 +145,18 @@ const singleHtmlCases = [
     marker: /api\.onCTAClick\s*\(\s*\)/,
     runtimeGate: false,
   },
+  {
+    platform: "Pangle" as const,
+    fileName: "pangle-playable.html",
+    marker: new RegExp(PANGLE_PLAYABLE_SDK_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    runtimeGate: false,
+  },
+  {
+    platform: "TikTok" as const,
+    fileName: "tiktok-playable.html",
+    marker: new RegExp(TIKTOK_PLAYABLE_SDK_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    runtimeGate: false,
+  },
 ];
 
 for (const testCase of singleHtmlCases) {
@@ -198,5 +217,77 @@ new Script(molocoBridgeSource).runInNewContext({
 const molocoBridge = molocoWindow.xsd_playable as { download?: () => void };
 molocoBridge.download?.();
 assert.equal(molocoCtaCalls, 1);
+
+function extractByteDanceBridge(
+  html: string,
+  stage: "capture" | "delegate",
+): string {
+  const pattern = new RegExp(
+    `<script ${BYTEDANCE_PLAYABLE_BRIDGE_MARKER}="${stage}">\\n([\\s\\S]*?)\\n<\\/script>`,
+  );
+  const match = pattern.exec(html);
+  assert.notEqual(match, null, `${stage} 桥脚本缺失。`);
+  return match?.[1] ?? "";
+}
+
+for (const platform of ["Pangle", "TikTok"] as const satisfies readonly ByteDanceChannelPlatform[]) {
+  const html = createChannelDownloadArtifact(sourceHtml, config(platform)).body.toString("utf8");
+  assert.match(html, new RegExp(BYTEDANCE_PLAYABLE_SDK_MARKER));
+  const captureSource = extractByteDanceBridge(html, "capture");
+  const delegateSource = extractByteDanceBridge(html, "delegate");
+  new Script(captureSource);
+  new Script(delegateSource);
+
+  let fallbackCalls = 0;
+  let sdkCalls = 0;
+  let warningCalls = 0;
+  const fallback = () => {
+    fallbackCalls += 1;
+  };
+  const runtimeWindow: Record<string, unknown> = {
+    xsd_playable: {
+      download: fallback,
+      install: fallback,
+    },
+  };
+  const context = {
+    window: runtimeWindow,
+    console: {
+      warn() {
+        warningCalls += 1;
+      },
+    },
+  };
+
+  new Script(captureSource).runInNewContext(context);
+  (runtimeWindow.xsd_playable as { download: () => void }).download = () => {
+    sdkCalls += 1;
+  };
+  new Script(delegateSource).runInNewContext(context);
+  (runtimeWindow.xsd_playable as { download?: () => void }).download?.();
+  assert.equal(sdkCalls, 1, `${platform} 应调用 SDK 替换后的 download。`);
+  assert.equal(fallbackCalls, 0, `${platform} 不应调用通用浏览器跳转回退。`);
+  assert.equal(warningCalls, 0);
+
+  const missingSdkWindow: Record<string, unknown> = {
+    xsd_playable: {
+      download: fallback,
+      install: fallback,
+    },
+  };
+  const missingSdkContext = {
+    window: missingSdkWindow,
+    console: {
+      warn() {
+        warningCalls += 1;
+      },
+    },
+  };
+  new Script(captureSource).runInNewContext(missingSdkContext);
+  new Script(delegateSource).runInNewContext(missingSdkContext);
+  (missingSdkWindow.xsd_playable as { download?: () => void }).download?.();
+  assert.equal(fallbackCalls, 0, `${platform} SDK 缺失时也不应调用通用跳转回退。`);
+  assert.equal(warningCalls, 1, `${platform} SDK 缺失时应输出一次警告。`);
+}
 
 console.log("Remaining channel delivery self-test passed.");
