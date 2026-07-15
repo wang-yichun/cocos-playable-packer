@@ -230,26 +230,24 @@ function extractByteDanceBridge(
   return match?.[1] ?? "";
 }
 
-for (const platform of ["Pangle", "TikTok"] as const satisfies readonly ByteDanceChannelPlatform[]) {
+const byteDancePlatforms: readonly ByteDanceChannelPlatform[] = ["Pangle", "TikTok"];
+for (const platform of byteDancePlatforms) {
   const html = createChannelDownloadArtifact(sourceHtml, config(platform)).body.toString("utf8");
   assert.match(html, new RegExp(BYTEDANCE_PLAYABLE_SDK_MARKER));
+  assert.doesNotMatch(html, /openStoreFallback|selectStoreUrl/);
+  assert.doesNotMatch(html, /var mraidListeners/);
+  assert.doesNotMatch(
+    html,
+    /\bwindow\.open\s*\(|\bwindow\.location\.href\s*=|\blocation\.(?:assign|replace)\s*\(/,
+  );
   const captureSource = extractByteDanceBridge(html, "capture");
   const delegateSource = extractByteDanceBridge(html, "delegate");
   new Script(captureSource);
   new Script(delegateSource);
 
-  let fallbackCalls = 0;
   let sdkCalls = 0;
   let warningCalls = 0;
-  const fallback = () => {
-    fallbackCalls += 1;
-  };
-  const runtimeWindow: Record<string, unknown> = {
-    xsd_playable: {
-      download: fallback,
-      install: fallback,
-    },
-  };
+  const runtimeWindow: Record<string, unknown> = {};
   const context = {
     window: runtimeWindow,
     console: {
@@ -260,21 +258,17 @@ for (const platform of ["Pangle", "TikTok"] as const satisfies readonly ByteDanc
   };
 
   new Script(captureSource).runInNewContext(context);
-  (runtimeWindow.xsd_playable as { download: () => void }).download = () => {
-    sdkCalls += 1;
+  runtimeWindow.xsd_playable = {
+    download() {
+      sdkCalls += 1;
+    },
   };
   new Script(delegateSource).runInNewContext(context);
   (runtimeWindow.xsd_playable as { download?: () => void }).download?.();
-  assert.equal(sdkCalls, 1, `${platform} 应调用 SDK 替换后的 download。`);
-  assert.equal(fallbackCalls, 0, `${platform} 不应调用通用浏览器跳转回退。`);
+  assert.equal(sdkCalls, 1, `${platform} 应调用 SDK 创建的 download。`);
   assert.equal(warningCalls, 0);
 
-  const missingSdkWindow: Record<string, unknown> = {
-    xsd_playable: {
-      download: fallback,
-      install: fallback,
-    },
-  };
+  const missingSdkWindow: Record<string, unknown> = {};
   const missingSdkContext = {
     window: missingSdkWindow,
     console: {
@@ -286,7 +280,6 @@ for (const platform of ["Pangle", "TikTok"] as const satisfies readonly ByteDanc
   new Script(captureSource).runInNewContext(missingSdkContext);
   new Script(delegateSource).runInNewContext(missingSdkContext);
   (missingSdkWindow.xsd_playable as { download?: () => void }).download?.();
-  assert.equal(fallbackCalls, 0, `${platform} SDK 缺失时也不应调用通用跳转回退。`);
   assert.equal(warningCalls, 1, `${platform} SDK 缺失时应输出一次警告。`);
 }
 
