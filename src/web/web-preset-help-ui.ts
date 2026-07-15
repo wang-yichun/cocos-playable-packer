@@ -1,4 +1,4 @@
-import { createGroupedChannelWebMvpIndexHtml } from "./web-config-grouped-channel-ui.js";
+import { createPlayableSdkDownloadWebMvpIndexHtml } from "./playable-sdk-download-ui.js";
 import type { WebVersionInfo } from "./web-version-info.js";
 
 function replaceOnce(source: string, search: string, replacement: string): string {
@@ -10,7 +10,7 @@ function replaceOnce(source: string, search: string, replacement: string): strin
 }
 
 export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): string {
-  let html = createGroupedChannelWebMvpIndexHtml(versionInfo);
+  let html = createPlayableSdkDownloadWebMvpIndexHtml(versionInfo);
 
   html = replaceOnce(
     html,
