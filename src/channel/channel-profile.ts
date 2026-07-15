@@ -139,7 +139,8 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     requiresExternalApi: true,
     warnings: [
       MRAID_LIFECYCLE_WARNING,
-      "当前实现会生成 ZIP，ZIP 根目录内仅包含 index.html；正式投放前仍需通过 Liftoff Validator。",
+      "当前实现采用 Liftoff Interactive Ad Integration 的 MRAID 路线，并生成根目录仅含 index.html 的 ZIP。",
+      "当前 CTA 调用为 mraid.open(storeUrl)，而官方示例使用无参数 mraid.open()；正式投放前需在目标预览环境确认。",
     ],
   },
   IronSource: {
@@ -183,7 +184,8 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      "当前实现按历史成品兼容基线使用 FbPlayableAd.onCTAClick，并生成单 HTML；正式投放前仍需通过 Moloco 最新渠道验证。",
+      "Moloco 2026-06-11 官方规范已确认：产物应为小于 5 MB 的单 HTML，CTA 使用无参数 FbPlayableAd.onCTAClick()。",
+      "正式产物不得包含 XMLHttpRequest、外部网络资源、mraid.js 或 JavaScript redirects；仍需通过 Moloco Ads Manager Preview。",
       "历史成品中的第三方 beacon 不会作为默认实现复制。",
     ],
   },
