@@ -23,6 +23,7 @@
     "encoding:base91": "tsx src/encoding/reencode-brotli-html.ts",
     "encoding:html7": "tsx src/encoding/reencode-brotli-html7.ts",
     "typecheck": "tsc --noEmit",
+    "test:playable-sdk": "tsx src/sdk/playable-sdk-self-test.ts",
     "test:build-config": "tsx src/config/unified-build-config-self-test.ts",
     "test:build-service": "tsx src/service/build-playable-service-self-test.ts",
     "test:loading-screen": "tsx src/web/loading-screen-self-test.ts",
