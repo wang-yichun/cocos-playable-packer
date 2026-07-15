@@ -71,7 +71,48 @@ ${catchHandler}
   return html.replace(pattern, replacement);
 }
 
+function createMolocoDownloadBridgeSource(config: ChannelBuildConfig): string {
+  const serializedConfig = safeJson(config);
+
+  return `(() => {
+  const config = ${serializedConfig};
+  window.__PLATFORM = config.platform;
+  window.__PLAYABLE_CHANNEL_CONFIG__ = config;
+
+  const bridge = window.xsd_playable && typeof window.xsd_playable === "object"
+    ? window.xsd_playable
+    : {};
+
+  bridge.download = function download() {
+    const api = window.FbPlayableAd;
+    if (api && typeof api.onCTAClick === "function") {
+      api.onCTAClick();
+      return;
+    }
+    console.warn("[Playable Channel] Moloco 宿主未提供 FbPlayableAd.onCTAClick()。");
+  };
+
+  bridge.install = bridge.download;
+  bridge.mraidOpen = bridge.download;
+  bridge.adapter = typeof bridge.adapter === "function" ? bridge.adapter : function adapter() {};
+  bridge.gameReady = typeof bridge.gameReady === "function" ? bridge.gameReady : function gameReady() {};
+  bridge.gameEnd = typeof bridge.gameEnd === "function" ? bridge.gameEnd : function gameEnd() {};
+  bridge.onInteracted = typeof bridge.onInteracted === "function"
+    ? bridge.onInteracted
+    : function onInteracted() {};
+  bridge.playableSDKsendEvent = typeof bridge.playableSDKsendEvent === "function"
+    ? bridge.playableSDKsendEvent
+    : function playableSDKsendEvent() {};
+
+  window.xsd_playable = bridge;
+})();`;
+}
+
 export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): string {
+  if (config.platform === "Moloco") {
+    return createMolocoDownloadBridgeSource(config);
+  }
+
   const serializedConfig = safeJson(config);
   const mraidPlatform = usesMraid(config.platform);
 
@@ -394,7 +435,7 @@ export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): s
       return;
     }
 
-    if ((platform === "Facebook" || platform === "Moloco")
+    if (platform === "Facebook"
       && window.FbPlayableAd
       && typeof window.FbPlayableAd.onCTAClick === "function") {
       window.FbPlayableAd.onCTAClick();
