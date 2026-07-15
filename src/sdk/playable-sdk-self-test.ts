@@ -1,19 +1,23 @@
 import assert from "node:assert/strict";
 
-import { PlayableSDK } from "./playable-sdk.js";
+import {
+  PlayablePlatform,
+  PlayableSDK,
+} from "./playable-sdk.js";
 import type { PlayableRuntimeHost } from "./playable-sdk-types.js";
 
 const host = globalThis as unknown as PlayableRuntimeHost;
 const calls: Array<{ name: string; value?: unknown }> = [];
 
 host.__PLATFORM = "FallbackPlatform";
-assert.equal(PlayableSDK.platform, "FallbackPlatform");
+assert.equal(PlayableSDK.platformName, "FallbackPlatform");
+assert.equal(PlayableSDK.platform, PlayablePlatform.Unknown);
 assert.equal(PlayableSDK.getConfig("missing", "fallback"), "fallback");
 PlayableSDK.ready();
 PlayableSDK.openStore();
 
 host.__COCOS_PLAYABLE__ = {
-  platform: "TestChannel",
+  platform: PlayablePlatform.Google,
   ready: () => calls.push({ name: "ready" }),
   setLoadingProgress: (value) => calls.push({ name: "progress", value }),
   openStore: () => calls.push({ name: "openStore" }),
@@ -28,7 +32,8 @@ host.__COCOS_PLAYABLE__ = {
   },
 };
 
-assert.equal(PlayableSDK.platform, "TestChannel");
+assert.equal(PlayableSDK.platformName, "Google");
+assert.equal(PlayableSDK.platform, PlayablePlatform.Google);
 PlayableSDK.ready();
 PlayableSDK.setLoadingProgress(-1);
 PlayableSDK.setLoadingProgress(0.5);
@@ -53,5 +58,8 @@ assert.deepEqual(calls, [
 
 delete host.__COCOS_PLAYABLE__;
 delete host.__PLATFORM;
+
+assert.equal(PlayableSDK.platformName, PlayablePlatform.Preview);
+assert.equal(PlayableSDK.platform, PlayablePlatform.Preview);
 
 console.log("Playable SDK facade self-test passed.");
