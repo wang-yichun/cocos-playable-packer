@@ -119,6 +119,20 @@ const passiveXhrMoloco = validateChannelArtifact({
 assert.equal(passiveXhrMoloco.valid, true);
 assert.ok(issueCodes(passiveXhrMoloco).includes("XMLHTTPREQUEST_REFERENCE_PRESENT"));
 
+const invalidPangle = validateChannelArtifact({
+  platform: "Pangle",
+  deliveryFormat: "single-html",
+  artifactBytes: 1_000,
+  entries: ["pangle-playable.html"],
+  textFiles: {
+    "pangle-playable.html": "<!doctype html><title>missing SDK</title>",
+  },
+});
+assert.equal(invalidPangle.valid, false);
+assert.ok(issueCodes(invalidPangle).includes("PANGLE_PLAYABLE_SDK_SCRIPT_MISSING"));
+assert.ok(issueCodes(invalidPangle).includes("PANGLE_CTA_DELEGATE_MISSING"));
+assert.ok(issueCodes(invalidPangle).includes("OFFICIAL_SPEC_UNVERIFIED"));
+
 const googleWithoutMeta = validateChannelArtifact({
   platform: "Google",
   deliveryFormat: "zip-html-res-js",
@@ -175,6 +189,14 @@ try {
       platform: "Unity" as const,
       expectedIssue: "UNITY_DEVICE_TEST_REQUIRED",
     },
+    {
+      platform: "Pangle" as const,
+      expectedIssue: "PANGLE_BACKEND_PREVIEW_REQUIRED",
+    },
+    {
+      platform: "TikTok" as const,
+      expectedIssue: "TIKTOK_BACKEND_PREVIEW_REQUIRED",
+    },
   ];
 
   for (const testCase of cases) {
@@ -199,6 +221,9 @@ try {
       result.report.issues.some((issue) => issue.code === testCase.expectedIssue),
       `${testCase.platform} 应保留待人工验证警告 ${testCase.expectedIssue}。`,
     );
+    if (testCase.platform === "Pangle" || testCase.platform === "TikTok") {
+      assert.ok(issueCodes(result.report).includes("OFFICIAL_SPEC_UNVERIFIED"));
+    }
   }
 
   const molocoArtifact = createChannelDownloadArtifact(
