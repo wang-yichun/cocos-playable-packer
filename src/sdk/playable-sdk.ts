@@ -1,4 +1,5 @@
 import {
+  PLAYABLE_SDK_VERSION,
   PlayablePlatform,
   normalizePlayablePlatform,
 } from "./playable-sdk-types.js";
@@ -9,7 +10,10 @@ import type {
   PlayableRuntimeHost,
 } from "./playable-sdk-types.js";
 
-export { PlayablePlatform } from "./playable-sdk-types.js";
+export {
+  PLAYABLE_SDK_VERSION,
+  PlayablePlatform,
+} from "./playable-sdk-types.js";
 export type {
   PlayableEndPayload,
   PlayableEventParams,
@@ -50,6 +54,11 @@ function callRuntime(method: string, callback: (runtime: PlayableRuntime) => voi
  * 缺少运行时注入时，所有写操作都会安全降级为 no-op，便于直接在
  * Cocos Creator、本地浏览器和普通 Web Mobile 构建中运行。
  *
+ * @example 查看 SDK 版本
+ * ```ts
+ * console.log("Playable SDK:", PlayableSDK.version);
+ * ```
+ *
  * @example 基础生命周期与 CTA
  * ```ts
  * import PlayableSDK from "./PlayableSDK";
@@ -76,6 +85,9 @@ function callRuntime(method: string, callback: (runtime: PlayableRuntime) => voi
  * ```
  */
 export class PlayableSDK {
+  /** 当前门面 SDK 版本。 */
+  static readonly version = PLAYABLE_SDK_VERSION;
+
   /**
    * 原始渠道名称。用于日志、诊断或兼容尚未加入枚举的新渠道。
    *
