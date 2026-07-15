@@ -26,6 +26,38 @@ const sourceHtml = `<!doctype html><html><head><meta charset="utf-8"></head><bod
 <script>
 window.__PACK_ARCHIVE__={"v":1,"c":"br","e":"html7","n":8,"b":""};
 (function () {
+    if (!window.mraid) {
+        var mraidListeners =
+            Object.create(null);
+
+        window.mraid = {
+            getVersion:
+                function () {
+                    return 'preview';
+                },
+
+            addEventListener:
+                function (name, callback) {
+                    mraidListeners[name] = callback;
+                },
+
+            open:
+                function (url) {
+                    window.open(
+                        url,
+                        '_blank'
+                    );
+                },
+        };
+    }
+
+    if (!window.xsd_playable) {
+        window.xsd_playable = {
+            download: function () {},
+            mraidOpen: function () {},
+        };
+    }
+
     async function boot() {
         window.__remainingChannelTest = true;
     }
@@ -131,9 +163,13 @@ for (const testCase of singleHtmlCases) {
 const unityHtml = createChannelDownloadArtifact(sourceHtml, config("Unity")).body.toString("utf8");
 assert.doesNotMatch(unityHtml, /<script[^>]+src=["']mraid\.js["']/i);
 assert.match(unityHtml, /isMraidPlatform = true/);
+assert.match(unityHtml, /var mraidListeners/);
+assert.match(unityHtml, /\bwindow\.open\s*\(/);
 
 const molocoHtml = createChannelDownloadArtifact(sourceHtml, config("Moloco")).body.toString("utf8");
 assert.doesNotMatch(molocoHtml, /openStoreFallback|selectStoreUrl/);
+assert.doesNotMatch(molocoHtml, /var mraidListeners/);
+assert.match(molocoHtml, /if \(!window\.xsd_playable\)/);
 assert.doesNotMatch(
   molocoHtml,
   /\bwindow\.open\s*\(|\bwindow\.location\.href\s*=|\blocation\.(?:assign|replace)\s*\(/,
