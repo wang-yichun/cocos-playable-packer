@@ -46,6 +46,17 @@ Moloco
 - 存在确定性错误：退出码 `1`；报告仍会正常写入。
 - 参数、文件或 ZIP 无效：退出码 `1`。
 
+## 静态扫描边界
+
+静态校验只能确认产物文本和包结构，不能证明某段兼容代码是否会在运行时执行。
+
+Cocos Creator 和第三方运行库可能保留 `XMLHttpRequest` 兼容分支，即使最终单文件 Playable 的资源全部来自内嵌 Payload。因此：
+
+- 出现 `XMLHttpRequest` 字样时输出 `XMLHTTPREQUEST_REFERENCE_PRESENT` 警告；
+- 该警告不会单独导致 `valid: false`；
+- 真正的违规应由渠道预览、浏览器网络面板或后续运行时网络拦截测试确认；
+- 外部 URL、外部脚本和远程资源引用仍属于高置信度静态问题，可继续判为错误。
+
 ## 当前规则
 
 ### AppLovin
@@ -54,7 +65,8 @@ Moloco
 - 最大 5,000,000 B；
 - 要求 `mraid.open()`；
 - 要求 MRAID `viewableChange` 启动门控；
-- 禁止外部资源、`XMLHttpRequest` 和自行打包 `mraid.js`；
+- 禁止外部资源和自行打包 `mraid.js`；
+- `XMLHttpRequest` 文本引用先记为静态警告；
 - 首次交互前静音仍需实机确认。
 
 ### Google App Campaign
@@ -79,7 +91,8 @@ Moloco
 - 单 HTML；
 - 最大 5,000,000 B；
 - 要求 MRAID CTA 和 `viewableChange` 启动门控；
-- 禁止外部资源、`XMLHttpRequest` 和自行打包 `mraid.js`；
+- 禁止外部资源和自行打包 `mraid.js`；
+- `XMLHttpRequest` 文本引用先记为静态警告；
 - 仍需 Unity Ads Ad Testing App 真机验证。
 
 ### Moloco
@@ -87,7 +100,8 @@ Moloco
 - 单 HTML；
 - 最大 5,000,000 B；
 - 要求无参数 `FbPlayableAd.onCTAClick()`；
-- 禁止外部资源、`XMLHttpRequest` 和自行打包 `mraid.js`；
+- 禁止外部资源和自行打包 `mraid.js`；
+- `XMLHttpRequest` 文本引用先记为静态警告；
 - JavaScript 跳转回退当前先记为警告，后续应从 Moloco 专用产物中移除；
 - 仍需 Moloco Ads Manager Preview 验证。
 
