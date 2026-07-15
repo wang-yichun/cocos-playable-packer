@@ -143,10 +143,6 @@ try {
       platform: "Unity" as const,
       expectedIssue: "UNITY_DEVICE_TEST_REQUIRED",
     },
-    {
-      platform: "Moloco" as const,
-      expectedIssue: "MOLOCO_JAVASCRIPT_REDIRECT_PRESENT",
-    },
   ];
 
   for (const testCase of cases) {
@@ -172,6 +168,17 @@ try {
       `${testCase.platform} 应保留待人工验证警告 ${testCase.expectedIssue}。`,
     );
   }
+
+  const molocoArtifact = createChannelDownloadArtifact(
+    sourceHtml,
+    config("Moloco"),
+  );
+  const molocoFile = path.join(temporaryRoot, molocoArtifact.fileName);
+  await writeFile(molocoFile, molocoArtifact.body);
+  const moloco = await validateChannelArtifactFile(molocoFile, "Moloco");
+  assert.equal(moloco.report.valid, true);
+  assert.equal(moloco.report.actualFormat, "single-html");
+  assert.ok(!issueCodes(moloco.report).includes("MOLOCO_JAVASCRIPT_REDIRECT_PRESENT"));
 
   const facebookArtifact = createChannelDownloadArtifact(
     sourceHtml,
