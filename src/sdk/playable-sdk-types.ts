@@ -1,3 +1,11 @@
+/**
+ * Cocos Playable SDK 版本。
+ *
+ * 必须与 cocos-playable-packer 的 package.json version 保持一致；
+ * 自测会阻止两者不一致的提交。
+ */
+export const PLAYABLE_SDK_VERSION = "0.2.0";
+
 export enum PlayablePlatform {
   Unknown = "Unknown",
   Preview = "Preview",
