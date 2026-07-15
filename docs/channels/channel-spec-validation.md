@@ -100,9 +100,11 @@ Cocos Creator 和第三方运行库可能保留 `XMLHttpRequest` 兼容分支，
 - 单 HTML；
 - 最大 5,000,000 B；
 - 要求无参数 `FbPlayableAd.onCTAClick()`；
+- 使用构建期专用 CTA 桥，不复用通用商店地址回退逻辑；
+- 正式 Moloco 产物不得包含 `window.open()`、`location.href`、`location.assign()`、`location.replace()` 或 `mraid.open()`；
+- 宿主未提供 `FbPlayableAd.onCTAClick()` 时只输出控制台警告，不自行跳转；
 - 禁止外部资源和自行打包 `mraid.js`；
 - `XMLHttpRequest` 文本引用先记为静态警告；
-- JavaScript 跳转回退当前先记为警告，后续应从 Moloco 专用产物中移除；
 - 仍需 Moloco Ads Manager Preview 验证。
 
 ### Facebook 与 IronSource
