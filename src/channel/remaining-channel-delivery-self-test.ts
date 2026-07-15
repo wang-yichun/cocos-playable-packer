@@ -103,7 +103,7 @@ const singleHtmlCases = [
   {
     platform: "Moloco" as const,
     fileName: "moloco-playable.html",
-    marker: /window\.FbPlayableAd\.onCTAClick/,
+    marker: /api\.onCTAClick\s*\(\s*\)/,
     runtimeGate: false,
   },
 ];
