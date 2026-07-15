@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-07-15",
+  "repository": "wang-yichun/cocos-playable-packer",
+  "channels": {
+    "Preview": {
+      "status": "not-a-delivery-channel",
+      "confidence": "not-applicable",
+      "sources": []
+    },
+    "AppLovin": {
+      "status": "official-public",
+      "confidence": "confirmed",
+      "sources": [
+        {
+          "title": "Creative specs & guidelines",
+          "url": "https://support.applovin.com/en/growth/promoting-your-apps/welcome-to-applovin/creative-specs-and-guidelines",
+          "authority": "AppLovin",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "AppLovin Playable Preview",
+          "url": "https://p.applov.in/",
+          "authority": "AppLovin",
+          "checkedAt": "2026-07-15"
+        }
+      ],
+      "openQuestions": [
+        "Confirm whether waiting for viewableChange is required or merely tolerated by the current AppLovin preview environment.",
+        "Confirm whether Base122 has any channel-specific benefit over other fully inlined encodings."
+      ]
+    },
+    "Google": {
+      "status": "official-public",
+      "confidence": "confirmed-for-app-campaigns",
+      "sources": [
+        {
+          "title": "About HTML5/Playable ads for App campaigns",
+          "url": "https://support.google.com/google-ads/answer/9981650",
+          "authority": "Google Ads",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "Fix issues with HTML5 assets for App campaigns",
+          "url": "https://support.google.com/google-ads/answer/12771973",
+          "authority": "Google Ads",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "Google Ads HTML5 Validator",
+          "url": "https://h5validator.appspot.com/",
+          "authority": "Google Ads",
+          "checkedAt": "2026-07-15"
+        }
+      ],
+      "openQuestions": [
+        "Confirm generated ZIP metadata and click behavior with a real App Campaign upload.",
+        "Confirm the production package remains below the practical safe limit rather than relying on the approximate 5.2 MB rejection boundary."
+      ]
+    },
+    "Facebook": {
+      "status": "official-account-required",
+      "confidence": "unverified",
+      "sources": [
+        {
+          "title": "Audience Network Playable Ads guide",
+          "url": "https://developers.facebook.com/docs/audience-network/guides/playable-ads/",
+          "authority": "Meta",
+          "checkedAt": "2026-07-15",
+          "access": "login-or-fetch-blocked"
+        }
+      ],
+      "openQuestions": [
+        "Obtain the current Meta Playable package and CTA specification from an authenticated account or account representative.",
+        "Confirm whether FbPlayableAd.onCTAClick remains the current required CTA API.",
+        "Confirm whether ZIP with index.html and res.js is accepted by the current upload flow."
+      ]
+    },
+    "Liftoff": {
+      "status": "official-public-with-product-line-ambiguity",
+      "confidence": "confirmed-for-current-interactive-integration",
+      "sources": [
+        {
+          "title": "Interactive Ad Integration",
+          "url": "https://docs.liftoff.io/liftoff_creatives/liftoff_creatives/interactive_api_integration",
+          "authority": "Liftoff",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "Test Your Playable Asset With Our Creative Verifier",
+          "url": "https://support.vungle.com/hc/en-us/articles/4908908675355-Test-Your-Playable-Asset-With-Our-Creative-Verifier",
+          "authority": "Liftoff Direct / Vungle",
+          "checkedAt": "2026-07-15",
+          "role": "legacy-or-separate-adaptive-creative-product"
+        }
+      ],
+      "openQuestions": [
+        "Confirm whether the target delivery product is current Interactive Ad Integration or legacy Direct Adaptive Creative.",
+        "Validate mraid.open() without a URL versus mraid.open(storeUrl) in the actual Liftoff preview environment.",
+        "Create a separate profile if parent.postMessage download and complete events are still required for a supported product line."
+      ]
+    },
+    "IronSource": {
+      "status": "official-account-required",
+      "confidence": "unverified",
+      "sources": [
+        {
+          "title": "Unity Grow documentation redirect",
+          "url": "https://developers.is.com/",
+          "authority": "Unity / ironSource",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "ironSource Ads",
+          "url": "https://docs.unity.com/en-us/grow/is-ads",
+          "authority": "Unity",
+          "checkedAt": "2026-07-15",
+          "scope": "primarily-monetization-sdk"
+        }
+      ],
+      "openQuestions": [
+        "Obtain the current ironSource user-acquisition playable creative specification.",
+        "Confirm delivery format, maximum size, MRAID version, startup lifecycle and CTA arguments.",
+        "Do not assume Unity Ads User Acquisition rules automatically apply to ironSource Ads."
+      ]
+    },
+    "Unity": {
+      "status": "official-public",
+      "confidence": "confirmed",
+      "sources": [
+        {
+          "title": "Playable asset specifications",
+          "url": "https://docs.unity.com/en-us/grow/acquire/creatives/playable/specifications",
+          "authority": "Unity",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "Playable ad best practices",
+          "url": "https://docs.unity.com/en-us/grow/acquire/creatives/playable/best-practices",
+          "authority": "Unity",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "Preview creative packs with the Ad Testing app",
+          "url": "https://docs.unity.com/en-us/grow/acquire/creatives/creative-packs/test",
+          "authority": "Unity",
+          "checkedAt": "2026-07-15"
+        },
+        {
+          "title": "Mobile Rich Media Ad Interface Definitions",
+          "url": "https://www.iab.com/guidelines/mraid/",
+          "authority": "IAB",
+          "checkedAt": "2026-07-15"
+        }
+      ],
+      "openQuestions": [
+        "Run the generated single HTML through the Unity Ads Ad Testing app on Android and iOS.",
+        "Confirm no automatic CTA path remains in game-specific integration code."
+      ]
+    },
+    "Moloco": {
+      "status": "official-public",
+      "confidence": "confirmed",
+      "sources": [
+        {
+          "title": "Playable and Interactive End Card creative guide",
+          "url": "https://help.moloco.com/hc/en-us/articles/24124525963799-Playable-and-Interactive-End-Card-IEC-creative-guide",
+          "authority": "Moloco",
+          "updatedAt": "2026-06-11",
+          "checkedAt": "2026-07-15"
+        }
+      ],
+      "openQuestions": [
+        "Run the generated single HTML through Moloco Ads Manager Preview and confirm the CTA success message.",
+        "Add static checks for XMLHttpRequest, external references, mraid.js, JavaScript redirects and the 5 MB limit."
+      ]
+    }
+  }
+}
