@@ -1,10 +1,22 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import {
+  PLAYABLE_SDK_VERSION,
   PlayablePlatform,
   PlayableSDK,
 } from "./playable-sdk.js";
 import type { PlayableRuntimeHost } from "./playable-sdk-types.js";
+
+const packageManifest = JSON.parse(await readFile("package.json", "utf8")) as {
+  version?: unknown;
+};
+assert.equal(
+  PLAYABLE_SDK_VERSION,
+  packageManifest.version,
+  "Playable SDK 版本必须与 package.json version 一致。",
+);
+assert.equal(PlayableSDK.version, PLAYABLE_SDK_VERSION);
 
 const host = globalThis as unknown as PlayableRuntimeHost;
 const calls: Array<{ name: string; value?: unknown }> = [];
@@ -62,4 +74,4 @@ delete host.__PLATFORM;
 assert.equal(PlayableSDK.platformName, PlayablePlatform.Preview);
 assert.equal(PlayableSDK.platform, PlayablePlatform.Preview);
 
-console.log("Playable SDK facade self-test passed.");
+console.log(`Playable SDK v${PLAYABLE_SDK_VERSION} facade self-test passed.`);
