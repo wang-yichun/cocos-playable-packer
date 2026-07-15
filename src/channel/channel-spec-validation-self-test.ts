@@ -16,6 +16,38 @@ const sourceHtml = `<!doctype html><html><head><meta charset="utf-8"></head><bod
 <script>
 window.__PACK_ARCHIVE__={"v":1,"c":"br","e":"base64","n":0,"b":""};
 (function () {
+    if (!window.mraid) {
+        var mraidListeners =
+            Object.create(null);
+
+        window.mraid = {
+            getVersion:
+                function () {
+                    return 'preview';
+                },
+
+            addEventListener:
+                function (name, callback) {
+                    mraidListeners[name] = callback;
+                },
+
+            open:
+                function (url) {
+                    window.open(
+                        url,
+                        '_blank'
+                    );
+                },
+        };
+    }
+
+    if (!window.xsd_playable) {
+        window.xsd_playable = {
+            download: function () {},
+            mraidOpen: function () {},
+        };
+    }
+
     async function boot() {
         window.__channelValidationTest = true;
     }
