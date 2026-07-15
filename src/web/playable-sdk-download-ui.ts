@@ -5,6 +5,10 @@ import { fileURLToPath } from "node:url";
 import { createGroupedChannelWebMvpIndexHtml } from "./web-config-grouped-channel-ui.js";
 import type { WebVersionInfo } from "./web-version-info.js";
 
+const SDK_ZIP_DIRECTORY = "CocosPlayableSDK";
+const SDK_ZIP_FILE_NAME = "CocosPlayableSDK.zip";
+const ZIP_UTF8_FLAG = 0x0800;
+
 function replaceOnce(source: string, search: string, replacement: string): string {
   const index = source.indexOf(search);
   if (index < 0) {
@@ -42,6 +46,85 @@ function createDownloadSources(): Record<string, string> {
   };
 }
 
+function calculateCrc32(bytes: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function createStoredZip(entries: Record<string, string>): Buffer {
+  const localParts: Buffer[] = [];
+  const centralParts: Buffer[] = [];
+  let localOffset = 0;
+
+  for (const [fileName, source] of Object.entries(entries)) {
+    const archivePath = `${SDK_ZIP_DIRECTORY}/${fileName}`;
+    const nameBytes = Buffer.from(archivePath, "utf8");
+    const contentBytes = Buffer.from(source, "utf8");
+    const crc32 = calculateCrc32(contentBytes);
+
+    const localHeader = Buffer.alloc(30);
+    localHeader.writeUInt32LE(0x04034b50, 0);
+    localHeader.writeUInt16LE(20, 4);
+    localHeader.writeUInt16LE(ZIP_UTF8_FLAG, 6);
+    localHeader.writeUInt16LE(0, 8);
+    localHeader.writeUInt16LE(0, 10);
+    localHeader.writeUInt16LE(0, 12);
+    localHeader.writeUInt32LE(crc32, 14);
+    localHeader.writeUInt32LE(contentBytes.byteLength, 18);
+    localHeader.writeUInt32LE(contentBytes.byteLength, 22);
+    localHeader.writeUInt16LE(nameBytes.byteLength, 26);
+    localHeader.writeUInt16LE(0, 28);
+
+    const localPart = Buffer.concat([localHeader, nameBytes, contentBytes]);
+    localParts.push(localPart);
+
+    const centralHeader = Buffer.alloc(46);
+    centralHeader.writeUInt32LE(0x02014b50, 0);
+    centralHeader.writeUInt16LE(20, 4);
+    centralHeader.writeUInt16LE(20, 6);
+    centralHeader.writeUInt16LE(ZIP_UTF8_FLAG, 8);
+    centralHeader.writeUInt16LE(0, 10);
+    centralHeader.writeUInt16LE(0, 12);
+    centralHeader.writeUInt16LE(0, 14);
+    centralHeader.writeUInt32LE(crc32, 16);
+    centralHeader.writeUInt32LE(contentBytes.byteLength, 20);
+    centralHeader.writeUInt32LE(contentBytes.byteLength, 24);
+    centralHeader.writeUInt16LE(nameBytes.byteLength, 28);
+    centralHeader.writeUInt16LE(0, 30);
+    centralHeader.writeUInt16LE(0, 32);
+    centralHeader.writeUInt16LE(0, 34);
+    centralHeader.writeUInt16LE(0, 36);
+    centralHeader.writeUInt32LE(0, 38);
+    centralHeader.writeUInt32LE(localOffset, 42);
+    centralParts.push(Buffer.concat([centralHeader, nameBytes]));
+
+    localOffset += localPart.byteLength;
+  }
+
+  const centralDirectory = Buffer.concat(centralParts);
+  const endRecord = Buffer.alloc(22);
+  endRecord.writeUInt32LE(0x06054b50, 0);
+  endRecord.writeUInt16LE(0, 4);
+  endRecord.writeUInt16LE(0, 6);
+  endRecord.writeUInt16LE(centralParts.length, 8);
+  endRecord.writeUInt16LE(centralParts.length, 10);
+  endRecord.writeUInt32LE(centralDirectory.byteLength, 12);
+  endRecord.writeUInt32LE(localOffset, 16);
+  endRecord.writeUInt16LE(0, 20);
+
+  return Buffer.concat([...localParts, centralDirectory, endRecord]);
+}
+
+export function createPlayableSdkDownloadZip(): Buffer {
+  return createStoredZip(createDownloadSources());
+}
+
 function safeScriptJson(value: unknown): string {
   return JSON.stringify(value)
     .replace(/</g, "\\u003c")
@@ -53,7 +136,7 @@ export function createPlayableSdkDownloadWebMvpIndexHtml(
   versionInfo: WebVersionInfo,
 ): string {
   let html = createGroupedChannelWebMvpIndexHtml(versionInfo);
-  const sources = safeScriptJson(createDownloadSources());
+  const zipBase64 = safeScriptJson(createPlayableSdkDownloadZip().toString("base64"));
 
   html = replaceOnce(
     html,
@@ -70,11 +153,9 @@ export function createPlayableSdkDownloadWebMvpIndexHtml(
     `      <div id="playableSdkDownloadField" class="field">
         <label>游戏侧 Playable SDK</label>
         <div class="playable-sdk-download-actions">
-          <button id="downloadPlayableSdkButton" class="secondary" type="button">下载 PlayableSDK.ts</button>
-          <button id="downloadPlayableSdkTypesButton" class="secondary" type="button">下载 PlayableSDKTypes.ts</button>
-          <button id="downloadPlayableSdkGlobalButton" class="secondary" type="button">下载 PlayableSDKGlobal.d.ts</button>
+          <button id="downloadPlayableSdkZipButton" class="secondary" type="button">下载 CocosPlayableSDK.zip</button>
         </div>
-        <small class="playable-sdk-download-note">把三个文件放在 Cocos 项目的同一脚本目录。游戏逻辑通常只导入 PlayableSDK.ts；类型文件和全局声明用于提供字符串枚举、运行时契约与 Window 类型。</small>
+        <small class="playable-sdk-download-note">ZIP 内的 CocosPlayableSDK 文件夹包含 PlayableSDK.ts、PlayableSDKTypes.ts 和 PlayableSDKGlobal.d.ts。把整个文件夹复制到 Cocos 项目的脚本目录；游戏逻辑通常只导入 PlayableSDK.ts。</small>
       </div>
       <div id="channelSummary" class="summary"></div>`,
   );
@@ -82,26 +163,30 @@ export function createPlayableSdkDownloadWebMvpIndexHtml(
   html = replaceOnce(
     html,
     "    const configSummary = document.getElementById('configSummary');",
-    `    const playableSdkDownloadFiles = ${sources};
-    const downloadPlayableSdkButton = document.getElementById('downloadPlayableSdkButton');
-    const downloadPlayableSdkTypesButton = document.getElementById('downloadPlayableSdkTypesButton');
-    const downloadPlayableSdkGlobalButton = document.getElementById('downloadPlayableSdkGlobalButton');
+    `    const playableSdkZipBase64 = ${zipBase64};
+    const downloadPlayableSdkZipButton = document.getElementById('downloadPlayableSdkZipButton');
     const configSummary = document.getElementById('configSummary');`,
   );
 
   html = replaceOnce(
     html,
     "    function readConfig() {",
-    `    function downloadPlayableSdkFile(fileName) {
-      const source = playableSdkDownloadFiles[fileName];
-      if (typeof source !== 'string') {
-        throw new Error('没有找到 Playable SDK 下载内容：' + fileName);
+    `    function decodeBase64Bytes(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
       }
-      const blob = new Blob([source], { type: 'text/plain;charset=utf-8' });
+      return bytes;
+    }
+
+    function downloadPlayableSdkZip() {
+      const bytes = decodeBase64Bytes(playableSdkZipBase64);
+      const blob = new Blob([bytes], { type: 'application/zip' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = fileName;
+      anchor.download = '${SDK_ZIP_FILE_NAME}';
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -114,9 +199,7 @@ export function createPlayableSdkDownloadWebMvpIndexHtml(
   html = replaceOnce(
     html,
     "    payloadEncodingInput.addEventListener('change', refreshConfigUi);",
-    `    downloadPlayableSdkButton.addEventListener('click', () => downloadPlayableSdkFile('PlayableSDK.ts'));
-    downloadPlayableSdkTypesButton.addEventListener('click', () => downloadPlayableSdkFile('PlayableSDKTypes.ts'));
-    downloadPlayableSdkGlobalButton.addEventListener('click', () => downloadPlayableSdkFile('PlayableSDKGlobal.d.ts'));
+    `    downloadPlayableSdkZipButton.addEventListener('click', downloadPlayableSdkZip);
     payloadEncodingInput.addEventListener('change', refreshConfigUi);`,
   );
 
