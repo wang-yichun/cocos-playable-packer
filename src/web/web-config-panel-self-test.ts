@@ -142,6 +142,10 @@ for (const id of [
   "testStoreUrlsButton",
   "channelSummary",
   "channelWarning",
+  "playableSdkDownloadField",
+  "downloadPlayableSdkButton",
+  "downloadPlayableSdkTypesButton",
+  "downloadPlayableSdkGlobalButton",
   "previewChannelDialog",
   "previewChannelSelect",
   "startPreviewButton",
@@ -187,6 +191,12 @@ assert.match(html, /图片压缩/);
 assert.match(html, /音频压缩/);
 assert.match(html, /Payload 与兼容性/);
 assert.match(html, /目标渠道/);
+assert.match(html, /游戏侧 Playable SDK/);
+assert.match(html, /下载 PlayableSDK\.ts/);
+assert.match(html, /下载 PlayableSDKTypes\.ts/);
+assert.match(html, /下载 PlayableSDKGlobal\.d\.ts/);
+assert.match(html, /enum PlayablePlatform/);
+assert.match(html, /PlayablePlatform\.AppLovin/);
 assert.match(html, /跳转地址/);
 assert.match(html, /加载界面/);
 assert.match(html, /默认全选/);
@@ -210,6 +220,7 @@ assert.match(inlineScript, /details\.open = false/);
 assert.doesNotMatch(inlineScript, /details\.open = open/);
 assert.doesNotMatch(inlineScript, /queueMicrotask\(groupConfigSections\)/);
 assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image'/);
+assert.match(inlineScript, /createConfigGroup\('目标渠道', 'channel',[^\n]*playableSdkDownloadField/);
 assert.match(inlineScript, /updateConfigGroupSummaries/);
 assert.match(inlineScript, /abbreviateConfigUrl/);
 assert.match(inlineScript, /stateElement\.id = 'configGroupState-' \+ key/);
@@ -227,5 +238,11 @@ assert.match(inlineScript, /loadingScreenEnabled: loadingScreenEnabledInput\.che
 assert.match(inlineScript, /element\.hidden = true/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /config: config/);
+assert.match(inlineScript, /const playableSdkDownloadFiles =/);
+assert.match(inlineScript, /new Blob\(\[source\]/);
+assert.match(inlineScript, /anchor\.download = fileName/);
+assert.match(inlineScript, /downloadPlayableSdkFile\('PlayableSDK\.ts'\)/);
+assert.match(inlineScript, /downloadPlayableSdkFile\('PlayableSDKTypes\.ts'\)/);
+assert.match(inlineScript, /downloadPlayableSdkFile\('PlayableSDKGlobal\.d\.ts'\)/);
 
-console.log("Playable Web grouped config and TinyPNG self-test passed.");
+console.log("Playable Web grouped config, SDK download and TinyPNG self-test passed.");
