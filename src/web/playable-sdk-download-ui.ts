@@ -6,6 +6,7 @@ import { createGroupedChannelWebMvpIndexHtml } from "./web-config-grouped-channe
 import type { WebVersionInfo } from "./web-version-info.js";
 
 const ZIP_UTF8_FLAG = 0x0800;
+const ZIP_DOS_DATE_1980_01_01 = 0x0021;
 
 function replaceOnce(source: string, search: string, replacement: string): string {
   const index = source.indexOf(search);
@@ -109,7 +110,7 @@ function createStoredZip(entries: Record<string, string>, directoryName: string)
     localHeader.writeUInt16LE(ZIP_UTF8_FLAG, 6);
     localHeader.writeUInt16LE(0, 8);
     localHeader.writeUInt16LE(0, 10);
-    localHeader.writeUInt16LE(0, 12);
+    localHeader.writeUInt16LE(ZIP_DOS_DATE_1980_01_01, 12);
     localHeader.writeUInt32LE(crc32, 14);
     localHeader.writeUInt32LE(contentBytes.byteLength, 18);
     localHeader.writeUInt32LE(contentBytes.byteLength, 22);
@@ -126,7 +127,7 @@ function createStoredZip(entries: Record<string, string>, directoryName: string)
     centralHeader.writeUInt16LE(ZIP_UTF8_FLAG, 8);
     centralHeader.writeUInt16LE(0, 10);
     centralHeader.writeUInt16LE(0, 12);
-    centralHeader.writeUInt16LE(0, 14);
+    centralHeader.writeUInt16LE(ZIP_DOS_DATE_1980_01_01, 14);
     centralHeader.writeUInt32LE(crc32, 16);
     centralHeader.writeUInt32LE(contentBytes.byteLength, 20);
     centralHeader.writeUInt32LE(contentBytes.byteLength, 24);
