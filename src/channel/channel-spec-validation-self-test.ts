@@ -62,9 +62,30 @@ assert.deepEqual(
     "EXTERNAL_RESOURCE_REFERENCE",
     "MOLOCO_CTA_MISSING",
     "MRAID_SCRIPT_BUNDLED",
-    "XMLHTTPREQUEST_PRESENT",
+    "XMLHTTPREQUEST_REFERENCE_PRESENT",
   ]),
 );
+assert.equal(
+  invalidMoloco.issues.find((issue) => issue.code === "XMLHTTPREQUEST_REFERENCE_PRESENT")?.severity,
+  "warning",
+);
+
+const passiveXhrMoloco = validateChannelArtifact({
+  platform: "Moloco",
+  deliveryFormat: "single-html",
+  artifactBytes: 4_000_000,
+  entries: ["moloco-playable.html"],
+  textFiles: {
+    "moloco-playable.html": [
+      "<script>",
+      "FbPlayableAd.onCTAClick();",
+      "function unusedCompatibilityLoader() { return new XMLHttpRequest(); }",
+      "</script>",
+    ].join("\n"),
+  },
+});
+assert.equal(passiveXhrMoloco.valid, true);
+assert.ok(issueCodes(passiveXhrMoloco).includes("XMLHTTPREQUEST_REFERENCE_PRESENT"));
 
 const googleWithoutMeta = validateChannelArtifact({
   platform: "Google",
