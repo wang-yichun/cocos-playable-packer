@@ -26,6 +26,38 @@ const sourceHtml = `<!doctype html><html><head><meta charset="utf-8"></head><bod
 <script>
 window.__PACK_ARCHIVE__={"v":1,"c":"br","e":"html7","n":8,"b":""};
 (function () {
+    if (!window.mraid) {
+        var mraidListeners =
+            Object.create(null);
+
+        window.mraid = {
+            getVersion:
+                function () {
+                    return 'preview';
+                },
+
+            addEventListener:
+                function (name, callback) {
+                    mraidListeners[name] = callback;
+                },
+
+            open:
+                function (url) {
+                    window.open(
+                        url,
+                        '_blank'
+                    );
+                },
+        };
+    }
+
+    if (!window.xsd_playable) {
+        window.xsd_playable = {
+            download: function () {},
+            mraidOpen: function () {},
+        };
+    }
+
     async function boot() {
         window.__remainingChannelTest = true;
     }
@@ -103,7 +135,7 @@ const singleHtmlCases = [
   {
     platform: "Moloco" as const,
     fileName: "moloco-playable.html",
-    marker: /window\.FbPlayableAd\.onCTAClick/,
+    marker: /api\.onCTAClick\s*\(\s*\)/,
     runtimeGate: false,
   },
 ];
@@ -131,5 +163,40 @@ for (const testCase of singleHtmlCases) {
 const unityHtml = createChannelDownloadArtifact(sourceHtml, config("Unity")).body.toString("utf8");
 assert.doesNotMatch(unityHtml, /<script[^>]+src=["']mraid\.js["']/i);
 assert.match(unityHtml, /isMraidPlatform = true/);
+assert.match(unityHtml, /var mraidListeners/);
+assert.match(unityHtml, /\bwindow\.open\s*\(/);
+
+const molocoHtml = createChannelDownloadArtifact(sourceHtml, config("Moloco")).body.toString("utf8");
+assert.doesNotMatch(molocoHtml, /openStoreFallback|selectStoreUrl/);
+assert.doesNotMatch(molocoHtml, /var mraidListeners/);
+assert.match(molocoHtml, /if \(!window\.xsd_playable\)/);
+assert.doesNotMatch(
+  molocoHtml,
+  /\bwindow\.open\s*\(|\bwindow\.location\.href\s*=|\blocation\.(?:assign|replace)\s*\(/,
+);
+assert.doesNotMatch(molocoHtml, /\bmraid\.open\s*\(/);
+
+const molocoBridgePattern = new RegExp(
+  `<script ${CHANNEL_DOWNLOAD_BRIDGE_MARKER}>\\n([\\s\\S]*?)\\n<\\/script>`,
+);
+const molocoBridgeMatch = molocoBridgePattern.exec(molocoHtml);
+assert.notEqual(molocoBridgeMatch, null);
+const molocoBridgeSource = molocoBridgeMatch?.[1] ?? "";
+let molocoCtaCalls = 0;
+const molocoWindow: Record<string, unknown> = {
+  xsd_playable: {},
+  FbPlayableAd: {
+    onCTAClick() {
+      molocoCtaCalls += 1;
+    },
+  },
+};
+new Script(molocoBridgeSource).runInNewContext({
+  window: molocoWindow,
+  console: { warn() {} },
+});
+const molocoBridge = molocoWindow.xsd_playable as { download?: () => void };
+molocoBridge.download?.();
+assert.equal(molocoCtaCalls, 1);
 
 console.log("Remaining channel delivery self-test passed.");

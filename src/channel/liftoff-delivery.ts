@@ -47,6 +47,8 @@ const ZIP_DEFLATE_METHOD = 8;
 const ZIP_STORE_METHOD = 0;
 const ZIP_VERSION_NEEDED = 20;
 const ZIP_DOS_DATE_1980_01_01 = 0x0021;
+const PREVIEW_MRAID_STUB_START = "    if (!window.mraid) {";
+const PREVIEW_XSD_STUB_START = "    if (!window.xsd_playable) {";
 
 function sha256(value: Buffer | string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -190,6 +192,28 @@ export function injectGoogleExitApiScript(html: string): string {
   return injectHeadScript(html, script);
 }
 
+export function removePreviewMraidStub(sourceHtml: string): string {
+  const startIndex = sourceHtml.indexOf(PREVIEW_MRAID_STUB_START);
+  if (startIndex < 0) {
+    return sourceHtml;
+  }
+
+  const endIndex = sourceHtml.indexOf(
+    PREVIEW_XSD_STUB_START,
+    startIndex + PREVIEW_MRAID_STUB_START.length,
+  );
+  if (endIndex < 0) {
+    return sourceHtml;
+  }
+
+  const candidate = sourceHtml.slice(startIndex, endIndex);
+  if (!candidate.includes("var mraidListeners") || !candidate.includes("window.open(")) {
+    return sourceHtml;
+  }
+
+  return sourceHtml.slice(0, startIndex) + sourceHtml.slice(endIndex);
+}
+
 export function splitRuntimeHtml(
   sourceHtml: string,
   channelName: string,
@@ -298,7 +322,10 @@ export function createChannelHtml(
   sourceHtml: string,
   config: ChannelBuildConfig,
 ): string {
-  return injectChannelDownloadBridge(sourceHtml, config);
+  const channelSourceHtml = config.platform === "Moloco"
+    ? removePreviewMraidStub(sourceHtml)
+    : sourceHtml;
+  return injectChannelDownloadBridge(channelSourceHtml, config);
 }
 
 export function createChannelDownloadArtifact(
