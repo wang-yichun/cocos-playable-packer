@@ -4,6 +4,11 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import os from "node:os";
 import path from "node:path";
 
+import {
+  BYTEDANCE_PLAYABLE_SDK_MARKER,
+  PANGLE_PLAYABLE_SDK_URL,
+  TIKTOK_PLAYABLE_SDK_URL,
+} from "../channel/bytedance-channel.js";
 import { CHANNEL_DOWNLOAD_BRIDGE_MARKER } from "../channel/channel-download-bridge.js";
 import {
   createChannelDownloadArtifact,
@@ -109,6 +114,7 @@ try {
     contentType: RegExp;
     deliveryFormat: string;
     bridgeMarker: RegExp;
+    sdkUrl?: string;
   }> = [
     {
       platform: "AppLovin",
@@ -145,11 +151,25 @@ try {
       deliveryFormat: "single-html",
       bridgeMarker: /api\.onCTAClick\s*\(\s*\)/,
     },
+    {
+      platform: "Pangle",
+      fileName: "pangle-playable.html",
+      contentType: /text\/html/,
+      deliveryFormat: "single-html",
+      bridgeMarker: new RegExp(BYTEDANCE_PLAYABLE_SDK_MARKER),
+      sdkUrl: PANGLE_PLAYABLE_SDK_URL,
+    },
+    {
+      platform: "TikTok",
+      fileName: "tiktok-playable.html",
+      contentType: /text\/html/,
+      deliveryFormat: "single-html",
+      bridgeMarker: new RegExp(BYTEDANCE_PLAYABLE_SDK_MARKER),
+      sdkUrl: TIKTOK_PLAYABLE_SDK_URL,
+    },
   ];
 
   for (const testCase of cases) {
-    // WebJobManager 会在 createJob 时消费上传记录；每个渠道用独立上传，
-    // 既符合真实 API 行为，也避免测试错误复用已经消费的 uploadId。
     const caseUploadId = randomUUID();
     const caseUploadPath = server.manager.createUploadPath(caseUploadId);
     await writeFile(caseUploadPath, inputArtifact.body);
@@ -190,12 +210,20 @@ try {
       const html = downloaded.toString("utf8");
       assert.match(html, new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
       assert.match(html, testCase.bridgeMarker);
+      if (testCase.sdkUrl !== undefined) {
+        assert.ok(html.includes(testCase.sdkUrl));
+        assert.match(html, /bridge\.download\s*=\s*invokeByteDanceCta/);
+      }
     }
 
     const previewResponse = await fetch(`${server.url}${job.links?.preview}`);
     assert.equal(previewResponse.ok, true);
     assert.match(previewResponse.headers.get("content-type") ?? "", /text\/html/);
-    assert.match(await previewResponse.text(), new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
+    const previewHtml = await previewResponse.text();
+    assert.match(previewHtml, new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
+    if (testCase.sdkUrl !== undefined) {
+      assert.ok(previewHtml.includes(testCase.sdkUrl));
+    }
 
     const reportResponse = await fetch(`${server.url}${job.links?.report}`);
     assert.equal(reportResponse.ok, true);
