@@ -255,7 +255,8 @@ function checkByteDancePlayableSdk(
   if (
     !source.includes(BYTEDANCE_PLAYABLE_BRIDGE_MARKER)
     || !/invokeByteDanceCta/.test(source)
-    || !/xsd_playable\.download/.test(source)
+    || !/bridge\.download\s*=\s*invokeByteDanceCta/.test(source)
+    || !/bridge\.install\s*=\s*invokeByteDanceCta/.test(source)
   ) {
     pushIssue(issues, {
       code: `${codePrefix}_CTA_DELEGATE_MISSING`,
