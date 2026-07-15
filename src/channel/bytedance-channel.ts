@@ -12,6 +12,8 @@ const CHANNEL_DOWNLOAD_BRIDGE_MARKER =
   "data-cocos-playable-channel-download-bridge";
 const BYTEDANCE_SNAPSHOT_GLOBAL =
   "__COCOS_PLAYABLE_BYTE_DANCE_SNAPSHOT__";
+const PREVIEW_MRAID_STUB_START = "    if (!window.mraid) {";
+const PREVIEW_XSD_STUB_START = "    if (!window.xsd_playable) {";
 
 export type ByteDanceChannelPlatform = "Pangle" | "TikTok";
 
@@ -41,6 +43,38 @@ function safeJson(value: unknown): string {
     throw new Error("无法序列化字节系渠道配置。");
   }
   return json.replace(/</g, "\\u003c");
+}
+
+function normalizeByteDanceConfig(
+  value: ByteDanceChannelConfig | ByteDanceChannelPlatform,
+): ByteDanceChannelConfig {
+  if (typeof value === "string") {
+    return {
+      platform: value,
+      androidStoreUrl: null,
+      iosStoreUrl: null,
+    };
+  }
+  return value;
+}
+
+function removePreviewMraidStub(html: string): string {
+  const startIndex = html.indexOf(PREVIEW_MRAID_STUB_START);
+  if (startIndex < 0) {
+    return html;
+  }
+  const endIndex = html.indexOf(
+    PREVIEW_XSD_STUB_START,
+    startIndex + PREVIEW_MRAID_STUB_START.length,
+  );
+  if (endIndex < 0) {
+    return html;
+  }
+  const candidate = html.slice(startIndex, endIndex);
+  if (!candidate.includes("var mraidListeners") || !candidate.includes("window.open(")) {
+    return html;
+  }
+  return html.slice(0, startIndex) + html.slice(endIndex);
 }
 
 function injectBeforeHeadClose(
@@ -140,13 +174,15 @@ function createDelegateSource(
 
 export function injectByteDancePlayableSdk(
   html: string,
-  config: ByteDanceChannelConfig,
+  value: ByteDanceChannelConfig | ByteDanceChannelPlatform,
 ): string {
   if (html.includes(BYTEDANCE_PLAYABLE_SDK_MARKER)) {
     return html;
   }
 
-  const bootstrapHtml = replaceGenericChannelBridge(html, config);
+  const config = normalizeByteDanceConfig(value);
+  const cleanHtml = removePreviewMraidStub(html);
+  const bootstrapHtml = replaceGenericChannelBridge(cleanHtml, config);
   const sdkUrl = getByteDancePlayableSdkUrl(config.platform);
   const source = [
     `<script ${BYTEDANCE_PLAYABLE_BRIDGE_MARKER}="capture">\n${createCaptureSource()}\n</script>`,
