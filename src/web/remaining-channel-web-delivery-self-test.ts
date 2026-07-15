@@ -143,7 +143,7 @@ try {
       fileName: "moloco-playable.html",
       contentType: /text\/html/,
       deliveryFormat: "single-html",
-      bridgeMarker: /window\.FbPlayableAd\.onCTAClick/,
+      bridgeMarker: /api\.onCTAClick\s*\(\s*\)/,
     },
   ];
 
