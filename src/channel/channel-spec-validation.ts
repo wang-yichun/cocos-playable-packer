@@ -1,3 +1,9 @@
+import {
+  BYTEDANCE_PLAYABLE_BRIDGE_MARKER,
+  BYTEDANCE_PLAYABLE_SDK_MARKER,
+  getByteDancePlayableSdkUrl,
+  type ByteDanceChannelPlatform,
+} from "./bytedance-channel.js";
 import type { ChannelDeliveryFormat, ChannelPlatform } from "./channel-profile.js";
 
 export type ChannelArtifactFormat = ChannelDeliveryFormat | "zip-other" | "unknown";
@@ -105,6 +111,20 @@ const CHANNEL_RULES: Readonly<Record<ChannelPlatform, ChannelRuleSet>> = {
     maximumArtifactBytes: FIVE_MB,
     sizeSeverity: "error",
     maximumEntries: 1,
+  },
+  Pangle: {
+    specificationStatus: "unverified",
+    expectedFormat: "single-html",
+    maximumArtifactBytes: null,
+    sizeSeverity: "warning",
+    maximumEntries: null,
+  },
+  TikTok: {
+    specificationStatus: "unverified",
+    expectedFormat: "single-html",
+    maximumArtifactBytes: null,
+    sizeSeverity: "warning",
+    maximumEntries: null,
   },
 };
 
@@ -215,6 +235,40 @@ function checkMraidBridge(
       message: "产物缺少 MRAID viewableChange 启动门控。",
     });
   }
+}
+
+function checkByteDancePlayableSdk(
+  issues: ChannelValidationIssue[],
+  files: Readonly<Record<string, string>>,
+  source: string,
+  platform: ByteDanceChannelPlatform,
+): void {
+  const codePrefix = platform.toUpperCase();
+  const sdkUrl = getByteDancePlayableSdkUrl(platform);
+  if (!source.includes(sdkUrl) || !source.includes(BYTEDANCE_PLAYABLE_SDK_MARKER)) {
+    pushIssue(issues, {
+      code: `${codePrefix}_PLAYABLE_SDK_SCRIPT_MISSING`,
+      severity: "error",
+      message: `${platform} 产物缺少样例对应的远程 Playable SDK 引用。`,
+    });
+  }
+  if (
+    !source.includes(BYTEDANCE_PLAYABLE_BRIDGE_MARKER)
+    || !/invokeByteDanceCta/.test(source)
+    || !/xsd_playable\.download/.test(source)
+  ) {
+    pushIssue(issues, {
+      code: `${codePrefix}_CTA_DELEGATE_MISSING`,
+      severity: "error",
+      message: `${platform} 产物缺少对 SDK xsd_playable.download/install 的 CTA 委托。`,
+    });
+  }
+  checkXhrReference(issues, files);
+  pushIssue(issues, {
+    code: `${codePrefix}_BACKEND_PREVIEW_REQUIRED`,
+    severity: "warning",
+    message: `当前 ${platform} 接入依据用户提供样例，仍需在对应广告后台确认 SDK URL、上传格式、CTA 与生命周期行为。`,
+  });
 }
 
 export function validateChannelArtifact(
@@ -373,6 +427,11 @@ export function validateChannelArtifact(
       }
       break;
     }
+
+    case "Pangle":
+    case "TikTok":
+      checkByteDancePlayableSdk(issues, input.textFiles, source, input.platform);
+      break;
 
     case "Facebook":
       if (!/\bFbPlayableAd\.onCTAClick\s*\(/.test(source)) {
