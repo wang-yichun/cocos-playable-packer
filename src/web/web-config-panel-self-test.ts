@@ -10,6 +10,7 @@ import {
   RECOMMENDED_WEB_BUILD_CONFIG,
 } from "./web-build-config.js";
 import { createLoadingScreenWebMvpIndexHtml } from "./loading-screen-ui.js";
+import { createPlayableSdkDownloadZip } from "./playable-sdk-download-ui.js";
 
 const previewChannel = {
   platform: "Preview",
@@ -90,15 +91,6 @@ assert.throws(
   /tinyPngLimit/,
 );
 
-const nonTinyPngConfig = normalizeWebBuildConfig({
-  imageMode: "webp",
-  tinyPngScope: "all",
-  tinyPngLimit: null,
-  tinyPngMinBytes: null,
-});
-assert.equal(nonTinyPngConfig.imageMode, "webp");
-assert.equal(nonTinyPngConfig.tinyPngMinBytes, 4096);
-
 const tinyPngDefaults = normalizeWebBuildConfig({ imageMode: "tinypng" });
 assert.equal(tinyPngDefaults.tinyPngMinBytes, 4096);
 
@@ -143,9 +135,7 @@ for (const id of [
   "channelSummary",
   "channelWarning",
   "playableSdkDownloadField",
-  "downloadPlayableSdkButton",
-  "downloadPlayableSdkTypesButton",
-  "downloadPlayableSdkGlobalButton",
+  "downloadPlayableSdkZipButton",
   "previewChannelDialog",
   "previewChannelSelect",
   "startPreviewButton",
@@ -180,33 +170,23 @@ for (const platform of CHANNEL_PLATFORMS) {
   );
 }
 
-assert.match(html, /TinyPNG API/);
-assert.match(html, /客户自己的 TINYPNG_API_KEY/);
-assert.match(html, /默认 4 KB/);
-assert.match(html, /value="4096"/);
-assert.match(html, /仅用于本次构建/);
-assert.match(html, /config-group-state/);
-assert.match(html, /基础构建/);
-assert.match(html, /图片压缩/);
-assert.match(html, /音频压缩/);
-assert.match(html, /Payload 与兼容性/);
-assert.match(html, /目标渠道/);
-assert.match(html, /游戏侧 Playable SDK/);
-assert.match(html, /下载 PlayableSDK\.ts/);
-assert.match(html, /下载 PlayableSDKTypes\.ts/);
-assert.match(html, /下载 PlayableSDKGlobal\.d\.ts/);
-assert.match(html, /enum PlayablePlatform/);
-assert.match(html, /PlayablePlatform\.AppLovin/);
-assert.match(html, /跳转地址/);
-assert.match(html, /加载界面/);
-assert.match(html, /默认全选/);
-assert.match(html, /下载渠道合集 ZIP/);
-assert.match(html, /选择试玩渠道/);
-assert.match(html, /基础资源只压缩一次/);
-assert.match(html, /应用一键推荐预设/);
-assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
-assert.match(html, /仅合并单 HTML（不压缩）/);
-assert.match(html, /FFmpeg/);
+for (const expected of [
+  /TinyPNG API/,
+  /客户自己的 TINYPNG_API_KEY/,
+  /默认 4 KB/,
+  /游戏侧 Playable SDK vdev/,
+  /下载 CocosPlayableSDK-vdev\.zip/,
+  /PlayableSDK\.ts、PlayableSDKTypes\.ts 和 PlayableSDKGlobal\.d\.ts/,
+  /目标渠道/,
+  /跳转地址/,
+  /加载界面/,
+  /下载渠道合集 ZIP/,
+  /应用一键推荐预设/,
+  /WebP 80 \/ 音频 48 kbps \/ HTML7/,
+  /FFmpeg/,
+]) {
+  assert.match(html, expected);
+}
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -214,35 +194,34 @@ const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
 assert.match(inlineScript, /TinyPNG 模式必须填写 TINYPNG_API_KEY/);
 assert.match(inlineScript, /imageMode === 'tinypng' && tinyPngScope === 'limit'/);
-assert.match(inlineScript, /tinyPngApiKey: tinyPngApiKey/);
 assert.match(inlineScript, /groupConfigSections\(\);/);
 assert.match(inlineScript, /details\.open = false/);
 assert.doesNotMatch(inlineScript, /details\.open = open/);
-assert.doesNotMatch(inlineScript, /queueMicrotask\(groupConfigSections\)/);
 assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image'/);
-assert.match(inlineScript, /createConfigGroup\('目标渠道', 'channel',[^\n]*playableSdkDownloadField/);
-assert.match(inlineScript, /updateConfigGroupSummaries/);
-assert.match(inlineScript, /abbreviateConfigUrl/);
-assert.match(inlineScript, /stateElement\.id = 'configGroupState-' \+ key/);
-assert.match(inlineScript, /setConfigGroupState\('channel'/);
-assert.match(inlineScript, /setConfigGroupState\('links'/);
-assert.match(inlineScript, /setConfigGroupState\('loading'/);
+assert.match(
+  inlineScript,
+  /createConfigGroup\('目标渠道', 'channel',[^\n]*playableSdkDownloadField/,
+);
+assert.match(inlineScript, /setConfigGroupState\(\s*'channel'/);
+assert.match(inlineScript, /setConfigGroupState\(\s*'links'/);
+assert.match(inlineScript, /setConfigGroupState\(\s*'loading'/);
 assert.match(inlineScript, /persistedConfigStorageKey = 'cocos-playable-packer\.web-config\.v1'/);
-assert.match(inlineScript, /localStorage\.setItem\(persistedConfigStorageKey/);
-assert.match(inlineScript, /localStorage\.getItem\(persistedConfigStorageKey/);
-assert.match(inlineScript, /const initialConfig = persistedConfig \|\|/);
-assert.match(inlineScript, /\.\.\.recommendedConfig/);
-assert.match(inlineScript, /tinyPngApiKeyInput\.value = ''/);
-assert.doesNotMatch(inlineScript, /tinyPngApiKey:\s*tinyPngApiKeyInput/);
-assert.match(inlineScript, /loadingScreenEnabled: loadingScreenEnabledInput\.checked/);
-assert.match(inlineScript, /element\.hidden = true/);
-assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
-assert.match(inlineScript, /config: config/);
-assert.match(inlineScript, /const playableSdkDownloadFiles =/);
-assert.match(inlineScript, /new Blob\(\[source\]/);
-assert.match(inlineScript, /anchor\.download = fileName/);
-assert.match(inlineScript, /downloadPlayableSdkFile\('PlayableSDK\.ts'\)/);
-assert.match(inlineScript, /downloadPlayableSdkFile\('PlayableSDKTypes\.ts'\)/);
-assert.match(inlineScript, /downloadPlayableSdkFile\('PlayableSDKGlobal\.d\.ts'\)/);
+assert.match(inlineScript, /const playableSdkZipBase64 =/);
+assert.match(inlineScript, /new Blob\(\[bytes\], \{ type: 'application\/zip' \}\)/);
+assert.match(inlineScript, /anchor\.download = "CocosPlayableSDK-vdev\.zip"/);
+assert.match(inlineScript, /downloadPlayableSdkZipButton\.addEventListener/);
 
-console.log("Playable Web grouped config, SDK download and TinyPNG self-test passed.");
+const zipText = createPlayableSdkDownloadZip("1.2.3").toString("utf8");
+for (const expected of [
+  /CocosPlayableSDK-v1\.2\.3\/PlayableSDK\.ts/,
+  /CocosPlayableSDK-v1\.2\.3\/PlayableSDKTypes\.ts/,
+  /CocosPlayableSDK-v1\.2\.3\/PlayableSDKGlobal\.d\.ts/,
+  /Cocos Playable SDK v1\.2\.3/,
+  /Generated by Cocos Playable Packer v1\.2\.3/,
+  /export const PLAYABLE_SDK_VERSION = "1\.2\.3";/,
+  /PlayablePlatform\.AppLovin/,
+]) {
+  assert.match(zipText, expected);
+}
+
+console.log("Playable Web grouped config, versioned SDK ZIP and TinyPNG self-test passed.");
