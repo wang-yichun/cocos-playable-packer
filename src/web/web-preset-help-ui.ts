@@ -20,6 +20,7 @@ export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): st
     .compact-help-button:hover { border-color: #6b7280; background: #1f2937; color: #fff; }
     .channel-warning-help-button { width: 24px; height: 24px; margin-left: 8px; border-color: #a16207; color: #fbbf24; font-size: 13px; }
     .channel-warning-help-button:hover { border-color: #f59e0b; color: #fde68a; }
+    .config-group-warning { grid-column: 1 / -1; margin-top: 0; padding: 0 2px; line-height: 1.55; }
     .preset-help-dialog h2, .channel-warning-dialog h2 { margin-bottom: 12px; }
     .preset-help-dialog p, .channel-warning-dialog p { margin: 0; color: #cbd5e1; }
     .preset-help-dialog strong { color: #fff; }
@@ -43,7 +44,7 @@ export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): st
       </div>`,
     `      <dialog id="recommendedPresetHelpDialog" class="preset-help-dialog">
         <h2>推荐预设</h2>
-        <p><strong>WebP 80 / 音频 48 kbps / HTML7 / Brotli raw-js</strong>。该组合已经通过真实游戏试玩验证；启用音频压缩前需确保系统可以执行 FFmpeg。</p>
+        <p><strong>Squoosh · PNG 80 · JPEG 80 / 音频不压缩 / HTML7 / Brotli raw-js</strong>。推荐预设默认使用 Squoosh 并保留原音频；WebP 与 MP3 码率压缩可在完成目标渠道和设备验证后手动启用。</p>
         <div class="dialog-actions">
           <button id="closeRecommendedPresetHelpButton" class="secondary" type="button">关闭</button>
         </div>
@@ -59,6 +60,13 @@ export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): st
 
   html = replaceOnce(
     html,
+    '      <div id="audioWarning" class="warning" hidden>已启用音频压缩：运行 Web 服务的环境必须能够执行 ffmpeg。</div>',
+    `      <div id="imageWarning" class="warning config-group-warning" hidden>WebP 兼容性提示：部分旧设备、旧版浏览器或广告 WebView 可能无法正常解码；正式发布前请在目标渠道和设备上验证。</div>
+      <div id="audioWarning" class="warning config-group-warning" hidden>已启用音频压缩：运行 Web 服务的环境必须能够执行 ffmpeg。</div>`,
+  );
+
+  html = replaceOnce(
+    html,
     "    const recommendedPresetButton = document.getElementById('recommendedPresetButton');",
     `    const recommendedPresetButton = document.getElementById('recommendedPresetButton');
     const recommendedPresetHelpButton = document.getElementById('recommendedPresetHelpButton');
@@ -67,6 +75,32 @@ export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): st
     const channelWarningDialog = document.getElementById('channelWarningDialog');
     const channelWarningDialogText = document.getElementById('channelWarningDialogText');
     const closeChannelWarningButton = document.getElementById('closeChannelWarningButton');`,
+  );
+
+  html = replaceOnce(
+    html,
+    "    const audioWarning = document.getElementById('audioWarning');",
+    `    const imageWarning = document.getElementById('imageWarning');
+    const audioWarning = document.getElementById('audioWarning');`,
+  );
+
+  html = replaceOnce(
+    html,
+    "      audioWarning.hidden = rawMode || !audioEnabled;",
+    `      imageWarning.hidden = rawMode || imageMode !== 'webp';
+      audioWarning.hidden = rawMode || !audioEnabled;`,
+  );
+
+  html = replaceOnce(
+    html,
+    "        createConfigGroup('图片压缩', 'image', [field('imageMode'), field('pngQuality'), field('jpegQuality'), tinyPngApiKeyField, tinyPngScopeField, tinyPngLimitField, tinyPngMinBytesField]),",
+    "        createConfigGroup('图片压缩', 'image', [field('imageMode'), field('pngQuality'), field('jpegQuality'), tinyPngApiKeyField, tinyPngScopeField, tinyPngLimitField, tinyPngMinBytesField, imageWarning]),",
+  );
+
+  html = replaceOnce(
+    html,
+    "        createConfigGroup('音频压缩', 'audio', [field('audioEnabled'), field('audioBitrate')]),",
+    "        createConfigGroup('音频压缩', 'audio', [field('audioEnabled'), field('audioBitrate'), audioWarning]),",
   );
 
   html = replaceOnce(
