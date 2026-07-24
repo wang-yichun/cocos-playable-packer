@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { deflateRawSync } from "node:zlib";
 
 import { injectChannelDownloadBridge } from "./channel-download-bridge.js";
+import {
+  injectByteDancePlayableSdk,
+  isByteDanceChannel,
+} from "./bytedance-channel.js";
 import type {
   ChannelBuildConfig,
   ChannelDeliveryFormat,
@@ -313,6 +317,10 @@ function singleHtmlFileName(platform: ChannelPlatform): string {
       return "unity-playable.html";
     case "Moloco":
       return "moloco-playable.html";
+    case "Pangle":
+      return "pangle-playable.html";
+    case "TikTok":
+      return "tiktok-playable.html";
     default:
       return "game.html";
   }
@@ -325,7 +333,10 @@ export function createChannelHtml(
   const channelSourceHtml = config.platform === "Moloco"
     ? removePreviewMraidStub(sourceHtml)
     : sourceHtml;
-  return injectChannelDownloadBridge(channelSourceHtml, config);
+  const bridgeHtml = injectChannelDownloadBridge(channelSourceHtml, config);
+  return isByteDanceChannel(config.platform)
+    ? injectByteDancePlayableSdk(bridgeHtml, config.platform)
+    : bridgeHtml;
 }
 
 export function createChannelDownloadArtifact(

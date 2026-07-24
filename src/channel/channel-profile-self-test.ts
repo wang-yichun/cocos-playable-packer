@@ -4,6 +4,10 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  PANGLE_PLAYABLE_SDK_URL,
+  TIKTOK_PLAYABLE_SDK_URL,
+} from "./bytedance-channel.js";
+import {
   appendChannelReport,
   CHANNEL_PLATFORMS,
   CHANNEL_PROFILES,
@@ -22,6 +26,8 @@ assert.deepEqual(CHANNEL_PLATFORMS, [
   "IronSource",
   "Unity",
   "Moloco",
+  "Pangle",
+  "TikTok",
 ]);
 
 assert.equal(CHANNEL_PROFILES.AppLovin.bridge, "mraid");
@@ -41,6 +47,10 @@ assert.equal(CHANNEL_PROFILES.Unity.bridge, "mraid");
 assert.equal(CHANNEL_PROFILES.Moloco.deliveryFormat, "single-html");
 assert.equal(CHANNEL_PROFILES.Moloco.bridge, "facebook-cta");
 assert.equal(CHANNEL_PROFILES.Moloco.analyticsAdapter, "none");
+assert.equal(CHANNEL_PROFILES.Pangle.bridge, "bytedance-playable-sdk");
+assert.equal(CHANNEL_PROFILES.Pangle.externalScripts[0], PANGLE_PLAYABLE_SDK_URL);
+assert.equal(CHANNEL_PROFILES.TikTok.bridge, "bytedance-playable-sdk");
+assert.equal(CHANNEL_PROFILES.TikTok.externalScripts[0], TIKTOK_PLAYABLE_SDK_URL);
 
 const defaults = normalizeChannelBuildConfig(undefined);
 assert.deepEqual(defaults, {
@@ -82,7 +92,7 @@ assert.equal(facebookReport.bridge, "facebook-cta");
 assert.equal(facebookReport.deliveryFormat, "zip-html-res-js");
 assert.ok(facebookReport.warnings.some((warning) => warning.includes("index.html + res.js")));
 
-for (const platform of ["IronSource", "Unity", "Moloco"] as const) {
+for (const platform of ["IronSource", "Unity", "Moloco", "Pangle", "TikTok"] as const) {
   const channelReport = createChannelReport({
     platform,
     androidStoreUrl: TEST_ANDROID_STORE_URL,
@@ -90,6 +100,19 @@ for (const platform of ["IronSource", "Unity", "Moloco"] as const) {
   });
   assert.equal(channelReport.deliveryFormat, "single-html");
   assert.ok(channelReport.warnings.length > 0);
+}
+
+for (const platform of ["Pangle", "TikTok"] as const) {
+  const channelReport = createChannelReport({
+    platform,
+    androidStoreUrl: null,
+    iosStoreUrl: null,
+  });
+  assert.equal(
+    channelReport.warnings.some((warning) => warning.includes("商店地址")),
+    false,
+    `${platform} CTA 由渠道 SDK 负责，不应要求本地商店地址。`,
+  );
 }
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "channel-profile-test-"));

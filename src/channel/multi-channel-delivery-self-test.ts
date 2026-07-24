@@ -3,6 +3,11 @@ import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import {
+  BYTEDANCE_PLAYABLE_SDK_MARKER,
+  PANGLE_PLAYABLE_SDK_URL,
+  TIKTOK_PLAYABLE_SDK_URL,
+} from "./bytedance-channel.js";
 import { CHANNEL_DOWNLOAD_BRIDGE_MARKER } from "./channel-download-bridge.js";
 import { CHANNEL_PLATFORMS } from "./channel-profile.js";
 import {
@@ -45,6 +50,8 @@ assert.ok(bundle.entries.includes("channels/liftoff/liftoff-playable.zip"));
 assert.ok(bundle.entries.includes("channels/ironsource/ironsource-playable.html"));
 assert.ok(bundle.entries.includes("channels/unity/unity-playable.html"));
 assert.ok(bundle.entries.includes("channels/moloco/moloco-playable.html"));
+assert.ok(bundle.entries.includes("channels/pangle/pangle-playable.html"));
+assert.ok(bundle.entries.includes("channels/tiktok/tiktok-playable.html"));
 assert.equal(
   createMultiChannelDownloadArtifact(sourceHtml, config).body.equals(bundle.body),
   true,
@@ -83,6 +90,20 @@ try {
     path.join(outputDirectory, "channels", "google", "google-playable.zip"),
   );
   assert.equal(googleZip.readUInt32LE(0), 0x04034b50);
+
+  const pangleHtml = await readFile(
+    path.join(outputDirectory, "channels", "pangle", "pangle-playable.html"),
+    "utf8",
+  );
+  assert.match(pangleHtml, new RegExp(BYTEDANCE_PLAYABLE_SDK_MARKER));
+  assert.ok(pangleHtml.includes(PANGLE_PLAYABLE_SDK_URL));
+
+  const tiktokHtml = await readFile(
+    path.join(outputDirectory, "channels", "tiktok", "tiktok-playable.html"),
+    "utf8",
+  );
+  assert.match(tiktokHtml, new RegExp(BYTEDANCE_PLAYABLE_SDK_MARKER));
+  assert.ok(tiktokHtml.includes(TIKTOK_PLAYABLE_SDK_URL));
 
   const previewInfo = await stat(
     path.join(outputDirectory, "channels", "preview", "game.html"),

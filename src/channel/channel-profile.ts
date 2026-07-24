@@ -1,5 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 
+import {
+  PANGLE_PLAYABLE_SDK_URL,
+  TIKTOK_PLAYABLE_SDK_URL,
+} from "./bytedance-channel.js";
+
 export const CHANNEL_PLATFORMS = [
   "Preview",
   "AppLovin",
@@ -9,6 +14,8 @@ export const CHANNEL_PLATFORMS = [
   "IronSource",
   "Unity",
   "Moloco",
+  "Pangle",
+  "TikTok",
 ] as const;
 
 export type ChannelPlatform = typeof CHANNEL_PLATFORMS[number];
@@ -20,7 +27,8 @@ export type ChannelBridge =
   | "preview"
   | "mraid"
   | "facebook-cta"
-  | "google-exit-api";
+  | "google-exit-api"
+  | "bytedance-playable-sdk";
 export type ChannelStartupPolicy = "window-load" | "mraid-viewable";
 export type ChannelAnalyticsAdapter = "none" | "applovin" | "custom-beacon";
 export type ChannelIntegrationStatus =
@@ -71,6 +79,9 @@ export const TEST_IOS_STORE_URL =
 
 const MRAID_LIFECYCLE_WARNING =
   "已注入 MRAID ready/viewable、尺寸、音量和下载桥；正式投放前仍需通过目标渠道最新 Validator。";
+
+const BYTEDANCE_SAMPLE_WARNING =
+  "当前接入依据用户提供的渠道样例：同步加载远程 Playable SDK，并将游戏 CTA 委托给 SDK 提供的 xsd_playable.download/install。公开资料不足以确认该 SDK URL 为长期稳定官方入口，正式投放前必须通过对应广告后台预览与上传验证。";
 
 export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>> = {
   Preview: {
@@ -189,6 +200,36 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
       "历史成品中的第三方 beacon 不会作为默认实现复制。",
     ],
   },
+  Pangle: {
+    platform: "Pangle",
+    displayName: "Pangle",
+    deliveryFormat: "single-html",
+    bridge: "bytedance-playable-sdk",
+    startupPolicy: "window-load",
+    analyticsAdapter: "none",
+    requiredGlobals: ["xsd_playable"],
+    externalScripts: [PANGLE_PLAYABLE_SDK_URL],
+    requiresExternalApi: true,
+    warnings: [
+      BYTEDANCE_SAMPLE_WARNING,
+      "当前 Pangle SDK URL 来自用户提供的 Pangle 样例。SDK 未提供 CTA 时，产物只输出警告，不执行浏览器商店跳转回退。",
+    ],
+  },
+  TikTok: {
+    platform: "TikTok",
+    displayName: "TikTok",
+    deliveryFormat: "single-html",
+    bridge: "bytedance-playable-sdk",
+    startupPolicy: "window-load",
+    analyticsAdapter: "none",
+    requiredGlobals: ["xsd_playable"],
+    externalScripts: [TIKTOK_PLAYABLE_SDK_URL],
+    requiresExternalApi: true,
+    warnings: [
+      BYTEDANCE_SAMPLE_WARNING,
+      "当前 TikTok SDK URL 来自用户提供的 TikTok 样例。SDK 未提供 CTA 时，产物只输出警告，不执行浏览器商店跳转回退。",
+    ],
+  },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -249,8 +290,8 @@ export function normalizeChannelBuildConfig(value: unknown): ChannelBuildConfig 
 export function createChannelReport(config: ChannelBuildConfig): ChannelReport {
   const profile = CHANNEL_PROFILES[config.platform];
   const warnings = [...profile.warnings];
-  if (config.platform !== "Preview" && config.androidStoreUrl === null && config.iosStoreUrl === null) {
-    warnings.push("未配置 Android 或 iOS 商店地址；下载桥无法完成商店跳转。");
+  if (profile.bridge === "mraid" && config.androidStoreUrl === null && config.iosStoreUrl === null) {
+    warnings.push("未配置 Android 或 iOS 商店地址；MRAID 下载桥无法完成商店跳转。");
   }
   return {
     platform: profile.platform,
