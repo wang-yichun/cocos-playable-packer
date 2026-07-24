@@ -65,7 +65,7 @@ export function createWebMvpIndexHtml(): string {
 
       <div class="preset">
         <strong>推荐预设</strong>
-        WebP 80 / 音频 48 kbps / HTML7 / Brotli raw-js。该组合已经通过真实游戏试玩验证；启用音频压缩前需确保系统可以执行 FFmpeg。
+        Squoosh 80 / 音频不压缩 / HTML7 / Brotli raw-js。图片保持 PNG/JPEG 格式；音频压缩需按项目试听后手动启用。
       </div>
 
       <div class="config-grid" style="margin-top: 18px;">
@@ -86,6 +86,7 @@ export function createWebMvpIndexHtml(): string {
             <option value="none">不处理图片</option>
           </select>
           <small id="imageModeHint">将 PNG/JPEG 内容编码为 WebP，并保留逻辑路径。</small>
+          <div id="webpWarning" class="warning" hidden>WebP 在部分旧设备或渠道 WebView 中可能存在兼容性问题，正式投放前请在目标设备与渠道验证。</div>
         </div>
 
         <div class="field">
@@ -107,6 +108,7 @@ export function createWebMvpIndexHtml(): string {
             <label for="audioEnabled">启用 MP3 码率压缩</label>
           </div>
           <small>启用后需要 FFmpeg；关闭时保留原音频。</small>
+          <div id="audioWarning" class="warning" hidden>已启用音频压缩：运行 Web 服务的环境必须能够执行 ffmpeg。</div>
         </div>
 
         <div class="field">
@@ -127,7 +129,6 @@ export function createWebMvpIndexHtml(): string {
       </div>
 
       <div id="configSummary" class="summary"></div>
-      <div id="audioWarning" class="warning" hidden>已启用音频压缩：运行 Web 服务的环境必须能够执行 ffmpeg。</div>
     </section>
 
     <section class="card">
@@ -158,6 +159,7 @@ export function createWebMvpIndexHtml(): string {
     const buildModeHint = document.getElementById('buildModeHint');
     const imageModeInput = document.getElementById('imageMode');
     const imageModeHint = document.getElementById('imageModeHint');
+    const webpWarning = document.getElementById('webpWarning');
     const pngQualityInput = document.getElementById('pngQuality');
     const pngQualityHint = document.getElementById('pngQualityHint');
     const jpegQualityInput = document.getElementById('jpegQuality');
@@ -279,6 +281,7 @@ export function createWebMvpIndexHtml(): string {
         payloadHint.textContent = '兼容性最高，但文本 Payload 体积最大。';
       }
 
+      webpWarning.hidden = rawMode || imageMode !== 'webp';
       audioWarning.hidden = rawMode || !audioEnabled;
 
       if (rawMode) {

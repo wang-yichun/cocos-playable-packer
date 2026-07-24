@@ -39,11 +39,11 @@ export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): st
     html,
     `      <div class="preset">
         <strong>推荐预设</strong>
-        WebP 80 / 音频 48 kbps / HTML7 / Brotli raw-js。该组合已经通过真实游戏试玩验证；启用音频压缩前需确保系统可以执行 FFmpeg。
+        Squoosh 80 / 音频不压缩 / HTML7 / Brotli raw-js。图片保持 PNG/JPEG 格式；音频压缩需按项目试听后手动启用。
       </div>`,
     `      <dialog id="recommendedPresetHelpDialog" class="preset-help-dialog">
         <h2>推荐预设</h2>
-        <p><strong>WebP 80 / 音频 48 kbps / HTML7 / Brotli raw-js</strong>。该组合已经通过真实游戏试玩验证；启用音频压缩前需确保系统可以执行 FFmpeg。</p>
+        <p><strong>Squoosh 80 / 音频不压缩 / HTML7 / Brotli raw-js</strong>。图片保持 PNG/JPEG 格式，避免默认引入 WebP 兼容风险；音频压缩需按项目试听后手动启用。</p>
         <div class="dialog-actions">
           <button id="closeRecommendedPresetHelpButton" class="secondary" type="button">关闭</button>
         </div>
