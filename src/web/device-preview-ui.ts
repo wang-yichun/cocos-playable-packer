@@ -7,9 +7,8 @@ function replaceOnce(source: string, search: string, replacement: string): strin
 export function addDevicePreviewSimulator(html: string): string {
   html = replaceOnce(
     html,
-    "    .version-legal { grid-column: 1 / -1; }\n  </style>",
-    `    .version-legal { grid-column: 1 / -1; }
-    #devicePreviewButton { background: #0f766e; }
+    "  </style>",
+    `    #devicePreviewButton { background: #0f766e; }
     .device-preview-dialog { width: min(1180px, calc(100vw - 24px)); max-width: none; height: min(820px, calc(100vh - 24px)); padding: 0; overflow: hidden; }
     .device-preview-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); height: 100%; }
     .device-preview-sidebar { overflow: auto; padding: 20px; border-right: 1px solid #374151; background: #111827; }
@@ -42,9 +41,8 @@ export function addDevicePreviewSimulator(html: string): string {
 
   html = replaceOnce(
     html,
-    "  </dialog>",
-    `  </dialog>
-  <dialog id="devicePreviewDialog" class="device-preview-dialog">
+    "</body>",
+    `  <dialog id="devicePreviewDialog" class="device-preview-dialog">
     <div class="device-preview-layout">
       <aside class="device-preview-sidebar">
         <h2>模拟真机预览</h2>
@@ -79,7 +77,8 @@ export function addDevicePreviewSimulator(html: string): string {
         </div>
       </section>
     </div>
-  </dialog>`,
+  </dialog>
+</body>`,
   );
 
   html = replaceOnce(
@@ -91,7 +90,6 @@ export function addDevicePreviewSimulator(html: string): string {
     const devicePreviewList = document.getElementById('devicePreviewList');
     const devicePreviewCanvas = document.getElementById('devicePreviewCanvas');
     const deviceShell = document.getElementById('deviceShell');
-    const deviceScreen = document.getElementById('deviceScreen');
     const devicePreviewFrame = document.getElementById('devicePreviewFrame');
     const deviceCutout = document.getElementById('deviceCutout');
     const deviceSafeArea = document.getElementById('deviceSafeArea');
@@ -182,7 +180,7 @@ export function addDevicePreviewSimulator(html: string): string {
     devicePreviewReloadButton.addEventListener('click', () => { devicePreviewFrame.src = buildDevicePreviewUrl(); });
     deviceSafeAreaToggle.addEventListener('change', updateDevicePreview);
     document.querySelectorAll('[data-device-orientation]').forEach((button) => button.addEventListener('click', () => {
-      selectedOrientation = button.dataset.deviceOrientation;
+      selectedOrientation = button.dataset.deviceOrientation || 'portrait';
       updateDevicePreview();
     }));
     window.addEventListener('resize', () => { if (devicePreviewDialog.open) updateDevicePreview(); });
