@@ -1,3 +1,4 @@
+import { addDevicePreviewSimulator } from "./device-preview-ui.js";
 import { createBuildFilesResourceAnalysisWebMvpIndexHtml } from "./resource-analysis-build-files-ui.js";
 import {
   createFallbackWebVersionInfo,
@@ -140,5 +141,5 @@ export function createOverviewResourceAnalysisWebMvpIndexHtml(
     `        + renderOverviewInsights(report)`,
   );
 
-  return html;
+  return addDevicePreviewSimulator(html);
 }
