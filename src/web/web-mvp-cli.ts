@@ -1,5 +1,6 @@
 import { pathToFileURL } from "node:url";
 
+import { playableCoreApi } from "../core/index.js";
 import { startEnhancedResourceAnalysisWebMvpServer } from "./resource-analysis-enhanced-web-server.js";
 import {
   createWebMvpAccessUrls,
@@ -15,6 +16,7 @@ async function main(): Promise<void> {
     port: parseWebMvpPort(process.env.PLAYABLE_WEB_PORT),
     rootDirectory: process.env.PLAYABLE_WEB_ROOT,
     projectRoot: process.cwd(),
+    buildPlayableImpl: playableCoreApi.build,
   });
   const urls = createWebMvpAccessUrls(server.host, server.port);
 
