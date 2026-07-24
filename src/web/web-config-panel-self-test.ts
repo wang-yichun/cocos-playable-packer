@@ -38,9 +38,9 @@ assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
 
 assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
   buildMode: "optimized",
-  imageMode: "webp",
+  imageMode: "squoosh",
   ...commonImageDefaults,
-  audioBitrateKbps: 48,
+  audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
   channel: previewChannel,
@@ -153,8 +153,10 @@ for (const id of [
   "tinyPngScope",
   "tinyPngLimit",
   "tinyPngMinBytes",
+  "imageWarning",
   "audioEnabled",
   "audioBitrate",
+  "audioWarning",
   "payloadEncoding",
   "loadingScreenEnabled",
   "loadingLogoFile",
@@ -194,7 +196,10 @@ assert.match(html, /下载渠道合集 ZIP/);
 assert.match(html, /选择试玩渠道/);
 assert.match(html, /基础资源只压缩一次/);
 assert.match(html, /应用一键推荐预设/);
-assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
+assert.match(html, /Squoosh · PNG 80 · JPEG 80 \/ 音频不压缩 \/ HTML7/);
+assert.match(html, /WebP 兼容性提示/);
+assert.match(html, /正式发布前请在目标渠道和设备上验证/);
+assert.match(html, /已启用音频压缩/);
 assert.match(html, /仅合并单 HTML（不压缩）/);
 assert.match(html, /FFmpeg/);
 
@@ -209,7 +214,10 @@ assert.match(inlineScript, /groupConfigSections\(\);/);
 assert.match(inlineScript, /details\.open = false/);
 assert.doesNotMatch(inlineScript, /details\.open = open/);
 assert.doesNotMatch(inlineScript, /queueMicrotask\(groupConfigSections\)/);
-assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image'/);
+assert.match(inlineScript, /createConfigGroup\('图片压缩', 'image',[^\n]*imageWarning/);
+assert.match(inlineScript, /createConfigGroup\('音频压缩', 'audio',[^\n]*audioWarning/);
+assert.match(inlineScript, /imageWarning\.hidden = rawMode \|\| imageMode !== 'webp'/);
+assert.match(inlineScript, /audioWarning\.hidden = rawMode \|\| !audioEnabled/);
 assert.match(inlineScript, /updateConfigGroupSummaries/);
 assert.match(inlineScript, /abbreviateConfigUrl/);
 assert.match(inlineScript, /stateElement\.id = 'configGroupState-' \+ key/);
@@ -228,4 +236,4 @@ assert.match(inlineScript, /element\.hidden = true/);
 assert.match(inlineScript, /recommendedPresetButton\.addEventListener/);
 assert.match(inlineScript, /config: config/);
 
-console.log("Playable Web grouped config and TinyPNG self-test passed.");
+console.log("Playable Web grouped config, compression warning, and TinyPNG self-test passed.");
