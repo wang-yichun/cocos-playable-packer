@@ -71,7 +71,8 @@ export const DEFAULT_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
 
 export const RECOMMENDED_WEB_BUILD_CONFIG: Readonly<NormalizedWebBuildConfig> = {
   ...DEFAULT_WEB_BUILD_CONFIG,
-  audioBitrateKbps: 48,
+  imageMode: "squoosh",
+  audioBitrateKbps: null,
   channel: { ...DEFAULT_CHANNEL_CONFIG, platforms: [...DEFAULT_CHANNEL_CONFIG.platforms] },
 };
 
