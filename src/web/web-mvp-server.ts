@@ -270,6 +270,10 @@ function deliveryWarning(platform: ChannelPlatform): string {
       return "已生成 Unity Ads 单 HTML，并依赖宿主提供 mraid；正式投放前仍需通过 Unity Ads 验证。";
     case "Moloco":
       return "已生成 Moloco 单 HTML，并按历史兼容基线注入 CTA 下载桥；正式投放前仍需通过 Moloco 验证。";
+    case "Pangle":
+      return "已生成 Pangle 单 HTML，并注入 ByteDance Playable SDK CTA 桥；正式投放前仍需通过 Pangle 后台预览与校验。";
+    case "TikTok":
+      return "已生成 TikTok 单 HTML，并注入 ByteDance Playable SDK CTA 桥；正式投放前仍需通过 TikTok Ads 后台预览与校验。";
     case "Preview":
       return "本地预览只验证浏览器运行，不代表任何广告渠道审核结果。";
   }
