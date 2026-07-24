@@ -38,9 +38,9 @@ assert.deepEqual(DEFAULT_WEB_BUILD_CONFIG, {
 
 assert.deepEqual(RECOMMENDED_WEB_BUILD_CONFIG, {
   buildMode: "optimized",
-  imageMode: "webp",
+  imageMode: "squoosh",
   ...commonImageDefaults,
-  audioBitrateKbps: 48,
+  audioBitrateKbps: null,
   payloadEncoding: "html7",
   brotliFallback: "raw-js",
   channel: previewChannel,
@@ -55,6 +55,19 @@ assert.deepEqual(RAW_SINGLE_HTML_WEB_BUILD_CONFIG, {
   brotliFallback: "raw-js",
   channel: previewChannel,
 });
+
+const recommendedRequest = createWebBuildRequest(
+  "./web-mobile",
+  "./dist/recommended.html",
+  "recommended-test",
+  RECOMMENDED_WEB_BUILD_CONFIG,
+);
+assert.deepEqual(recommendedRequest.image, {
+  mode: "squoosh",
+  pngQuality: 80,
+  jpegQuality: 80,
+});
+assert.equal(recommendedRequest.audio, null);
 
 const normalizedRaw = normalizeWebBuildConfig({
   buildMode: "raw-single-html",
@@ -147,6 +160,7 @@ for (const id of [
   "startPreviewButton",
   "buildMode",
   "imageMode",
+  "webpWarning",
   "pngQuality",
   "jpegQuality",
   "tinyPngApiKey",
@@ -155,6 +169,7 @@ for (const id of [
   "tinyPngMinBytes",
   "audioEnabled",
   "audioBitrate",
+  "audioWarning",
   "payloadEncoding",
   "loadingScreenEnabled",
   "loadingLogoFile",
@@ -194,7 +209,17 @@ assert.match(html, /下载渠道合集 ZIP/);
 assert.match(html, /选择试玩渠道/);
 assert.match(html, /基础资源只压缩一次/);
 assert.match(html, /应用一键推荐预设/);
-assert.match(html, /WebP 80 \/ 音频 48 kbps \/ HTML7/);
+assert.match(html, /Squoosh 80 \/ 音频不压缩 \/ HTML7/);
+assert.match(html, /WebP 在部分旧设备或渠道 WebView 中可能存在兼容性问题/);
+assert.match(html, /已启用音频压缩：运行 Web 服务的环境必须能够执行 ffmpeg/);
+assert.match(
+  html,
+  /<label for="imageMode">图片模式<\/label>[\s\S]*?id="webpWarning"[\s\S]*?<\/div>/,
+);
+assert.match(
+  html,
+  /<label>音频压缩<\/label>[\s\S]*?id="audioWarning"[\s\S]*?<\/div>/,
+);
 assert.match(html, /仅合并单 HTML（不压缩）/);
 assert.match(html, /FFmpeg/);
 
@@ -205,6 +230,8 @@ new Script(inlineScript);
 assert.match(inlineScript, /TinyPNG 模式必须填写 TINYPNG_API_KEY/);
 assert.match(inlineScript, /imageMode === 'tinypng' && tinyPngScope === 'limit'/);
 assert.match(inlineScript, /tinyPngApiKey: tinyPngApiKey/);
+assert.match(inlineScript, /webpWarning\.hidden = rawMode \|\| imageMode !== 'webp'/);
+assert.match(inlineScript, /audioWarning\.hidden = rawMode \|\| !audioEnabled/);
 assert.match(inlineScript, /groupConfigSections\(\);/);
 assert.match(inlineScript, /details\.open = false/);
 assert.doesNotMatch(inlineScript, /details\.open = open/);
