@@ -41,7 +41,7 @@ export function addDevicePreviewSimulator(html: string): string {
 
   html = replaceOnce(
     html,
-    "</body>",
+    "  <script>",
     `  <dialog id="devicePreviewDialog" class="device-preview-dialog">
     <div class="device-preview-layout">
       <aside class="device-preview-sidebar">
@@ -78,7 +78,7 @@ export function addDevicePreviewSimulator(html: string): string {
       </section>
     </div>
   </dialog>
-</body>`,
+  <script>`,
   );
 
   html = replaceOnce(
