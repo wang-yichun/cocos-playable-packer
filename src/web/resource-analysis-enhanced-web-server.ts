@@ -1,8 +1,19 @@
 import type { RequestListener } from "node:http";
 
+import { createDevicePreviewPageHtml } from "./device-preview-page.js";
 import { createOverviewResourceAnalysisWebMvpIndexHtml } from "./resource-analysis-overview-ui.js";
 import { startResourceAnalysisWebMvpServer } from "./resource-analysis-web-server.js";
 import type { RunningWebMvpServer, WebMvpServerOptions } from "./web-mvp-server.js";
+
+function sendHtml(response: Parameters<RequestListener>[1], body: string): void {
+  response.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body),
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+  });
+  response.end(body);
+}
 
 export async function startEnhancedResourceAnalysisWebMvpServer(
   options: WebMvpServerOptions = {},
@@ -19,14 +30,11 @@ export async function startEnhancedResourceAnalysisWebMvpServer(
     const method = request.method ?? "GET";
     const url = new URL(request.url ?? "/", "http://localhost");
     if (method === "GET" && url.pathname === "/") {
-      const body = createOverviewResourceAnalysisWebMvpIndexHtml(running.versionInfo);
-      response.writeHead(200, {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Length": Buffer.byteLength(body),
-        "Cache-Control": "no-store",
-        "X-Content-Type-Options": "nosniff",
-      });
-      response.end(body);
+      sendHtml(response, createOverviewResourceAnalysisWebMvpIndexHtml(running.versionInfo));
+      return;
+    }
+    if (method === "GET" && url.pathname === "/device-preview") {
+      sendHtml(response, createDevicePreviewPageHtml());
       return;
     }
     originalListener(request, response);
