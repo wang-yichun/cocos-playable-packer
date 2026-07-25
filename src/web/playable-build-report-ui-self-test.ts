@@ -2,11 +2,16 @@ import assert from "node:assert/strict";
 import { Script } from "node:vm";
 
 import { createPlayableBuildReportWebMvpIndexHtml } from "./playable-build-report-ui.js";
-import { repairBuildReportInlineScript } from "./web-preset-help-ui.js";
+import {
+  repairBuildReportInlineScript,
+  simplifyBuildReportSettingsLayout,
+} from "./web-preset-help-ui.js";
 import { createFallbackWebVersionInfo } from "./web-version-info.js";
 
 const rawHtml = createPlayableBuildReportWebMvpIndexHtml(createFallbackWebVersionInfo());
-const html = repairBuildReportInlineScript(rawHtml);
+const html = simplifyBuildReportSettingsLayout(
+  repairBuildReportInlineScript(rawHtml),
+);
 
 for (const id of [
   "viewReportButton",
@@ -28,6 +33,8 @@ assert.match(html, /本次构建配置/);
 assert.match(html, /渠道交付/);
 assert.match(html, /无法可靠拆分最终 HTML 内的类别占比/);
 assert.doesNotMatch(html, />下载报告<\/a>/);
+assert.match(html, /\.report-setting-row \{/);
+assert.doesNotMatch(html, /grid-template-columns: repeat\(4, minmax\(130px, 1fr\)\)/);
 
 const inlineScriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
 assert.notEqual(inlineScriptMatch, null);
@@ -36,6 +43,9 @@ new Script(inlineScript);
 
 assert.match(inlineScript, /String\.fromCharCode\(92\)/);
 assert.doesNotMatch(inlineScript, /\.replace\(\/\\\/g/);
+assert.match(inlineScript, /<dl class="report-settings">/);
+assert.match(inlineScript, /class="report-setting-row"/);
+assert.doesNotMatch(inlineScript, /<article class="report-setting">/);
 assert.match(inlineScript, /viewReportButton\.disabled = false/);
 assert.match(inlineScript, /url\.searchParams\.delete\('download'\)/);
 assert.match(inlineScript, /fetch\(reportUrl\.pathname \+ reportUrl\.search/);
