@@ -9,8 +9,20 @@ function replaceOnce(source: string, search: string, replacement: string): strin
   return `${source.slice(0, index)}${replacement}${source.slice(index + search.length)}`;
 }
 
+export function repairBuildReportInlineScript(source: string): string {
+  const slash = String.fromCharCode(92);
+  const brokenPathNormalizer = `.replace(/${slash}/g, '/')`;
+  const safePathNormalizer = ".split(String.fromCharCode(92)).join('/')";
+  if (!source.includes(brokenPathNormalizer)) {
+    return source;
+  }
+  return source.replace(brokenPathNormalizer, safePathNormalizer);
+}
+
 export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): string {
-  let html = createPlayableBuildReportWebMvpIndexHtml(versionInfo);
+  let html = repairBuildReportInlineScript(
+    createPlayableBuildReportWebMvpIndexHtml(versionInfo),
+  );
 
   html = replaceOnce(
     html,
