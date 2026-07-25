@@ -31,9 +31,9 @@ export function simplifyBuildReportSettingsLayout(source: string): string {
     .report-setting-row:first-child { padding-top: 0; }
     .report-setting-row:last-child { padding-bottom: 0; border-bottom: 0; }
     .report-setting-row dt { color: #9ca3af; font-size: 11px; }
-    .report-setting-row dd { min-width: 0; margin: 5px 0 0; color: #f9fafb; overflow-wrap: anywhere; }
-    .report-setting-row dd strong { display: block; font-size: 15px; }
-    .report-setting-row dd span { display: block; margin-top: 4px; color: #94a3b8; font-size: 11px; line-height: 1.45; }`,
+    .report-setting-row dd { display: flex; min-width: 0; margin: 5px 0 0; gap: 8px; align-items: baseline; flex-wrap: wrap; color: #f9fafb; overflow-wrap: anywhere; }
+    .report-setting-row dd strong { font-size: 15px; }
+    .report-setting-row dd span { color: #94a3b8; font-size: 11px; line-height: 1.45; }`,
   );
 
   html = replaceOnce(
