@@ -19,9 +19,41 @@ export function repairBuildReportInlineScript(source: string): string {
   return source.replace(brokenPathNormalizer, safePathNormalizer);
 }
 
+export function simplifyBuildReportSettingsLayout(source: string): string {
+  let html = replaceOnce(
+    source,
+    `    .report-settings { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 10px; }
+    .report-setting { padding: 13px; border-radius: 9px; background: #0f172a; border: 1px solid #273244; }
+    .report-setting span { display: block; color: #9ca3af; font-size: 11px; }
+    .report-setting strong { display: block; margin-top: 6px; overflow-wrap: anywhere; }`,
+    `    .report-settings { display: grid; gap: 0; margin: 0; }
+    .report-setting-row { min-width: 0; padding: 12px 0; border-bottom: 1px solid #273244; }
+    .report-setting-row:first-child { padding-top: 0; }
+    .report-setting-row:last-child { padding-bottom: 0; border-bottom: 0; }
+    .report-setting-row dt { color: #9ca3af; font-size: 11px; }
+    .report-setting-row dd { min-width: 0; margin: 5px 0 0; color: #f9fafb; overflow-wrap: anywhere; }
+    .report-setting-row dd strong { display: block; font-size: 15px; }
+    .report-setting-row dd span { display: block; margin-top: 4px; color: #94a3b8; font-size: 11px; line-height: 1.45; }`,
+  );
+
+  html = replaceOnce(
+    html,
+    `      return '<div class="report-settings">' + settings.map((item) => '<article class="report-setting"><span>'
+        + escapeReportHtml(item[0]) + '</span><strong>' + escapeReportHtml(item[1]) + '</strong><span style="margin-top:5px">'
+        + escapeReportHtml(item[2]) + '</span></article>').join('') + '</div>';`,
+    `      return '<dl class="report-settings">' + settings.map((item) => '<div class="report-setting-row"><dt>'
+        + escapeReportHtml(item[0]) + '</dt><dd><strong>' + escapeReportHtml(item[1]) + '</strong>'
+        + (item[2] ? '<span>' + escapeReportHtml(item[2]) + '</span>' : '') + '</dd></div>').join('') + '</dl>';`,
+  );
+
+  return html;
+}
+
 export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): string {
-  let html = repairBuildReportInlineScript(
-    createPlayableBuildReportWebMvpIndexHtml(versionInfo),
+  let html = simplifyBuildReportSettingsLayout(
+    repairBuildReportInlineScript(
+      createPlayableBuildReportWebMvpIndexHtml(versionInfo),
+    ),
   );
 
   html = replaceOnce(
