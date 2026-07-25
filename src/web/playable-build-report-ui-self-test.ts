@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { Script } from "node:vm";
 
 import { createPlayableBuildReportWebMvpIndexHtml } from "./playable-build-report-ui.js";
+import { repairBuildReportInlineScript } from "./web-preset-help-ui.js";
 import { createFallbackWebVersionInfo } from "./web-version-info.js";
 
-const html = createPlayableBuildReportWebMvpIndexHtml(createFallbackWebVersionInfo());
+const rawHtml = createPlayableBuildReportWebMvpIndexHtml(createFallbackWebVersionInfo());
+const html = repairBuildReportInlineScript(rawHtml);
 
 for (const id of [
   "viewReportButton",
@@ -32,6 +34,8 @@ assert.notEqual(inlineScriptMatch, null);
 const inlineScript = inlineScriptMatch?.[1] ?? "";
 new Script(inlineScript);
 
+assert.match(inlineScript, /String\.fromCharCode\(92\)/);
+assert.doesNotMatch(inlineScript, /\.replace\(\/\\\/g/);
 assert.match(inlineScript, /viewReportButton\.disabled = false/);
 assert.match(inlineScript, /url\.searchParams\.delete\('download'\)/);
 assert.match(inlineScript, /fetch\(reportUrl\.pathname \+ reportUrl\.search/);
