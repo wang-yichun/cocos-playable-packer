@@ -19,6 +19,126 @@ export function repairBuildReportInlineScript(source: string): string {
   return source.replace(brokenPathNormalizer, safePathNormalizer);
 }
 
+export function supportRawSingleHtmlBuildReport(source: string): string {
+  let html = replaceOnce(
+    source,
+    `    function reportOptionalNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }`,
+    `    function reportOptionalNumber(value) {
+      if (value === null || value === undefined || value === '') return null;
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function formatReportCount(value) {
+      const number = reportOptionalNumber(value);
+      return number === null ? '未记录' : Math.max(0, number).toLocaleString();
+    }
+
+    function isRawSingleHtmlReport(report) {
+      return report.buildMode === 'raw-single-html' || report.tool === 'raw-single-html';
+    }`,
+  );
+
+  html = replaceOnce(
+    html,
+    `      const settings = [
+        ['图片模式', reportModeLabel(image.mode), imageQuality],
+        ['音频压缩', audio.enabled ? (audio.targetBitrateKbps + ' kbps') : '未启用', audio.preserveChannels ? '保持原声道数' : ''],
+        ['Payload 编码', payload.mode || '未记录', payload.savedBytes === undefined ? '' : '相对 Base64 ' + formatReportPercent(payload.savedPercent)],
+        ['Brotli 回退', fallback.mode || 'raw-js', fallback.mode === 'gzip-packed-js' ? '压缩存储 JS 解码器' : '兼容优先'],
+      ];`,
+    `      const settings = isRawSingleHtmlReport(report)
+        ? [
+            ['图片模式', '未执行', '仅合并为单 HTML'],
+            ['音频压缩', '未执行', '仅合并为单 HTML'],
+            ['Payload 编码', '未执行', '未生成压缩 Payload'],
+            ['Brotli 压缩', '未执行', '未生成 Brotli 数据块'],
+          ]
+        : [
+            ['图片模式', reportModeLabel(image.mode), imageQuality],
+            ['音频压缩', audio.enabled ? (audio.targetBitrateKbps + ' kbps') : '未启用', audio.preserveChannels ? '保持原声道数' : ''],
+            ['Payload 编码', payload.mode || '未记录', payload.savedBytes === undefined ? '' : '相对 Base64 ' + formatReportPercent(payload.savedPercent)],
+            ['Brotli 回退', fallback.mode || 'raw-js', fallback.mode === 'gzip-packed-js' ? '压缩存储 JS 解码器' : '兼容优先'],
+          ];`,
+  );
+
+  html = replaceOnce(
+    html,
+    `        ['项目', project.key || project.explicitName || '-'],
+        ['输入文件数', reportNumber(input.fileCount).toLocaleString()],
+        ['图片文件数', reportNumber(input.imageCount).toLocaleString()],
+        ['音频文件数', reportNumber(input.audioCount).toLocaleString()],`,
+    `        ['项目', project.key || project.explicitName || '-'],
+        ['输入文件数', formatReportCount(input.fileCount)],
+        ['图片文件数', formatReportCount(input.imageCount)],
+        ['音频文件数', formatReportCount(input.audioCount)],`,
+  );
+
+  html = replaceOnce(
+    html,
+    `      const inputBytes = Math.max(0, reportNumber(input.totalBytes));
+      const outputBytes = Math.max(0, reportNumber(output.bytes));
+      const savedBytes = inputBytes - outputBytes;
+      const savedPercent = reportPercent(savedBytes, inputBytes);
+      const reductionText = savedBytes >= 0 ? formatReportBytes(savedBytes) : '增加 ' + formatReportBytes(Math.abs(savedBytes));
+      const status = report.status === 'succeeded' ? '构建成功' : String(report.status || '报告已生成');
+      const mode = reportObject(report.payloadEncoding).mode || (report.tool === 'raw-single-html' ? '原始单 HTML' : 'Base64');`,
+    `      const rawSingleHtml = isRawSingleHtmlReport(report);
+      const inputBytesValue = reportOptionalNumber(input.totalBytes);
+      const inputBytes = inputBytesValue === null ? null : Math.max(0, inputBytesValue);
+      const outputBytes = Math.max(0, reportNumber(output.bytes));
+      const savedBytes = inputBytes === null ? null : inputBytes - outputBytes;
+      const savedPercent = savedBytes === null ? null : reportPercent(savedBytes, inputBytes);
+      const reductionText = savedBytes === null
+        ? '不适用'
+        : savedBytes >= 0
+          ? formatReportBytes(savedBytes)
+          : '增加 ' + formatReportBytes(Math.abs(savedBytes));
+      const reductionDetail = savedPercent === null
+        ? '未记录输入目录总体积'
+        : (savedPercent >= 0 ? '减少 ' : '增加 ') + Math.abs(savedPercent).toFixed(2) + '%';
+      const status = report.status === 'succeeded' || rawSingleHtml
+        ? '构建成功'
+        : String(report.status || '报告已生成');
+      const mode = rawSingleHtml
+        ? '未压缩单 HTML'
+        : reportObject(report.payloadEncoding).mode || 'Base64';
+      const imageMode = rawSingleHtml
+        ? '图片未处理'
+        : reportObject(report.imageOptimization).mode || '图片模式未记录';
+      const inputSizeText = inputBytes === null ? '未记录' : formatReportBytes(inputBytes);
+      const inputFileCount = formatReportCount(input.fileCount);
+      const inputFileDetail = inputFileCount === '未记录' ? '报告未提供文件统计' : inputFileCount + ' 个文件';
+      const imageSavingsText = rawSingleHtml
+        ? '不适用'
+        : formatReportBytes(reportObject(report.imageOptimization).savedBytes);
+      const imageSavingsDetail = rawSingleHtml
+        ? '图片压缩未执行'
+        : formatReportPercent(reportObject(report.imageOptimization).savedPercent);`,
+  );
+
+  html = replaceOnce(
+    html,
+    `        + escapeReportHtml(reportFileName(output.file)) + '</h3><p>' + escapeReportHtml('实际输出 · ' + mode + ' · ' + (reportObject(report.imageOptimization).mode || '图片模式未记录'))`,
+    `        + escapeReportHtml(reportFileName(output.file)) + '</h3><p>' + escapeReportHtml('实际输出 · ' + mode + ' · ' + imageMode)`,
+  );
+
+  html = replaceOnce(
+    html,
+    `        + renderReportKpi('输入资源', formatReportBytes(inputBytes), reportNumber(input.fileCount) + ' 个文件')
+        + renderReportKpi('总体积变化', reductionText, (savedPercent >= 0 ? '减少 ' : '增加 ') + Math.abs(savedPercent).toFixed(2) + '%')
+        + renderReportKpi('图片收益', formatReportBytes(reportObject(report.imageOptimization).savedBytes), formatReportPercent(reportObject(report.imageOptimization).savedPercent))`,
+    `        + renderReportKpi('输入资源', inputSizeText, inputFileDetail)
+        + renderReportKpi('总体积变化', reductionText, reductionDetail)
+        + renderReportKpi('图片收益', imageSavingsText, imageSavingsDetail)`,
+  );
+
+  return html;
+}
+
 export function simplifyBuildReportSettingsLayout(source: string): string {
   let html = replaceOnce(
     source,
@@ -51,8 +171,10 @@ export function simplifyBuildReportSettingsLayout(source: string): string {
 
 export function createPresetHelpWebMvpIndexHtml(versionInfo: WebVersionInfo): string {
   let html = simplifyBuildReportSettingsLayout(
-    repairBuildReportInlineScript(
-      createPlayableBuildReportWebMvpIndexHtml(versionInfo),
+    supportRawSingleHtmlBuildReport(
+      repairBuildReportInlineScript(
+        createPlayableBuildReportWebMvpIndexHtml(versionInfo),
+      ),
     ),
   );
 
