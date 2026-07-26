@@ -96,7 +96,7 @@ export async function startBuildWorker(options: BuildWorkerClientOptions): Promi
     cwd: options.packageRoot,
     env: workerEnvironment(options.configuration, options.packageRoot, options.tempRoot),
     windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: ["pipe", "pipe", "pipe"],
   });
 
   child.stdout?.on("data", consumeLines((line) => {
@@ -116,7 +116,10 @@ export async function startBuildWorker(options: BuildWorkerClientOptions): Promi
   return {
     child,
     requestFile,
-    cancel() { child.kill(); },
+    cancel() {
+      if (child.exitCode !== null || child.signalCode !== null) return;
+      child.stdin?.write(`${JSON.stringify({ type: "cancel", taskId: options.taskId })}\n`);
+    },
     async cleanup() { await rm(requestFile, { force: true }); },
   };
 }

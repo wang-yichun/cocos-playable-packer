@@ -16,6 +16,10 @@ export interface CreatorWorkerRequest {
   build: PlayableBuildRequest;
 }
 
+/** Commands sent by the Creator extension to a running worker through stdin. */
+export type CreatorWorkerControlMessage =
+  | { type: "cancel"; taskId: string };
+
 export type CreatorWorkerMessage =
   | { type: "ready"; taskId: string; pid: number }
   | { type: "event"; taskId: string; event: PlayableBuildEvent }
@@ -28,6 +32,17 @@ export type CreatorWorkerMessage =
 
 export function serializeCreatorWorkerMessage(message: CreatorWorkerMessage): string {
   return `${JSON.stringify(message)}\n`;
+}
+
+export function parseCreatorWorkerControlMessage(value: unknown): CreatorWorkerControlMessage {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Creator Worker 控制消息必须是对象。");
+  }
+  const message = value as Partial<CreatorWorkerControlMessage>;
+  if (message.type !== "cancel" || typeof message.taskId !== "string" || message.taskId.trim().length === 0) {
+    throw new TypeError("无效的 Creator Worker 控制消息。");
+  }
+  return { type: "cancel", taskId: message.taskId };
 }
 
 export function parseCreatorWorkerRequest(value: unknown): CreatorWorkerRequest {

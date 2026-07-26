@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { runPlayableBuild } from "../core/index.js";
 import {
+  parseCreatorWorkerControlMessage,
   parseCreatorWorkerRequest,
   serializeCreatorWorkerMessage,
   type CreatorWorkerMessage,
@@ -57,6 +58,25 @@ async function ensureTinyPngEnvCompatibility(
   };
 }
 
+function listenForCancellation(taskId: string, controller: AbortController): void {
+  process.stdin.setEncoding("utf8");
+  let pending = "";
+  process.stdin.on("data", (chunk: string) => {
+    pending += chunk;
+    const lines = pending.split(/\r?\n/);
+    pending = lines.pop() ?? "";
+    for (const line of lines) {
+      if (line.trim().length === 0) continue;
+      try {
+        const command = parseCreatorWorkerControlMessage(JSON.parse(line) as unknown);
+        if (command.type === "cancel" && command.taskId === taskId) controller.abort();
+      } catch {
+        // Control input is host-owned. Ignore malformed messages without corrupting stdout JSONL.
+      }
+    }
+  });
+}
+
 async function main(): Promise<void> {
   const requestFile = process.argv[2];
   if (requestFile === undefined) {
@@ -66,6 +86,8 @@ async function main(): Promise<void> {
   const request = parseCreatorWorkerRequest(
     JSON.parse(await readFile(path.resolve(requestFile), "utf8")) as unknown,
   );
+  const cancellation = new AbortController();
+  listenForCancellation(request.taskId, cancellation);
   write({ type: "ready", taskId: request.taskId, pid: process.pid });
 
   const cleanupTinyPngEnv = await ensureTinyPngEnvCompatibility(request);
@@ -80,6 +102,7 @@ async function main(): Promise<void> {
           ...process.env,
           ...request.environment,
         },
+        signal: cancellation.signal,
         onEvent(event) {
           write({ type: "event", taskId: request.taskId, event });
         },
