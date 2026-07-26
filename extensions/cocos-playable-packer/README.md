@@ -29,10 +29,10 @@ npm run creator:link -- `
 Windows 下会创建目录 Junction，并在游戏仓库本地 `.git/info/exclude` 中加入：
 
 ```text
-/extensions/cocos-playable-packer/
+/extensions/cocos-playable-packer
 ```
 
-该排除项不会提交到游戏仓库，避免插件链接污染 `git status`。
+该排除项不会提交到游戏仓库，并且能同时匹配 Windows Junction 和其他平台的目录符号链接，避免插件链接污染 `git status`。
 
 检查链接：
 
