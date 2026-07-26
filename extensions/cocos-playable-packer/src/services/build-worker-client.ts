@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { access, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -20,7 +20,7 @@ export interface BuildWorkerClientOptions {
 }
 
 export interface RunningBuildWorker {
-  child: ChildProcessWithoutNullStreams;
+  child: ChildProcess;
   requestFile: string;
   cancel(): void;
   cleanup(): Promise<void>;
@@ -33,17 +33,13 @@ function buildRequest(configuration: CreatorBuildConfiguration, projectName: str
     image: configuration.imageMode === "tinypng"
       ? { mode: "tinypng" as const, scope: { type: "all" as const } }
       : { mode: configuration.imageMode },
-    audio: configuration.audioEnabled
-      ? { bitrateKbps: configuration.audioBitrateKbps }
-      : null,
+    audio: configuration.audioEnabled ? { bitrateKbps: configuration.audioBitrateKbps } : null,
     payloadEncoding: configuration.payloadEncoding,
     projectName,
   };
 }
 
-function consumeLines(
-  onLine: (line: string) => void,
-): (chunk: Buffer) => void {
+function consumeLines(onLine: (line: string) => void): (chunk: Buffer) => void {
   let buffer = "";
   return (chunk) => {
     buffer += chunk.toString("utf8");
@@ -57,15 +53,8 @@ function consumeLines(
   };
 }
 
-export async function startBuildWorker(
-  options: BuildWorkerClientOptions,
-): Promise<RunningBuildWorker> {
-  const workerScript = path.join(
-    options.packageRoot,
-    "dist",
-    "creator-worker",
-    "playable-build-worker.js",
-  );
+export async function startBuildWorker(options: BuildWorkerClientOptions): Promise<RunningBuildWorker> {
+  const workerScript = path.join(options.packageRoot, "dist", "creator-worker", "playable-build-worker.js");
   await access(workerScript);
   await mkdir(options.tempRoot, { recursive: true });
   const requestFile = path.join(options.tempRoot, `${options.taskId}.request.json`);
@@ -90,32 +79,24 @@ export async function startBuildWorker(
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  child.stdout.on("data", consumeLines((line) => {
+  child.stdout?.on("data", consumeLines((line) => {
     try {
       const message = JSON.parse(line) as { type?: unknown };
       const type = typeof message.type === "string" ? message.type : "invalid-output";
       options.onMessage({
-        type: type === "ready" || type === "event" || type === "result" || type === "error"
-          ? type
-          : "invalid-output",
+        type: type === "ready" || type === "event" || type === "result" || type === "error" ? type : "invalid-output",
         value: message,
       });
     } catch {
       options.onMessage({ type: "invalid-output", value: line });
     }
   }));
-  child.stderr.on("data", consumeLines((line) => {
-    options.onMessage({ type: "stderr", value: line });
-  }));
+  child.stderr?.on("data", consumeLines((line) => options.onMessage({ type: "stderr", value: line })));
 
   return {
     child,
     requestFile,
-    cancel() {
-      child.kill();
-    },
-    async cleanup() {
-      await rm(requestFile, { force: true });
-    },
+    cancel() { child.kill(); },
+    async cleanup() { await rm(requestFile, { force: true }); },
   };
 }
