@@ -6,10 +6,15 @@ export interface CreatorProjectInfo {
 }
 
 export interface CreatorRuntimeInfo {
-  nodeVersion: string;
-  nodeExecutable: string;
+  hostNodeVersion: string;
+  hostExecutable: string;
   platform: NodeJS.Platform;
   architecture: string;
+  externalNodeAvailable: boolean;
+  externalNodeSupported: boolean;
+  externalNodeVersion: string | null;
+  externalNodeExecutable: string | null;
+  externalNodeError: string | null;
 }
 
 export interface CreatorExtensionPaths {
