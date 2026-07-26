@@ -14,6 +14,7 @@ import type {
 const PACKAGE_NAME = "cocos-playable-packer";
 const MAX_LOG_LINES = 100;
 const MINIMUM_EXTERNAL_NODE_MAJOR = 22;
+const DEFAULT_IMAGE_QUALITY = 80;
 const execFileAsync = promisify(execFile);
 const logs: string[] = [];
 const taskManager = new CreatorBuildTaskManager();
@@ -171,7 +172,29 @@ async function queryEnvironment(): Promise<CreatorEnvironmentInfo> {
   };
 }
 
+function normalizedImageQuality(value: number | undefined, label: string): number {
+  const quality = value ?? DEFAULT_IMAGE_QUALITY;
+  if (!Number.isInteger(quality) || quality < 1 || quality > 100) {
+    throw new TypeError(`${label}必须是 1–100 的整数。`);
+  }
+  return quality;
+}
+
+function normalizeBuildConfiguration(configuration: CreatorBuildConfiguration): CreatorBuildConfiguration {
+  const tinyPngApiKey = configuration.tinyPngApiKey?.trim() ?? "";
+  if (configuration.imageMode === "tinypng" && tinyPngApiKey.length === 0) {
+    throw new TypeError("选择 TinyPNG 时必须填写 API Key。");
+  }
+  return {
+    ...configuration,
+    pngQuality: normalizedImageQuality(configuration.pngQuality, "PNG 质量"),
+    jpegQuality: normalizedImageQuality(configuration.jpegQuality, "JPG 质量"),
+    tinyPngApiKey,
+  };
+}
+
 async function startBuild(configuration: CreatorBuildConfiguration): Promise<CreatorBuildTask> {
+  const normalizedConfiguration = normalizeBuildConfiguration(configuration);
   const environment = await queryEnvironment();
   if (!environment.checks.webMobileDirectoryExists) throw new Error("未找到 Web Mobile 构建目录。");
   if (environment.paths.packerRoot === null) throw new Error("未检测到 Packer Core 根目录。");
@@ -185,7 +208,7 @@ async function startBuild(configuration: CreatorBuildConfiguration): Promise<Cre
     tempRoot,
     nodeExecutable: environment.runtime.externalNodeExecutable,
     projectName: environment.project.name,
-    configuration,
+    configuration: normalizedConfiguration,
   });
 }
 
