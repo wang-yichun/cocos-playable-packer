@@ -27,9 +27,9 @@ export interface RunningBuildWorker {
 }
 
 function imageRequest(configuration: CreatorBuildConfiguration) {
-  if (configuration.imageMode === "squoosh") {
+  if (configuration.imageMode === "squoosh" || configuration.imageMode === "webp") {
     return {
-      mode: "squoosh" as const,
+      mode: configuration.imageMode,
       pngQuality: configuration.pngQuality ?? 80,
       jpegQuality: configuration.jpegQuality ?? 80,
     };
@@ -37,7 +37,7 @@ function imageRequest(configuration: CreatorBuildConfiguration) {
   if (configuration.imageMode === "tinypng") {
     return { mode: "tinypng" as const, scope: { type: "all" as const } };
   }
-  return { mode: configuration.imageMode };
+  return { mode: "none" as const };
 }
 
 function buildRequest(configuration: CreatorBuildConfiguration, projectName: string) {
