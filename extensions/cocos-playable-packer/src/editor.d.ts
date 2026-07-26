@@ -11,6 +11,36 @@ declare namespace Editor {
     function define<T>(definition: T): T;
   }
 
+  interface DialogFilter {
+    name: string;
+    extensions: string[];
+  }
+
+  interface SelectDialogOptions {
+    title?: string;
+    button?: string;
+    path?: string;
+    type?: "directory" | "file";
+    multi?: boolean;
+    filters?: DialogFilter[];
+    extensions?: string[];
+  }
+
+  interface OpenDialogReturnValue {
+    canceled: boolean;
+    filePaths: string[];
+  }
+
+  interface SaveDialogReturnValue {
+    canceled: boolean;
+    filePath: string;
+  }
+
+  namespace Dialog {
+    function select(options?: SelectDialogOptions): Promise<OpenDialogReturnValue>;
+    function save(options?: SelectDialogOptions): Promise<SaveDialogReturnValue>;
+  }
+
   namespace Message {
     function request<T = unknown>(
       packageName: string,
