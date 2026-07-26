@@ -46,13 +46,16 @@ try {
   assert.match(linkedExclude, /# user excludes/);
   assert.match(linkedExclude, /\/local-only\//);
   assert.match(linkedExclude, /cocos-playable-packer managed Creator extension link/);
-  assert.match(linkedExclude, /\/extensions\/cocos-playable-packer\//);
+  assert.ok(linkedExclude.split(/\r?\n/).includes("/extensions/cocos-playable-packer"));
 
   const alreadyLinked = await linkCreatorExtension(projectRoot, { source });
   assert.equal(alreadyLinked.status, "already-linked");
   const repeatedExclude = await readFile(excludeFile, "utf8");
   assert.equal(
-    repeatedExclude.match(/\/extensions\/cocos-playable-packer\//g)?.length,
+    repeatedExclude
+      .split(/\r?\n/)
+      .filter((line) => line === "/extensions/cocos-playable-packer")
+      .length,
     1,
   );
 
@@ -71,7 +74,10 @@ try {
   assert.match(remainingExclude, /# user excludes/);
   assert.match(remainingExclude, /\/local-only\//);
   assert.doesNotMatch(remainingExclude, /cocos-playable-packer managed/);
-  assert.doesNotMatch(remainingExclude, /\/extensions\/cocos-playable-packer\//);
+  assert.equal(
+    remainingExclude.split(/\r?\n/).includes("/extensions/cocos-playable-packer"),
+    false,
+  );
 
   const notLinked = await unlinkCreatorExtension(projectRoot);
   assert.equal(notLinked.status, "not-linked");
