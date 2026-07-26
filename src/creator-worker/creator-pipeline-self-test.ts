@@ -24,6 +24,22 @@ const request = parseCreatorWorkerRequest({
 assert.equal(request.taskId, "task-1");
 assert.equal(request.build.payloadEncoding, "html7");
 
+const loadingScreenRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-loading-screen",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    loadingScreen: { enabled: true, logoDataUrl: "data:image/png;base64,AA==" },
+  },
+});
+assert.equal(loadingScreenRequest.build.loadingScreen?.enabled, true);
+
 const tinyPngRequest = parseCreatorWorkerRequest({
   protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
   taskId: "task-tinypng",
@@ -79,5 +95,7 @@ assert.match(workerSource, /flag: "wx"/);
 assert.match(workerSource, /await cleanupTinyPngEnv\?\.\(\)/);
 assert.match(workerSource, /listenForCancellation/);
 assert.match(workerSource, /signal: cancellation\.signal/);
+assert.match(workerSource, /normalizeLoadingScreenConfig\(request\.build\.loadingScreen\)/);
+assert.match(workerSource, /applyLoadingScreenToArtifact/);
 
 console.log("Creator Worker protocol self-test passed.");

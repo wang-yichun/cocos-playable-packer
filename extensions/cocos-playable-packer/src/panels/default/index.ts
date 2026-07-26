@@ -19,6 +19,18 @@ interface PanelElements {
   cancelBuildButton: HTMLButtonElement;
   previewButton: HTMLButtonElement;
   outputFolderButton: HTMLButtonElement;
+  importLogoButton: HTMLButtonElement;
+  clearLogoButton: HTMLButtonElement;
+  loadingScreenEnabled: HTMLInputElement;
+  loadingLogoPreview: HTMLElement;
+  loadingLogoPreviewImage: HTMLImageElement;
+  loadingLogoPreviewMeta: HTMLElement;
+  loadingOverlay: HTMLElement;
+  loadingLogo: HTMLImageElement;
+  loadingProgressFill: HTMLElement;
+  loadingProgressLabel: HTMLElement;
+  reportSection: HTMLElement;
+  reportContent: HTMLElement;
   inputDirectoryBrowseButton: HTMLButtonElement;
   outputFileBrowseButton: HTMLButtonElement;
   panelStatus: HTMLElement;
@@ -73,6 +85,7 @@ interface PersistedConfiguration {
   payloadEncoding: string;
   audioEnabled: boolean;
   audioBitrateKbps: string;
+  loadingScreenEnabled: boolean;
 }
 
 const selectors: Record<keyof PanelElements, string> = {
@@ -81,6 +94,18 @@ const selectors: Record<keyof PanelElements, string> = {
   cancelBuildButton: "#cancelBuildButton",
   previewButton: "#previewButton",
   outputFolderButton: "#outputFolderButton",
+  importLogoButton: "#importLogoButton",
+  clearLogoButton: "#clearLogoButton",
+  loadingScreenEnabled: "#loadingScreenEnabled",
+  loadingLogoPreview: "#loadingLogoPreview",
+  loadingLogoPreviewImage: "#loadingLogoPreviewImage",
+  loadingLogoPreviewMeta: "#loadingLogoPreviewMeta",
+  loadingOverlay: "#loadingOverlay",
+  loadingLogo: "#loadingLogo",
+  loadingProgressFill: "#loadingProgressFill",
+  loadingProgressLabel: "#loadingProgressLabel",
+  reportSection: "#reportSection",
+  reportContent: "#reportContent",
   inputDirectoryBrowseButton: "#inputDirectoryBrowseButton",
   outputFileBrowseButton: "#outputFileBrowseButton",
   panelStatus: "#panelStatus",
@@ -125,6 +150,153 @@ const selectors: Record<keyof PanelElements, string> = {
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let handlers: Array<readonly [HTMLElement, string, EventListener]> = [];
+let lastReportTaskId = "";
+
+function reportObject(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function reportNumber(value: unknown): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function reportBytes(value: unknown): string {
+  const bytes = Math.max(0, reportNumber(value));
+  if (bytes < 1024) return `${Math.round(bytes)} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function reportPercent(before: unknown, after: unknown): string {
+  const source = reportNumber(before);
+  if (source <= 0) return "-";
+  return `${Math.max(0, (1 - reportNumber(after) / source) * 100).toFixed(2)}%`;
+}
+
+function reportDuration(value: unknown): string {
+  const milliseconds = Math.max(0, Math.round(reportNumber(value)));
+  return milliseconds >= 1_000 ? `${Math.round(milliseconds / 1_000)} 秒` : `${milliseconds} ms`;
+}
+
+function reportTimingLabel(key: string): string {
+  const labels: Record<string, string> = {
+    copy: "复制文件",
+    imageOptimization: "图片处理",
+    audioOptimization: "音频处理",
+    packaging: "封装资源",
+    payloadEncoding: "Payload 编码",
+    loadingScreen: "加载页注入",
+    brotliFallbackOptimization: "Brotli 兼容优化",
+  };
+  return labels[key] ?? key;
+}
+
+function reportCard(label: string, value: string, note = ""): string {
+  return `<article class="report-kpi"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong><small>${escapeHtml(note)}</small></article>`;
+}
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function renderBuildReport(elements: PanelElements, report: unknown): void {
+  const root = reportObject(report);
+  const input = reportObject(root.input);
+  const output = reportObject(root.output);
+  const image = reportObject(root.imageOptimization);
+  const audio = reportObject(root.audioOptimization);
+  const payload = reportObject(root.payloadEncoding);
+  const timing = reportObject(root.timingMs);
+  const warnings = Array.isArray(root.warnings) ? root.warnings : [];
+  const totalBefore = reportNumber(input.totalBytes);
+  const totalAfter = reportNumber(output.bytes);
+  const timingRows = Object.entries(timing).filter(([key]) => key !== "total");
+  const timingMaximum = Math.max(1, ...timingRows.map(([, value]) => reportNumber(value)));
+  const audioLabel = audio.enabled === true ? `已启用 · ${audio.targetBitrateKbps ?? "-"} kbps` : "未启用";
+  const html = [
+    `<div class="report-hero"><div><h3>${escapeHtml(reportObject(root.project).explicitName ?? reportObject(root.project).key ?? "Playable 构建报告")}</h3><p>本次构建的实际产物与处理统计</p></div><span class="report-status-badge">构建成功</span></div>`,
+    `<div class="report-kpis">${reportCard("最终 HTML", reportBytes(totalAfter), `节省 ${reportPercent(totalBefore, totalAfter)}`)}${reportCard("输入资源", reportBytes(totalBefore))}${reportCard("图片处理", reportBytes(image.afterBytes ?? image.beforeBytes), `${escapeHtml(image.mode ?? "未启用")}`)}${reportCard("音频处理", reportBytes(audio.afterBytes ?? audio.beforeBytes), audioLabel)}${reportCard("Payload", escapeHtml(payload.mode ?? "未启用"))}</div>`,
+    `<div class="report-grid"><article class="report-card"><h3>体积对比</h3><div class="report-comparison"><div class="report-comparison-head"><span>最终输出</span><strong>节省 ${reportPercent(totalBefore, totalAfter)}</strong></div><div class="report-pair"><span>处理前</span><div class="report-track"><div class="report-fill-before" style="width:100%"></div></div><span>${reportBytes(totalBefore)}</span></div><div class="report-pair"><span>处理后</span><div class="report-track"><div class="report-fill-after" style="width:${totalBefore > 0 ? Math.min(100, totalAfter / totalBefore * 100) : 0}%"></div></div><span>${reportBytes(totalAfter)}</span></div></div></article><article class="report-card"><h3>处理耗时</h3><div class="report-timings">${timingRows.map(([key, value]) => `<div class="report-timing-row"><span>${escapeHtml(reportTimingLabel(key))}</span><div class="report-track"><div class="report-timing-fill" style="width:${Math.min(100, reportNumber(value) / timingMaximum * 100)}%"></div></div><span>${reportDuration(value)}</span></div>`).join("") || "<div class=\"report-empty\">没有耗时统计。</div>"}<div class="report-timing-row report-timing-total"><strong>总时间</strong><div></div><strong>${reportDuration(timing.total)}</strong></div></div></article></div>`,
+    warnings.length > 0 ? `<article class="report-card report-card-wide"><h3>构建提示</h3><div class="report-warnings">${warnings.map((warning) => `<div class="report-warning-item">${escapeHtml(warning)}</div>`).join("")}</div></article>` : "",
+  ].join("");
+  elements.reportContent.innerHTML = html;
+  elements.reportSection.hidden = false;
+}
+
+async function loadBuildReport(elements: PanelElements, task: CreatorBuildTask): Promise<void> {
+  if (task.status !== "succeeded" || task.reportFile === null) {
+    return;
+  }
+  if (lastReportTaskId === task.id) return;
+  lastReportTaskId = task.id;
+  try {
+    renderBuildReport(elements, await Editor.Message.request<unknown>(PACKAGE_NAME, "read-build-report"));
+  } catch (error) {
+    elements.reportContent.innerHTML = `<div class="report-error">${escapeHtml(error instanceof Error ? error.message : String(error))}</div>`;
+  }
+}
+
+function setLoadingProgress(elements: PanelElements, value: number, label: string): void {
+  const progress = Math.max(0, Math.min(100, value));
+  elements.loadingProgressFill.style.width = `${progress}%`;
+  elements.loadingProgressLabel.textContent = label;
+}
+
+interface CachedLoadingLogo {
+  dataUrl: string;
+  filePath: string;
+  bytes: number;
+  mimeType: string;
+}
+
+function renderLoadingLogoPreview(elements: PanelElements, logo: CachedLoadingLogo | null): void {
+  if (logo === null) {
+    elements.loadingLogo.src = "./static/icon.svg";
+    elements.loadingLogoPreviewImage.src = "";
+    elements.loadingLogoPreviewMeta.textContent = "";
+    elements.loadingLogoPreview.hidden = true;
+    return;
+  }
+  elements.loadingLogo.src = logo.dataUrl;
+  elements.loadingLogoPreviewImage.src = logo.dataUrl;
+  elements.loadingLogoPreviewMeta.textContent = `${logo.mimeType} · ${logo.bytes} B`;
+  elements.loadingLogoPreview.hidden = false;
+}
+
+async function loadLoadingLogo(elements: PanelElements): Promise<CachedLoadingLogo | null> {
+  try {
+    const logo = await Editor.Message.request<CachedLoadingLogo | null>(PACKAGE_NAME, "query-loading-logo");
+    renderLoadingLogoPreview(elements, logo);
+    return logo;
+  } catch {
+    renderLoadingLogoPreview(elements, null);
+    return null;
+  }
+}
+
+async function importLoadingLogo(elements: PanelElements): Promise<void> {
+  try {
+    const result = await Editor.Dialog.select({ title: "选择加载页 Logo", button: "导入 Logo", type: "file", multi: false, filters: [{ name: "图片", extensions: ["png", "jpg", "jpeg", "webp"] }] });
+    const source = result.filePaths[0];
+    if (!source) return;
+    await Editor.Message.request(PACKAGE_NAME, "save-loading-logo", source);
+    await loadLoadingLogo(elements);
+    setText(elements, "panelStatus", "加载页 Logo 已缓存到扩展目录。 ");
+  } catch (error) {
+    setText(elements, "panelStatus", `导入 Logo 失败：${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+async function clearLoadingLogo(elements: PanelElements): Promise<void> {
+  try {
+    await Editor.Message.request<void>(PACKAGE_NAME, "clear-loading-logo");
+    renderLoadingLogoPreview(elements, null);
+    setText(elements, "panelStatus", "已清空加载页 Logo 缓存。");
+  } catch (error) {
+    setText(elements, "panelStatus", `清空 Logo 失败：${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 
 function configurationStorageKey(): string {
   const projectIdentity = Editor.Project.uuid || Editor.Project.path;
@@ -142,6 +314,7 @@ function persistedConfigurationFrom(elements: PanelElements): PersistedConfigura
     payloadEncoding: elements.payloadEncoding.value,
     audioEnabled: elements.audioEnabled.checked,
     audioBitrateKbps: elements.audioBitrateKbps.value,
+    loadingScreenEnabled: elements.loadingScreenEnabled.checked,
   };
 }
 
@@ -167,6 +340,7 @@ function restoreConfiguration(elements: PanelElements): void {
     if (typeof saved.payloadEncoding === "string") elements.payloadEncoding.value = saved.payloadEncoding;
     if (typeof saved.audioEnabled === "boolean") elements.audioEnabled.checked = saved.audioEnabled;
     if (typeof saved.audioBitrateKbps === "string") elements.audioBitrateKbps.value = saved.audioBitrateKbps;
+    if (typeof saved.loadingScreenEnabled === "boolean") elements.loadingScreenEnabled.checked = saved.loadingScreenEnabled;
   } catch {
     // 忽略损坏或不可用的历史配置，回退到默认值。
   }
@@ -200,6 +374,9 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
   elements.tinyPngApiKey.disabled = active || !tinyPngEnabled;
   elements.audioEnabled.disabled = active;
   elements.audioBitrateKbps.disabled = active || !elements.audioEnabled.checked;
+  elements.loadingScreenEnabled.disabled = active;
+  elements.importLogoButton.disabled = active;
+  elements.clearLogoButton.disabled = active;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
   elements.webpWarning.hidden = imageMode !== "webp";
   elements.audioWarning.hidden = !elements.audioEnabled.checked;
@@ -241,6 +418,7 @@ function renderTask(elements: PanelElements, task: CreatorBuildTask): void {
   setText(elements, "taskStatus", task.status === "idle" ? "等待构建" : `${task.status}${task.stage ? ` · ${task.stage}` : ""}`);
   setText(elements, "taskLogOutput", task.logs.length === 0 ? "暂无构建日志。" : task.logs.join("\n"));
   setText(elements, "panelStatus", task.error ?? (task.status === "succeeded" ? `构建完成：${task.outputFile}` : active ? "构建任务正在运行…" : "环境检测完成。"));
+  void loadBuildReport(elements, task);
 }
 
 async function refreshEnvironment(elements: PanelElements): Promise<void> {
@@ -316,11 +494,14 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
     audioEnabled: elements.audioEnabled.checked,
     audioBitrateKbps: Number(elements.audioBitrateKbps.value) || 48,
     payloadEncoding: elements.payloadEncoding.value as CreatorBuildConfiguration["payloadEncoding"],
+    loadingScreenEnabled: elements.loadingScreenEnabled.checked,
   };
 }
 
 async function startBuild(elements: PanelElements): Promise<void> {
   try {
+    elements.reportSection.hidden = true;
+    lastReportTaskId = "";
     saveConfiguration(elements);
     const configuration = configurationFrom(elements);
     renderTask(elements, await Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "start-build", configuration));
@@ -362,6 +543,8 @@ module.exports = Editor.Panel.define({
   $: selectors,
   methods: {},
   ready(this: PanelContext): void {
+    this.$.loadingOverlay.hidden = false;
+    setLoadingProgress(this.$, 12, "正在加载 Cocos Playable Packer…");
     restoreConfiguration(this.$);
     bind(this.$.refreshEnvironmentButton, "click", () => void refreshEnvironment(this.$));
     bind(this.$.inputDirectoryBrowseButton, "click", () => void chooseInputDirectory(this.$));
@@ -378,6 +561,7 @@ module.exports = Editor.Panel.define({
       "payloadEncoding",
       "audioEnabled",
       "audioBitrateKbps",
+      "loadingScreenEnabled",
     ] as const) {
       bind(this.$[key], "change", () => saveConfiguration(this.$));
       bind(this.$[key], "input", () => saveConfiguration(this.$));
@@ -386,11 +570,19 @@ module.exports = Editor.Panel.define({
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
     bind(this.$.previewButton, "click", () => void openPreview(this.$));
     bind(this.$.outputFolderButton, "click", () => void openOutputFolder(this.$));
+    bind(this.$.importLogoButton, "click", () => void importLoadingLogo(this.$));
+    bind(this.$.clearLogoButton, "click", () => void clearLoadingLogo(this.$));
     if (this.$.pngQuality.value.trim().length === 0) this.$.pngQuality.value = String(DEFAULT_IMAGE_QUALITY);
     if (this.$.jpegQuality.value.trim().length === 0) this.$.jpegQuality.value = String(DEFAULT_IMAGE_QUALITY);
     syncConfigurationState(this.$, false);
-    void refreshEnvironment(this.$);
-    void refreshTask(this.$);
+    void loadLoadingLogo(this.$);
+    void refreshEnvironment(this.$).finally(() => {
+      setLoadingProgress(this.$, 72, "正在读取构建任务…");
+      void refreshTask(this.$).finally(() => {
+        setLoadingProgress(this.$, 100, "加载完成");
+        setTimeout(() => { this.$.loadingOverlay.hidden = true; }, 220);
+      });
+    });
     pollTimer = setInterval(() => void refreshTask(this.$), 750);
   },
   beforeClose(): void {},

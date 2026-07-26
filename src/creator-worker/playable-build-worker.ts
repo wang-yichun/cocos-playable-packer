@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { runPlayableBuild } from "../core/index.js";
 import {
+  applyLoadingScreenToArtifact,
+  normalizeLoadingScreenConfig,
+} from "../web/loading-screen.js";
+import {
   parseCreatorWorkerControlMessage,
   parseCreatorWorkerRequest,
   serializeCreatorWorkerMessage,
@@ -108,6 +112,11 @@ async function main(): Promise<void> {
         },
       },
     });
+
+    const loadingScreen = normalizeLoadingScreenConfig(request.build.loadingScreen);
+    if (loadingScreen?.enabled) {
+      await applyLoadingScreenToArtifact(result.outputFile, result.reportFile, loadingScreen);
+    }
 
     write({ type: "result", taskId: request.taskId, result });
   } finally {

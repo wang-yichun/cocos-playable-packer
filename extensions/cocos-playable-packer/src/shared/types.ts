@@ -65,6 +65,9 @@ export interface CreatorBuildConfiguration {
   audioEnabled: boolean;
   audioBitrateKbps: number;
   payloadEncoding: CreatorPayloadEncoding;
+  loadingScreenEnabled: boolean;
+  /** Populated by the extension main process from the cached Logo, never persisted by the panel. */
+  loadingLogoDataUrl?: string | null;
 }
 
 export interface CreatorBuildTask {

@@ -1,3 +1,9 @@
+<div id="loadingOverlay" class="loading-overlay" role="status">
+  <img id="loadingLogo" class="loading-logo" src="./static/icon.svg" alt="Cocos Playable Packer">
+  <div class="loading-progress"><span id="loadingProgressFill"></span></div>
+  <div id="loadingProgressLabel" class="loading-label">正在加载…</div>
+</div>
+
 <main class="shell">
   <header class="hero">
     <div class="hero-copy">
@@ -119,6 +125,26 @@
           <p class="field-note">HTML7 体积最小；Base64 通用性最高，适合兼容性排查。</p>
         </article>
 
+        <article class="config-card">
+          <div class="config-card-heading">
+            <span class="config-index">05</span>
+            <div><h3>Playable 加载界面</h3><p>为最终 Playable 注入启动 Logo 与蓝色加载进度条。</p></div>
+          </div>
+          <label class="switch-row">
+            <span><strong>启用 Logo 与蓝色进度条</strong><small>关闭后不会向最终 HTML 注入加载界面</small></span>
+            <input id="loadingScreenEnabled" class="switch-input" type="checkbox" checked>
+          </label>
+          <div class="logo-import-row">
+            <button id="importLogoButton" class="button button--ghost" type="button"><span class="button-icon">◇</span>导入加载页 Logo</button>
+            <button id="clearLogoButton" class="button button--ghost" type="button">清空 Logo</button>
+            <span class="field-help">支持 PNG、JPEG、WebP，最大 40 KB。</span>
+          </div>
+          <div id="loadingLogoPreview" class="loading-logo-preview" hidden>
+            <img id="loadingLogoPreviewImage" alt="已导入的加载页 Logo">
+            <span id="loadingLogoPreviewMeta"></span>
+          </div>
+        </article>
+
         <article class="config-card config-card--summary">
           <div class="config-card-heading">
             <span class="config-index">✓</span>
@@ -147,6 +173,11 @@
       <div class="log-panel-heading"><strong>构建日志</strong><span>实时更新</span></div>
       <pre id="taskLogOutput" class="logs">暂无构建日志。</pre>
     </div>
+  </section>
+
+  <section id="reportSection" class="panel-section report-section" hidden>
+    <div class="section-title"><div><p class="section-kicker">BUILD REPORT</p><h2>Playable 构建报告</h2></div><span>本次构建</span></div>
+    <div id="reportContent" class="report-content"><div class="report-empty">构建完成后将在这里显示可视化报告。</div></div>
   </section>
 
   <section class="panel-section">

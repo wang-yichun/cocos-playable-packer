@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { access, mkdir, readFile, realpath } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, readdir, realpath, unlink } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -17,6 +17,14 @@ const PACKAGE_NAME = "cocos-playable-packer";
 const MAX_LOG_LINES = 100;
 const MINIMUM_EXTERNAL_NODE_MAJOR = 22;
 const DEFAULT_IMAGE_QUALITY = 80;
+const LOADING_LOGO_DIRECTORY = "static/assets";
+const LOADING_LOGO_BASENAME = "loading-logo";
+const LOADING_LOGO_MIME_TYPES: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+};
 const execFileAsync = promisify(execFile);
 const extensionRequire = createRequire(__filename);
 const logs: string[] = [];
@@ -51,6 +59,62 @@ async function extensionVersion(extensionRoot: string): Promise<string> {
   } catch {
     return "unknown";
   }
+}
+
+function extensionRootPath(): string {
+  return path.resolve(__dirname, "..");
+}
+
+async function queryLoadingLogo(): Promise<{
+  dataUrl: string;
+  filePath: string;
+  bytes: number;
+  mimeType: string;
+} | null> {
+  const directory = path.join(extensionRootPath(), LOADING_LOGO_DIRECTORY);
+  for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
+    if (!entry.isFile() || !entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) continue;
+    const extension = path.extname(entry.name).toLowerCase();
+    const mimeType = LOADING_LOGO_MIME_TYPES[extension];
+    if (!mimeType) continue;
+    const filePath = path.join(directory, entry.name);
+    const data = await readFile(filePath);
+    return {
+      dataUrl: `data:${mimeType};base64,${data.toString("base64")}`,
+      filePath,
+      bytes: data.byteLength,
+      mimeType,
+    };
+  }
+  return null;
+}
+
+async function saveLoadingLogo(sourcePath: string): Promise<{ filePath: string }> {
+  const source = path.resolve(sourcePath);
+  const extension = path.extname(source).toLowerCase();
+  if (!LOADING_LOGO_MIME_TYPES[extension]) throw new Error("Logo 仅支持 PNG、JPG、WebP 或 SVG 文件。");
+  if (!(await exists(source))) throw new Error(`Logo 文件不存在：${source}`);
+  const directory = path.join(extensionRootPath(), LOADING_LOGO_DIRECTORY);
+  await mkdir(directory, { recursive: true });
+  for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
+    if (entry.isFile() && entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) {
+      await unlink(path.join(directory, entry.name)).catch(() => undefined);
+    }
+  }
+  const target = path.join(directory, `${LOADING_LOGO_BASENAME}${extension}`);
+  await copyFile(source, target);
+  appendLog(`已缓存加载页 Logo：${target}`);
+  return { filePath: target };
+}
+
+async function clearLoadingLogo(): Promise<void> {
+  const directory = path.join(extensionRootPath(), LOADING_LOGO_DIRECTORY);
+  for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
+    if (entry.isFile() && entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) {
+      await unlink(path.join(directory, entry.name));
+    }
+  }
+  appendLog("已清空加载页 Logo 缓存。");
 }
 
 async function detectPackerRoot(extensionRoot: string, realExtensionRoot: string): Promise<string | null> {
@@ -188,7 +252,19 @@ function normalizeBuildConfiguration(configuration: CreatorBuildConfiguration): 
 }
 
 async function startBuild(configuration: CreatorBuildConfiguration): Promise<CreatorBuildTask> {
-  const normalizedConfiguration = normalizeBuildConfiguration(configuration);
+  let normalizedConfiguration = normalizeBuildConfiguration(configuration);
+  if (normalizedConfiguration.loadingScreenEnabled) {
+    const loadingLogo = await queryLoadingLogo();
+    if (loadingLogo === null) {
+      throw new Error("启用 Logo 与蓝色进度条前，请先导入 PNG、JPEG 或 WebP Logo。");
+    }
+    normalizedConfiguration = {
+      ...normalizedConfiguration,
+      loadingLogoDataUrl: loadingLogo.dataUrl,
+    };
+  } else {
+    normalizedConfiguration = { ...normalizedConfiguration, loadingLogoDataUrl: null };
+  }
   const environment = await queryEnvironment();
   if (!environment.checks.webMobileDirectoryExists) throw new Error("未找到 Web Mobile 构建目录。");
   if (environment.paths.packerRoot === null) throw new Error("未检测到 Packer Core 根目录。");
@@ -268,6 +344,16 @@ export const methods = {
     await openInFileManager(directory);
     appendLog(`已打开生成的资源目录：${directory}`);
   },
+  async readBuildReport(): Promise<unknown> {
+    const task = taskManager.current();
+    if (task.status !== "succeeded" || task.reportFile === null) throw new Error("当前构建没有可用报告。");
+    const reportPath = path.resolve(task.reportFile);
+    if (!(await exists(reportPath))) throw new Error(`构建报告不存在：${reportPath}`);
+    return JSON.parse(await readFile(reportPath, "utf8")) as unknown;
+  },
+  queryLoadingLogo,
+  saveLoadingLogo,
+  clearLoadingLogo,
 };
 
 export function load(): void {

@@ -47,6 +47,10 @@ function buildRequest(configuration: CreatorBuildConfiguration, projectName: str
     image: imageRequest(configuration),
     audio: configuration.audioEnabled ? { bitrateKbps: configuration.audioBitrateKbps } : null,
     payloadEncoding: configuration.payloadEncoding,
+    loadingScreen: {
+      enabled: configuration.loadingScreenEnabled,
+      logoDataUrl: configuration.loadingLogoDataUrl ?? null,
+    },
     projectName,
   };
 }
