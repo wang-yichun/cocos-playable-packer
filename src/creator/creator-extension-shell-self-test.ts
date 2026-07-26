@@ -71,8 +71,18 @@ assert.match(template, /id="externalNodeExecutable"/);
 assert.match(template, /当前阶段只验证插件加载/);
 assert.match(style, /\.status-grid/);
 assert.match(linkScript, /process\.platform === "win32" \? "junction" : "dir"/);
-assert.match(linkScript, /\.git["'], ["']info["'], ["']exclude/);
-assert.match(linkScript, /\/extensions\/cocos-playable-packer/);
+assert.ok(
+  linkScript.includes(
+    'const GIT_EXCLUDE_MARKER = "# cocos-playable-packer managed Creator extension link";',
+  ),
+);
+assert.ok(
+  linkScript.includes(
+    'const GIT_EXCLUDE_PATTERN = "/extensions/cocos-playable-packer";',
+  ),
+);
+assert.ok(linkScript.includes("async function localGitExcludeFile"));
+assert.ok(linkScript.includes('path.join(gitDirectory, "info", "exclude")'));
 assert.match(linkScript, /普通目录，拒绝覆盖/);
 assert.match(linkScript, /普通目录，拒绝删除/);
 
