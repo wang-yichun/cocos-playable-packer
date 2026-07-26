@@ -68,6 +68,22 @@
               <option value="webp">WebP</option>
             </select>
           </label>
+          <div id="qualitySettings" class="path-fields">
+            <label class="field compact-field">
+              <span class="field-label">PNG 质量</span>
+              <span class="number-input"><input id="pngQuality" type="number" min="1" max="100" step="1" value="80"><em>%</em></span>
+            </label>
+            <label class="field compact-field">
+              <span class="field-label">JPG / JPEG 质量</span>
+              <span class="number-input"><input id="jpegQuality" type="number" min="1" max="100" step="1" value="80"><em>%</em></span>
+            </label>
+            <p class="field-note">质量越低，通常体积越小；推荐先使用 80。</p>
+          </div>
+          <div id="tinyPngSettings" class="field compact-field" hidden>
+            <span class="field-label">TinyPNG API Key</span>
+            <input id="tinyPngApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="选择 TinyPNG 后必填">
+            <p class="field-note">仅用于当前构建任务，不写入请求文件、日志或构建报告。</p>
+          </div>
           <p id="webpWarning" class="inline-warning" hidden>WebP 在部分旧设备或渠道 WebView 中可能存在兼容性问题，交付前请做真机验证。</p>
         </article>
 
