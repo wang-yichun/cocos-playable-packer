@@ -33,9 +33,10 @@
 }
 
 .loading-logo {
-  width: min(38vw, 220px);
-  max-height: 180px;
+  width: min(34vw, 176px);
+  max-height: 156px;
   object-fit: contain;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, .3));
 }
 
 .loading-progress {
@@ -154,6 +155,30 @@ h3 {
   min-width: 0;
 }
 
+.hero-actions {
+  display: flex;
+  flex: 1 1 260px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hero-brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 14px;
+}
+
+.hero-logo {
+  flex: 0 0 auto;
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .22));
+}
+
 .eyebrow,
 .section-kicker {
   margin: 0 0 7px;
@@ -170,6 +195,35 @@ h3 {
   font-size: 12px;
   line-height: 1.55;
   overflow-wrap: anywhere;
+}
+
+.hero-version {
+  margin: 0;
+  color: #8f9cad;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.hero-status {
+  width: 100%;
+  max-width: 420px;
+  text-align: right;
+}
+
+@media (max-width: 560px) {
+  .hero {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .hero-brand {
+    gap: 10px;
+  }
+
+  .hero-logo {
+    width: 52px;
+    height: 52px;
+  }
 }
 
 .button {
@@ -851,6 +905,44 @@ select {
   text-align: center;
 }
 
+.advanced-details {
+  min-width: 0;
+  margin-top: 12px;
+  border: 1px solid rgba(80, 128, 201, .28);
+  border-radius: 9px;
+  background: rgba(30, 64, 112, .12);
+}
+
+.advanced-details > summary {
+  padding: 11px 13px;
+  color: #9fc1ee;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+}
+
+.advanced-details > summary::marker {
+  color: #73a7ff;
+}
+
+.advanced-details-content {
+  padding: 0 12px 12px;
+}
+
+.advanced-details-content .panel-section {
+  margin-top: 10px;
+}
+
+.panel-footer {
+  display: grid;
+  gap: 3px;
+}
+
+.footer-line {
+  display: block;
+}
+
 @media (max-width: 760px) {
   .status-grid,
   .config-grid {
@@ -884,6 +976,19 @@ select {
 
   .button--ghost {
     align-self: flex-start;
+  }
+
+  .hero-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .hero-actions .button--ghost {
+    align-self: flex-end;
+  }
+
+  .hero-status {
+    max-width: none;
   }
 
   .status-grid,

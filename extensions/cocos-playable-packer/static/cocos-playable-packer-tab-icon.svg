@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Cocos Playable Packer">
+  <!-- Small-size-first monochrome glyph: a package cube with a playable mark. -->
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8">
+    <path d="m12 2.8 8.1 4.45v9.5L12 21.2l-8.1-4.45v-9.5L12 2.8Z"/>
+    <path d="m3.9 7.25 8.1 4.4 8.1-4.4M12 11.65V21.2"/>
+  </g>
+  <path fill="currentColor" d="m14.05 13.05 3.45 2-3.45 2z"/>
+</svg>

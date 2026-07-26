@@ -1,6 +1,6 @@
 {
   "package_version": 2,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "name": "cocos-playable-packer",
   "title": "Cocos Playable Packer",
   "description": "Cocos Creator 3.8.x Playable 打包工具插件。",
@@ -13,7 +13,7 @@
       "title": "Cocos Playable Packer",
       "type": "dockable",
       "main": "./dist/panels/default",
-      "icon": "./static/icon.svg",
+      "icon": "./static/cocos-playable-packer-tab-icon.svg",
       "flags": { "resizable": true, "save": true },
       "size": { "min-width": 460, "min-height": 600, "width": 720, "height": 820 }
     }

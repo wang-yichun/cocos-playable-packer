@@ -1,20 +1,26 @@
 <div id="loadingOverlay" class="loading-overlay" role="status">
-  <img id="loadingLogo" class="loading-logo" src="./static/icon.svg" alt="Cocos Playable Packer">
+  <img id="loadingLogo" class="loading-logo" src="./static/branding/cocos-playable-packer-logo.png" alt="Cocos Playable Packer">
   <div class="loading-progress"><span id="loadingProgressFill"></span></div>
   <div id="loadingProgressLabel" class="loading-label">正在加载…</div>
 </div>
 
 <main class="shell">
   <header class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">Cocos Creator 3.8.x Extension</p>
-      <h1>Cocos Playable Packer</h1>
-      <p id="panelStatus" class="subtitle">正在初始化插件面板…</p>
+    <div class="hero-brand">
+      <img class="hero-logo" src="./static/branding/cocos-playable-packer-logo.png" alt="" aria-hidden="true">
+      <div class="hero-copy">
+        <p class="eyebrow">Cocos Creator 3.8.x Extension</p>
+        <h1>Cocos Playable Packer</h1>
+        <p class="hero-version">版本 <span id="headerVersion">1.0.0</span></p>
+      </div>
     </div>
-    <button id="refreshEnvironmentButton" class="button button--ghost" type="button">
-      <span class="button-icon">↻</span>
-      重新检测
-    </button>
+    <div class="hero-actions">
+      <button id="refreshEnvironmentButton" class="button button--ghost" type="button">
+        <span class="button-icon">↻</span>
+        重新检测
+      </button>
+      <p id="panelStatus" class="subtitle hero-status">正在初始化插件面板…</p>
+    </div>
   </header>
 
   <section class="status-grid" aria-label="环境状态">
@@ -180,35 +186,44 @@
     <div id="reportContent" class="report-content"><div class="report-empty">构建完成后将在这里显示可视化报告。</div></div>
   </section>
 
-  <section class="panel-section">
-    <div class="section-title"><div><p class="section-kicker">PROJECT</p><h2>当前项目</h2></div><span id="checkedAt">-</span></div>
-    <dl class="details">
-      <div><dt>项目名称</dt><dd id="projectName">-</dd></div>
-      <div><dt>项目路径</dt><dd id="projectPath">-</dd></div>
-      <div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div>
-      <div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div>
-      <div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
-    </dl>
-  </section>
+  <details class="advanced-details">
+    <summary>高级信息与诊断</summary>
+    <div class="advanced-details-content">
+      <section class="panel-section">
+        <div class="section-title"><div><p class="section-kicker">PROJECT</p><h2>当前项目</h2></div><span id="checkedAt">-</span></div>
+        <dl class="details">
+          <div><dt>项目名称</dt><dd id="projectName">-</dd></div>
+          <div><dt>项目路径</dt><dd id="projectPath">-</dd></div>
+          <div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div>
+          <div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div>
+          <div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
+        </dl>
+      </section>
 
-  <section class="panel-section">
-    <div class="section-title"><div><p class="section-kicker">RUNTIME</p><h2>插件运行环境</h2></div><span>Shell v<span id="extensionVersion">-</span></span></div>
-    <dl class="details">
-      <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div>
-      <div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div>
-      <div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div>
-      <div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div>
-      <div id="externalNodeErrorRow" hidden><dt>Node 检测错误</dt><dd id="externalNodeError"></dd></div>
-      <div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div>
-      <div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div>
-      <div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
-    </dl>
-  </section>
+      <section class="panel-section">
+        <div class="section-title"><div><p class="section-kicker">RUNTIME</p><h2>插件运行环境</h2></div><span>Shell v<span id="extensionVersion">-</span></span></div>
+        <dl class="details">
+          <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div>
+          <div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div>
+          <div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div>
+          <div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div>
+          <div id="externalNodeErrorRow" hidden><dt>Node 检测错误</dt><dd id="externalNodeError"></dd></div>
+          <div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div>
+          <div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div>
+          <div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
+        </dl>
+      </section>
 
-  <section class="panel-section">
-    <div class="section-title"><div><p class="section-kicker">DIAGNOSTICS</p><h2>开发日志</h2></div><span>最近 100 行</span></div>
-    <pre id="logOutput" class="logs">暂无日志。</pre>
-  </section>
+      <section class="panel-section">
+        <div class="section-title"><div><p class="section-kicker">DIAGNOSTICS</p><h2>开发日志</h2></div><span>最近 100 行</span></div>
+        <pre id="logOutput" class="logs">暂无日志。</pre>
+      </section>
+    </div>
+  </details>
 
-  <footer class="notice">Cocos Playable Packer · Creator 3.8.x · 构建结果仍需在目标渠道和真机环境中验证。</footer>
+  <footer class="notice panel-footer">
+    <span class="footer-line">Cocos Playable Packer · Creator 3.8.x</span>
+    <span class="footer-line">版本 <span id="footerVersion">1.0.0</span></span>
+    <span class="footer-line">FrSyrup · © 2026 FrSyrup. 保留所有权利。</span>
+  </footer>
 </main>

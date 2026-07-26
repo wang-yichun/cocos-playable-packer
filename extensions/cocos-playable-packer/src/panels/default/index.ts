@@ -10,7 +10,13 @@ import type {
 const PACKAGE_NAME = "cocos-playable-packer";
 const DEFAULT_IMAGE_QUALITY = 80;
 const CONFIGURATION_STORAGE_PREFIX = "cocos-playable-packer.configuration.v1";
-const template = readFileSync(path.join(__dirname, "../../../static/template/default/index.html"), "utf8");
+const panelLogoDataUrl = `data:image/png;base64,${readFileSync(
+  path.join(__dirname, "../../../static/branding/cocos-playable-packer-logo.png"),
+).toString("base64")}`;
+const template = readFileSync(path.join(__dirname, "../../../static/template/default/index.html"), "utf8")
+  // The panel HTML is injected into Creator's renderer document, so its relative
+  // URLs resolve against the renderer instead of this extension's static folder.
+  .replaceAll("./static/branding/cocos-playable-packer-logo.png", panelLogoDataUrl);
 const style = readFileSync(path.join(__dirname, "../../../static/style/default/index.css"), "utf8");
 
 interface PanelElements {
@@ -34,6 +40,7 @@ interface PanelElements {
   inputDirectoryBrowseButton: HTMLButtonElement;
   outputFileBrowseButton: HTMLButtonElement;
   panelStatus: HTMLElement;
+  headerVersion: HTMLElement;
   taskStatus: HTMLElement;
   taskLogOutput: HTMLElement;
   inputDirectory: HTMLInputElement;
@@ -51,6 +58,7 @@ interface PanelElements {
   webpWarning: HTMLElement;
   audioWarning: HTMLElement;
   extensionVersion: HTMLElement;
+  footerVersion: HTMLElement;
   projectName: HTMLElement;
   projectPath: HTMLElement;
   projectUuid: HTMLElement;
@@ -109,6 +117,7 @@ const selectors: Record<keyof PanelElements, string> = {
   inputDirectoryBrowseButton: "#inputDirectoryBrowseButton",
   outputFileBrowseButton: "#outputFileBrowseButton",
   panelStatus: "#panelStatus",
+  headerVersion: "#headerVersion",
   taskStatus: "#taskStatus",
   taskLogOutput: "#taskLogOutput",
   inputDirectory: "#inputDirectory",
@@ -126,6 +135,7 @@ const selectors: Record<keyof PanelElements, string> = {
   webpWarning: "#webpWarning",
   audioWarning: "#audioWarning",
   extensionVersion: "#extensionVersion",
+  footerVersion: "#footerVersion",
   projectName: "#projectName",
   projectPath: "#projectPath",
   projectUuid: "#projectUuid",
@@ -252,13 +262,11 @@ interface CachedLoadingLogo {
 
 function renderLoadingLogoPreview(elements: PanelElements, logo: CachedLoadingLogo | null): void {
   if (logo === null) {
-    elements.loadingLogo.src = "./static/icon.svg";
     elements.loadingLogoPreviewImage.src = "";
     elements.loadingLogoPreviewMeta.textContent = "";
     elements.loadingLogoPreview.hidden = true;
     return;
   }
-  elements.loadingLogo.src = logo.dataUrl;
   elements.loadingLogoPreviewImage.src = logo.dataUrl;
   elements.loadingLogoPreviewMeta.textContent = `${logo.mimeType} · ${logo.bytes} B`;
   elements.loadingLogoPreview.hidden = false;
@@ -383,7 +391,9 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
 }
 
 function renderEnvironment(elements: PanelElements, info: CreatorEnvironmentInfo): void {
+  setText(elements, "headerVersion", info.extensionVersion);
   setText(elements, "extensionVersion", info.extensionVersion);
+  setText(elements, "footerVersion", info.extensionVersion);
   setText(elements, "projectName", info.project.name);
   setText(elements, "projectPath", info.project.path);
   setText(elements, "projectUuid", info.project.uuid);
