@@ -15,6 +15,8 @@ interface PanelElements {
   refreshEnvironmentButton: HTMLButtonElement;
   startBuildButton: HTMLButtonElement;
   cancelBuildButton: HTMLButtonElement;
+  inputDirectoryBrowseButton: HTMLButtonElement;
+  outputFileBrowseButton: HTMLButtonElement;
   panelStatus: HTMLElement;
   taskStatus: HTMLElement;
   taskLogOutput: HTMLElement;
@@ -24,6 +26,9 @@ interface PanelElements {
   payloadEncoding: HTMLSelectElement;
   audioEnabled: HTMLInputElement;
   audioBitrateKbps: HTMLInputElement;
+  audioSettings: HTMLElement;
+  webpWarning: HTMLElement;
+  audioWarning: HTMLElement;
   extensionVersion: HTMLElement;
   projectName: HTMLElement;
   projectPath: HTMLElement;
@@ -50,15 +55,44 @@ interface PanelElements {
 interface PanelContext { $: PanelElements }
 
 const selectors: Record<keyof PanelElements, string> = {
-  refreshEnvironmentButton: "#refreshEnvironmentButton", startBuildButton: "#startBuildButton", cancelBuildButton: "#cancelBuildButton",
-  panelStatus: "#panelStatus", taskStatus: "#taskStatus", taskLogOutput: "#taskLogOutput", inputDirectory: "#inputDirectory", outputFile: "#outputFile",
-  imageMode: "#imageMode", payloadEncoding: "#payloadEncoding", audioEnabled: "#audioEnabled", audioBitrateKbps: "#audioBitrateKbps",
-  extensionVersion: "#extensionVersion", projectName: "#projectName", projectPath: "#projectPath", projectUuid: "#projectUuid",
-  hostNodeVersion: "#hostNodeVersion", hostExecutable: "#hostExecutable", externalNodeVersion: "#externalNodeVersion",
-  externalNodeExecutable: "#externalNodeExecutable", externalNodeErrorRow: "#externalNodeErrorRow", externalNodeError: "#externalNodeError",
-  extensionRoot: "#extensionRoot", realExtensionRoot: "#realExtensionRoot", packerRoot: "#packerRoot", webMobileDirectory: "#webMobileDirectory",
-  defaultOutputDirectory: "#defaultOutputDirectory", checkedAt: "#checkedAt", logOutput: "#logOutput",
-  projectCheck: "#projectCheck", buildCheck: "#buildCheck", packerCheck: "#packerCheck", nodeCheck: "#nodeCheck",
+  refreshEnvironmentButton: "#refreshEnvironmentButton",
+  startBuildButton: "#startBuildButton",
+  cancelBuildButton: "#cancelBuildButton",
+  inputDirectoryBrowseButton: "#inputDirectoryBrowseButton",
+  outputFileBrowseButton: "#outputFileBrowseButton",
+  panelStatus: "#panelStatus",
+  taskStatus: "#taskStatus",
+  taskLogOutput: "#taskLogOutput",
+  inputDirectory: "#inputDirectory",
+  outputFile: "#outputFile",
+  imageMode: "#imageMode",
+  payloadEncoding: "#payloadEncoding",
+  audioEnabled: "#audioEnabled",
+  audioBitrateKbps: "#audioBitrateKbps",
+  audioSettings: "#audioSettings",
+  webpWarning: "#webpWarning",
+  audioWarning: "#audioWarning",
+  extensionVersion: "#extensionVersion",
+  projectName: "#projectName",
+  projectPath: "#projectPath",
+  projectUuid: "#projectUuid",
+  hostNodeVersion: "#hostNodeVersion",
+  hostExecutable: "#hostExecutable",
+  externalNodeVersion: "#externalNodeVersion",
+  externalNodeExecutable: "#externalNodeExecutable",
+  externalNodeErrorRow: "#externalNodeErrorRow",
+  externalNodeError: "#externalNodeError",
+  extensionRoot: "#extensionRoot",
+  realExtensionRoot: "#realExtensionRoot",
+  packerRoot: "#packerRoot",
+  webMobileDirectory: "#webMobileDirectory",
+  defaultOutputDirectory: "#defaultOutputDirectory",
+  checkedAt: "#checkedAt",
+  logOutput: "#logOutput",
+  projectCheck: "#projectCheck",
+  buildCheck: "#buildCheck",
+  packerCheck: "#packerCheck",
+  nodeCheck: "#nodeCheck",
 };
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -72,6 +106,20 @@ function setCheck(element: HTMLElement, passed: boolean, ok: string, failed: str
   element.textContent = passed ? ok : failed;
   element.classList.toggle("status-ok", passed);
   element.classList.toggle("status-warning", !passed);
+}
+
+function syncConfigurationState(elements: PanelElements, active: boolean): void {
+  elements.inputDirectory.disabled = active;
+  elements.outputFile.disabled = active;
+  elements.inputDirectoryBrowseButton.disabled = active;
+  elements.outputFileBrowseButton.disabled = active;
+  elements.imageMode.disabled = active;
+  elements.payloadEncoding.disabled = active;
+  elements.audioEnabled.disabled = active;
+  elements.audioBitrateKbps.disabled = active || !elements.audioEnabled.checked;
+  elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
+  elements.webpWarning.hidden = elements.imageMode.value !== "webp";
+  elements.audioWarning.hidden = !elements.audioEnabled.checked;
 }
 
 function renderEnvironment(elements: PanelElements, info: CreatorEnvironmentInfo): void {
@@ -104,9 +152,7 @@ function renderTask(elements: PanelElements, task: CreatorBuildTask): void {
   const active = task.status === "starting" || task.status === "running";
   elements.startBuildButton.disabled = active;
   elements.cancelBuildButton.disabled = !active;
-  for (const control of [elements.inputDirectory, elements.outputFile, elements.imageMode, elements.payloadEncoding, elements.audioEnabled, elements.audioBitrateKbps]) {
-    control.disabled = active;
-  }
+  syncConfigurationState(elements, active);
   setText(elements, "taskStatus", task.status === "idle" ? "等待构建" : `${task.status}${task.stage ? ` · ${task.stage}` : ""}`);
   setText(elements, "taskLogOutput", task.logs.length === 0 ? "暂无构建日志。" : task.logs.join("\n"));
   setText(elements, "panelStatus", task.error ?? (task.status === "succeeded" ? `构建完成：${task.outputFile}` : active ? "构建任务正在运行…" : "环境检测完成。"));
@@ -120,6 +166,39 @@ async function refreshEnvironment(elements: PanelElements): Promise<void> {
     setText(elements, "panelStatus", `环境检测失败：${error instanceof Error ? error.message : String(error)}`);
   } finally {
     elements.refreshEnvironmentButton.disabled = false;
+  }
+}
+
+async function chooseInputDirectory(elements: PanelElements): Promise<void> {
+  try {
+    const result = await Editor.Dialog.select({
+      title: "选择 Web Mobile 构建目录",
+      button: "选择目录",
+      path: elements.inputDirectory.value.trim() || Editor.Project.path,
+      type: "directory",
+      multi: false,
+    });
+    const selectedDirectory = result.filePaths[0];
+    if (selectedDirectory) elements.inputDirectory.value = selectedDirectory;
+  } catch (error) {
+    setText(elements, "panelStatus", `打开目录选择器失败：${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+async function chooseOutputFile(elements: PanelElements): Promise<void> {
+  try {
+    const defaultFile = elements.outputFile.value.trim() || path.join(Editor.Project.path, "build", "playable", "game.html");
+    const result = await Editor.Dialog.save({
+      title: "选择 Playable HTML 输出文件",
+      button: "保存",
+      path: defaultFile,
+      filters: [{ name: "HTML 文件", extensions: ["html"] }],
+    });
+    if (result.filePath) {
+      elements.outputFile.value = result.filePath.toLowerCase().endsWith(".html") ? result.filePath : `${result.filePath}.html`;
+    }
+  } catch (error) {
+    setText(elements, "panelStatus", `打开输出文件选择器失败：${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -150,8 +229,13 @@ module.exports = Editor.Panel.define({
   methods: {},
   ready(this: PanelContext): void {
     bind(this.$.refreshEnvironmentButton, "click", () => void refreshEnvironment(this.$));
+    bind(this.$.inputDirectoryBrowseButton, "click", () => void chooseInputDirectory(this.$));
+    bind(this.$.outputFileBrowseButton, "click", () => void chooseOutputFile(this.$));
+    bind(this.$.imageMode, "change", () => syncConfigurationState(this.$, false));
+    bind(this.$.audioEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.startBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "start-build", configurationFrom(this.$)).then((task) => renderTask(this.$, task)).catch((error) => setText(this.$, "panelStatus", `启动失败：${String(error)}`)));
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
+    syncConfigurationState(this.$, false);
     void refreshEnvironment(this.$);
     void refreshTask(this.$);
     pollTimer = setInterval(() => void refreshTask(this.$), 750);
