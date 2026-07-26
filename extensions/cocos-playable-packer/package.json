@@ -29,7 +29,7 @@
   "contributions": {
     "menu": [
       {
-        "path": "Develop/Cocos Playable Packer",
+        "path": "i18n:menu.develop/Cocos Playable Packer",
         "label": "打开打包面板",
         "message": "open-panel"
       }
