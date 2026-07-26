@@ -1,0 +1,19 @@
+# Runtime dependencies installed locally for the Creator extension.
+runtime/node_modules/
+
+# Build caches and temporary workspaces created by the embedded Packer runtime.
+runtime/.squoosh-cache/
+runtime/.tinypng-cache/
+runtime/.packer-web/
+runtime/workspaces/
+runtime/web-mobile/
+runtime/*.log
+
+# Generated CLI/demo artifacts staged under the runtime dist directory.
+runtime/dist/**/*.html
+runtime/dist/**/*.json
+runtime/dist/**/*.report.json
+runtime/dist/**/*.encoding-report.json
+runtime/dist/**/*.channel-validation.json
+runtime/dist/**/reports/
+runtime/dist/**/manifests/
