@@ -22,6 +22,8 @@ function createPanelElement() {
     textContent: "",
     disabled: false,
     hidden: false,
+    value: "",
+    checked: false,
     classList: {
       toggle(name, force) {
         const enabled = force === undefined ? !classes.has(name) : Boolean(force);
@@ -49,6 +51,22 @@ function createPanelElement() {
         listener();
       }
     },
+  };
+}
+
+function idleTask(projectRoot) {
+  return {
+    id: null,
+    status: "idle",
+    startedAt: null,
+    finishedAt: null,
+    inputDirectory: path.join(projectRoot, "build", "web-mobile"),
+    outputFile: path.join(projectRoot, "build", "playable", "game.html"),
+    reportFile: null,
+    stage: null,
+    progress: null,
+    error: null,
+    logs: [],
   };
 }
 
@@ -96,6 +114,9 @@ try {
   assert.equal(typeof mainModule.unload, "function");
   assert.equal(typeof mainModule.methods?.openPanel, "function");
   assert.equal(typeof mainModule.methods?.queryEnvironment, "function");
+  assert.equal(typeof mainModule.methods?.queryBuildTask, "function");
+  assert.equal(typeof mainModule.methods?.startBuild, "function");
+  assert.equal(typeof mainModule.methods?.cancelBuild, "function");
 
   mainModule.load();
   await mainModule.methods.openPanel();
@@ -129,10 +150,42 @@ try {
   assert.ok(environment.logs.some((line) => line.includes("已找到 Web Mobile 构建目录")));
 
   let panelEnvironment = environment;
-  globalThis.Editor.Message.request = async (packageName, message) => {
+  let panelTask = idleTask(projectRoot);
+  const requestedMessages = [];
+  globalThis.Editor.Message.request = async (packageName, message, configuration) => {
     assert.equal(packageName, "cocos-playable-packer");
-    assert.equal(message, "query-environment");
-    return panelEnvironment;
+    requestedMessages.push(message);
+    switch (message) {
+      case "query-environment":
+        return panelEnvironment;
+      case "query-build-task":
+        return panelTask;
+      case "start-build":
+        assert.equal(configuration.inputDirectory, path.join(projectRoot, "build", "web-mobile"));
+        assert.equal(configuration.outputFile, path.join(projectRoot, "build", "playable", "game.html"));
+        assert.equal(configuration.imageMode, "squoosh");
+        assert.equal(configuration.payloadEncoding, "html7");
+        panelTask = {
+          ...panelTask,
+          id: "creator-task-test",
+          status: "running",
+          startedAt: new Date().toISOString(),
+          stage: "running",
+          logs: ["Worker 已启动"],
+        };
+        return panelTask;
+      case "cancel-build":
+        panelTask = {
+          ...panelTask,
+          status: "cancelled",
+          finishedAt: new Date().toISOString(),
+          stage: "cancelled",
+          logs: [...panelTask.logs, "任务已取消"],
+        };
+        return panelTask;
+      default:
+        throw new Error(`unexpected panel message: ${message}`);
+    }
   };
 
   const panelModulePath = path.join(
@@ -149,10 +202,15 @@ try {
   assert.equal(typeof panelDefinition?.close, "function");
   assert.match(panelDefinition?.template ?? "", /Cocos Playable Packer/);
   assert.match(panelDefinition?.template ?? "", /id="refreshEnvironmentButton"/);
+  assert.match(panelDefinition?.template ?? "", /id="startBuildButton"/);
+  assert.match(panelDefinition?.template ?? "", /id="cancelBuildButton"/);
+  assert.match(panelDefinition?.template ?? "", /id="taskStatus"/);
   assert.match(panelDefinition?.template ?? "", /id="nodeCheck"/);
   assert.match(panelDefinition?.template ?? "", /id="externalNodeErrorRow" hidden/);
   assert.match(panelDefinition?.style ?? "", /\.status-grid/);
   assert.equal(panelDefinition?.$.refreshEnvironmentButton, "#refreshEnvironmentButton");
+  assert.equal(panelDefinition?.$.startBuildButton, "#startBuildButton");
+  assert.equal(panelDefinition?.$.cancelBuildButton, "#cancelBuildButton");
   assert.equal(panelDefinition?.$.panelStatus, "#panelStatus");
   assert.equal(panelDefinition?.$.projectCheck, "#projectCheck");
   assert.equal(panelDefinition?.$.nodeCheck, "#nodeCheck");
@@ -161,16 +219,19 @@ try {
   const panelElements = Object.fromEntries(
     Object.keys(panelDefinition.$).map((key) => [key, createPanelElement()]),
   );
+  panelElements.imageMode.value = "squoosh";
+  panelElements.payloadEncoding.value = "html7";
+  panelElements.audioBitrateKbps.value = "48";
+
   panelDefinition.ready.call({ $: panelElements });
   await new Promise((resolve) => setImmediate(resolve));
 
+  assert.ok(requestedMessages.includes("query-environment"));
+  assert.ok(requestedMessages.includes("query-build-task"));
   assert.equal(panelElements.refreshEnvironmentButton.listenerCount("click"), 1);
+  assert.equal(panelElements.startBuildButton.listenerCount("click"), 1);
+  assert.equal(panelElements.cancelBuildButton.listenerCount("click"), 1);
   assert.equal(panelElements.refreshEnvironmentButton.disabled, false);
-  assert.equal(panelElements.refreshEnvironmentButton.textContent, "重新检测");
-  assert.equal(
-    panelElements.panelStatus.textContent,
-    "环境检测完成。当前阶段只验证插件壳层，不会启动压缩任务。",
-  );
   assert.equal(panelElements.projectName.textContent, "game143");
   assert.equal(panelElements.projectUuid.textContent, "game143-test-uuid");
   assert.equal(panelElements.projectCheck.textContent, "项目结构正常");
@@ -181,6 +242,28 @@ try {
   assert.equal(panelElements.nodeCheck.classList.contains("status-ok"), true);
   assert.equal(panelElements.externalNodeErrorRow.hidden, true);
   assert.equal(panelElements.externalNodeError.textContent, "");
+  assert.equal(panelElements.inputDirectory.value, path.join(projectRoot, "build", "web-mobile"));
+  assert.equal(panelElements.outputFile.value, path.join(projectRoot, "build", "playable", "game.html"));
+  assert.equal(panelElements.taskStatus.textContent, "等待构建");
+  assert.equal(panelElements.startBuildButton.disabled, false);
+  assert.equal(panelElements.cancelBuildButton.disabled, true);
+
+  panelElements.startBuildButton.dispatch("click");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(requestedMessages.includes("start-build"));
+  assert.equal(panelElements.taskStatus.textContent, "running · running");
+  assert.equal(panelElements.startBuildButton.disabled, true);
+  assert.equal(panelElements.cancelBuildButton.disabled, false);
+  assert.equal(panelElements.inputDirectory.disabled, true);
+  assert.match(panelElements.taskLogOutput.textContent, /Worker 已启动/);
+
+  panelElements.cancelBuildButton.dispatch("click");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(requestedMessages.includes("cancel-build"));
+  assert.equal(panelElements.taskStatus.textContent, "cancelled · cancelled");
+  assert.equal(panelElements.startBuildButton.disabled, false);
+  assert.equal(panelElements.cancelBuildButton.disabled, true);
+  assert.match(panelElements.taskLogOutput.textContent, /任务已取消/);
 
   panelEnvironment = {
     ...environment,
@@ -201,6 +284,8 @@ try {
 
   panelDefinition.close();
   assert.equal(panelElements.refreshEnvironmentButton.listenerCount("click"), 0);
+  assert.equal(panelElements.startBuildButton.listenerCount("click"), 0);
+  assert.equal(panelElements.cancelBuildButton.listenerCount("click"), 0);
   mainModule.unload();
 } finally {
   delete globalThis.Editor;
