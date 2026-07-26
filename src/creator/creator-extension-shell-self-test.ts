@@ -59,6 +59,8 @@ assert.match(template, /id="packerCheck"/);
 assert.match(template, /当前阶段只验证插件加载/);
 assert.match(style, /\.status-grid/);
 assert.match(linkScript, /process\.platform === "win32" \? "junction" : "dir"/);
+assert.match(linkScript, /\.git["'], ["']info["'], ["']exclude/);
+assert.match(linkScript, /\/extensions\/cocos-playable-packer\//);
 assert.match(linkScript, /普通目录，拒绝覆盖/);
 assert.match(linkScript, /普通目录，拒绝删除/);
 
