@@ -21,6 +21,10 @@
       <span>Packer Core</span>
       <strong id="packerCheck" class="status-warning">检测中</strong>
     </article>
+    <article class="status-card">
+      <span>外部 Node.js</span>
+      <strong id="nodeCheck" class="status-warning">检测中</strong>
+    </article>
   </section>
 
   <section class="panel-section">
@@ -43,8 +47,11 @@
       <span>Shell v<span id="extensionVersion">-</span></span>
     </div>
     <dl class="details">
-      <div><dt>Node.js</dt><dd id="nodeVersion">-</dd></div>
-      <div><dt>Node 可执行文件</dt><dd id="nodeExecutable">-</dd></div>
+      <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div>
+      <div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div>
+      <div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div>
+      <div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div>
+      <div><dt>Node 检测错误</dt><dd id="externalNodeError">-</dd></div>
       <div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div>
       <div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div>
       <div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
