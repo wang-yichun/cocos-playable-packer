@@ -1,72 +1,33 @@
 <main class="shell">
   <header class="hero">
-    <div>
-      <p class="eyebrow">Cocos Creator 3.8.x Extension</p>
-      <h1>Cocos Playable Packer</h1>
-      <p id="panelStatus" class="subtitle">正在初始化插件面板…</p>
-    </div>
+    <div><p class="eyebrow">Cocos Creator 3.8.x Extension</p><h1>Cocos Playable Packer</h1><p id="panelStatus" class="subtitle">正在初始化插件面板…</p></div>
     <button id="refreshEnvironmentButton" class="primary" type="button">重新检测</button>
   </header>
-
   <section class="status-grid" aria-label="环境状态">
-    <article class="status-card">
-      <span>Creator 项目</span>
-      <strong id="projectCheck" class="status-warning">检测中</strong>
-    </article>
-    <article class="status-card">
-      <span>Web Mobile</span>
-      <strong id="buildCheck" class="status-warning">检测中</strong>
-    </article>
-    <article class="status-card">
-      <span>Packer Core</span>
-      <strong id="packerCheck" class="status-warning">检测中</strong>
-    </article>
-    <article class="status-card">
-      <span>外部 Node.js</span>
-      <strong id="nodeCheck" class="status-warning">检测中</strong>
-    </article>
+    <article class="status-card"><span>Creator 项目</span><strong id="projectCheck" class="status-warning">检测中</strong></article>
+    <article class="status-card"><span>Web Mobile</span><strong id="buildCheck" class="status-warning">检测中</strong></article>
+    <article class="status-card"><span>Packer Core</span><strong id="packerCheck" class="status-warning">检测中</strong></article>
+    <article class="status-card"><span>外部 Node.js</span><strong id="nodeCheck" class="status-warning">检测中</strong></article>
   </section>
-
   <section class="panel-section">
-    <div class="section-title">
-      <h2>当前项目</h2>
-      <span id="checkedAt">-</span>
+    <div class="section-title"><h2>构建任务</h2><span id="taskStatus">等待构建</span></div>
+    <div class="form-grid">
+      <label>输入目录<input id="inputDirectory" type="text"></label>
+      <label>输出文件<input id="outputFile" type="text"></label>
+      <label>图片压缩<select id="imageMode"><option value="squoosh">Squoosh</option><option value="none">无压缩</option><option value="tinypng">TinyPNG</option><option value="webp">WebP</option></select></label>
+      <label>Payload<select id="payloadEncoding"><option value="html7">HTML7</option><option value="base91">Base91</option><option value="base64">Base64</option></select></label>
+      <label class="check-row"><input id="audioEnabled" type="checkbox">启用音频压缩</label>
+      <label>音频码率<input id="audioBitrateKbps" type="number" min="16" max="320" value="48"></label>
     </div>
-    <dl class="details">
-      <div><dt>项目名称</dt><dd id="projectName">-</dd></div>
-      <div><dt>项目路径</dt><dd id="projectPath">-</dd></div>
-      <div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div>
-      <div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div>
-      <div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
-    </dl>
+    <div class="actions"><button id="startBuildButton" class="primary" type="button">开始构建</button><button id="cancelBuildButton" type="button" disabled>取消任务</button></div>
+    <pre id="taskLogOutput" class="logs">暂无构建日志。</pre>
   </section>
-
-  <section class="panel-section">
-    <div class="section-title">
-      <h2>插件运行环境</h2>
-      <span>Shell v<span id="extensionVersion">-</span></span>
-    </div>
-    <dl class="details">
-      <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div>
-      <div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div>
-      <div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div>
-      <div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div>
-      <div id="externalNodeErrorRow" hidden><dt>Node 检测错误</dt><dd id="externalNodeError"></dd></div>
-      <div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div>
-      <div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div>
-      <div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
-    </dl>
-  </section>
-
-  <section class="panel-section">
-    <div class="section-title">
-      <h2>开发日志</h2>
-      <span>最近 100 行</span>
-    </div>
-    <pre id="logOutput" class="logs">暂无日志。</pre>
-  </section>
-
-  <footer class="notice">
-    当前阶段只验证插件加载、面板通信、项目识别与运行环境，不会修改游戏工程或执行 Playable 压缩。
-  </footer>
+  <section class="panel-section"><div class="section-title"><h2>当前项目</h2><span id="checkedAt">-</span></div><dl class="details">
+    <div><dt>项目名称</dt><dd id="projectName">-</dd></div><div><dt>项目路径</dt><dd id="projectPath">-</dd></div><div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div><div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div><div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
+  </dl></section>
+  <section class="panel-section"><div class="section-title"><h2>插件运行环境</h2><span>Shell v<span id="extensionVersion">-</span></span></div><dl class="details">
+    <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div><div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div><div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div><div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div><div id="externalNodeErrorRow" hidden><dt>Node 检测错误</dt><dd id="externalNodeError"></dd></div><div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div><div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div><div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
+  </dl></section>
+  <section class="panel-section"><div class="section-title"><h2>开发日志</h2><span>最近 100 行</span></div><pre id="logOutput" class="logs">暂无日志。</pre></section>
+  <footer class="notice">构建任务由外部 Node.js 22+ Worker 执行；关闭面板不会终止正在运行的任务。</footer>
 </main>

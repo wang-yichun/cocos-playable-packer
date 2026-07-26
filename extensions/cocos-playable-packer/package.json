@@ -14,16 +14,8 @@
       "type": "dockable",
       "main": "./dist/panels/default",
       "icon": "./static/icon.svg",
-      "flags": {
-        "resizable": true,
-        "save": true
-      },
-      "size": {
-        "min-width": 420,
-        "min-height": 520,
-        "width": 520,
-        "height": 720
-      }
+      "flags": { "resizable": true, "save": true },
+      "size": { "min-width": 420, "min-height": 520, "width": 520, "height": 720 }
     }
   },
   "contributions": {
@@ -35,16 +27,11 @@
       }
     ],
     "messages": {
-      "open-panel": {
-        "methods": [
-          "openPanel"
-        ]
-      },
-      "query-environment": {
-        "methods": [
-          "queryEnvironment"
-        ]
-      }
+      "open-panel": { "methods": ["openPanel"] },
+      "query-environment": { "methods": ["queryEnvironment"] },
+      "start-build": { "methods": ["startBuild"] },
+      "query-build-task": { "methods": ["queryBuildTask"] },
+      "cancel-build": { "methods": ["cancelBuild"] }
     }
   },
   "scripts": {
