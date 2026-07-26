@@ -21,6 +21,7 @@ function createPanelElement() {
   return {
     textContent: "",
     disabled: false,
+    hidden: false,
     classList: {
       toggle(name, force) {
         const enabled = force === undefined ? !classes.has(name) : Boolean(force);
@@ -42,6 +43,11 @@ function createPanelElement() {
     },
     listenerCount(type) {
       return listeners.get(type)?.size ?? 0;
+    },
+    dispatch(type) {
+      for (const listener of listeners.get(type) ?? []) {
+        listener();
+      }
     },
   };
 }
@@ -122,10 +128,11 @@ try {
   assert.ok(environment.logs.some((line) => line.includes("已找到外部 Node.js")));
   assert.ok(environment.logs.some((line) => line.includes("已找到 Web Mobile 构建目录")));
 
+  let panelEnvironment = environment;
   globalThis.Editor.Message.request = async (packageName, message) => {
     assert.equal(packageName, "cocos-playable-packer");
     assert.equal(message, "query-environment");
-    return environment;
+    return panelEnvironment;
   };
 
   const panelModulePath = path.join(
@@ -143,11 +150,13 @@ try {
   assert.match(panelDefinition?.template ?? "", /Cocos Playable Packer/);
   assert.match(panelDefinition?.template ?? "", /id="refreshEnvironmentButton"/);
   assert.match(panelDefinition?.template ?? "", /id="nodeCheck"/);
+  assert.match(panelDefinition?.template ?? "", /id="externalNodeErrorRow" hidden/);
   assert.match(panelDefinition?.style ?? "", /\.status-grid/);
   assert.equal(panelDefinition?.$.refreshEnvironmentButton, "#refreshEnvironmentButton");
   assert.equal(panelDefinition?.$.panelStatus, "#panelStatus");
   assert.equal(panelDefinition?.$.projectCheck, "#projectCheck");
   assert.equal(panelDefinition?.$.nodeCheck, "#nodeCheck");
+  assert.equal(panelDefinition?.$.externalNodeErrorRow, "#externalNodeErrorRow");
 
   const panelElements = Object.fromEntries(
     Object.keys(panelDefinition.$).map((key) => [key, createPanelElement()]),
@@ -170,6 +179,25 @@ try {
   assert.equal(panelElements.nodeCheck.textContent, "外部 Node.js 22+ 可用");
   assert.equal(panelElements.projectCheck.classList.contains("status-ok"), true);
   assert.equal(panelElements.nodeCheck.classList.contains("status-ok"), true);
+  assert.equal(panelElements.externalNodeErrorRow.hidden, true);
+  assert.equal(panelElements.externalNodeError.textContent, "");
+
+  panelEnvironment = {
+    ...environment,
+    runtime: {
+      ...environment.runtime,
+      externalNodeAvailable: false,
+      externalNodeSupported: false,
+      externalNodeVersion: null,
+      externalNodeExecutable: null,
+      externalNodeError: "where.exe node 执行失败",
+    },
+  };
+  panelElements.refreshEnvironmentButton.dispatch("click");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(panelElements.nodeCheck.textContent, "未找到外部 Node.js");
+  assert.equal(panelElements.externalNodeErrorRow.hidden, false);
+  assert.equal(panelElements.externalNodeError.textContent, "where.exe node 执行失败");
 
   panelDefinition.close();
   assert.equal(panelElements.refreshEnvironmentButton.listenerCount("click"), 0);
