@@ -24,6 +24,7 @@ interface PanelElements {
   hostExecutable: HTMLElement;
   externalNodeVersion: HTMLElement;
   externalNodeExecutable: HTMLElement;
+  externalNodeErrorRow: HTMLElement;
   externalNodeError: HTMLElement;
   extensionRoot: HTMLElement;
   realExtensionRoot: HTMLElement;
@@ -53,6 +54,7 @@ const selectors: Record<keyof PanelElements, string> = {
   hostExecutable: "#hostExecutable",
   externalNodeVersion: "#externalNodeVersion",
   externalNodeExecutable: "#externalNodeExecutable",
+  externalNodeErrorRow: "#externalNodeErrorRow",
   externalNodeError: "#externalNodeError",
   extensionRoot: "#extensionRoot",
   realExtensionRoot: "#realExtensionRoot",
@@ -115,7 +117,12 @@ function renderEnvironment(elements: PanelElements, info: CreatorEnvironmentInfo
   setText(elements, "hostExecutable", info.runtime.hostExecutable);
   setText(elements, "externalNodeVersion", info.runtime.externalNodeVersion ?? "未检测到");
   setText(elements, "externalNodeExecutable", info.runtime.externalNodeExecutable ?? "未检测到");
-  setText(elements, "externalNodeError", info.runtime.externalNodeError ?? "-");
+
+  const externalNodeError = info.runtime.externalNodeError;
+  const externalNodeErrorRow = requireMappedElement(elements, "externalNodeErrorRow");
+  externalNodeErrorRow.hidden = externalNodeError === null;
+  setText(elements, "externalNodeError", externalNodeError ?? "");
+
   setText(elements, "extensionRoot", info.paths.extensionRoot);
   setText(elements, "realExtensionRoot", info.paths.realExtensionRoot);
   setText(elements, "packerRoot", info.paths.packerRoot ?? "未检测到");
