@@ -29,7 +29,10 @@ async function main(): Promise<void> {
       host: "creator",
       tempRoot: request.tempRoot,
       nodeExecutable: request.nodeExecutable,
-      environment: request.environment,
+      environment: {
+        ...process.env,
+        ...request.environment,
+      },
       onEvent(event) {
         write({ type: "event", taskId: request.taskId, event });
       },
