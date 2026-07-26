@@ -8,6 +8,7 @@ import type {
 } from "../../shared/types.js";
 
 const PACKAGE_NAME = "cocos-playable-packer";
+const DEFAULT_IMAGE_QUALITY = 80;
 const template = readFileSync(path.join(__dirname, "../../../static/template/default/index.html"), "utf8");
 const style = readFileSync(path.join(__dirname, "../../../static/style/default/index.css"), "utf8");
 
@@ -23,6 +24,11 @@ interface PanelElements {
   inputDirectory: HTMLInputElement;
   outputFile: HTMLInputElement;
   imageMode: HTMLSelectElement;
+  qualitySettings: HTMLElement;
+  pngQuality: HTMLInputElement;
+  jpegQuality: HTMLInputElement;
+  tinyPngSettings: HTMLElement;
+  tinyPngApiKey: HTMLInputElement;
   payloadEncoding: HTMLSelectElement;
   audioEnabled: HTMLInputElement;
   audioBitrateKbps: HTMLInputElement;
@@ -66,6 +72,11 @@ const selectors: Record<keyof PanelElements, string> = {
   inputDirectory: "#inputDirectory",
   outputFile: "#outputFile",
   imageMode: "#imageMode",
+  qualitySettings: "#qualitySettings",
+  pngQuality: "#pngQuality",
+  jpegQuality: "#jpegQuality",
+  tinyPngSettings: "#tinyPngSettings",
+  tinyPngApiKey: "#tinyPngApiKey",
   payloadEncoding: "#payloadEncoding",
   audioEnabled: "#audioEnabled",
   audioBitrateKbps: "#audioBitrateKbps",
@@ -109,16 +120,25 @@ function setCheck(element: HTMLElement, passed: boolean, ok: string, failed: str
 }
 
 function syncConfigurationState(elements: PanelElements, active: boolean): void {
+  const imageMode = elements.imageMode.value;
+  const qualityEnabled = imageMode === "squoosh";
+  const tinyPngEnabled = imageMode === "tinypng";
+
   elements.inputDirectory.disabled = active;
   elements.outputFile.disabled = active;
   elements.inputDirectoryBrowseButton.disabled = active;
   elements.outputFileBrowseButton.disabled = active;
   elements.imageMode.disabled = active;
   elements.payloadEncoding.disabled = active;
+  elements.qualitySettings.hidden = !qualityEnabled;
+  elements.pngQuality.disabled = active || !qualityEnabled;
+  elements.jpegQuality.disabled = active || !qualityEnabled;
+  elements.tinyPngSettings.hidden = !tinyPngEnabled;
+  elements.tinyPngApiKey.disabled = active || !tinyPngEnabled;
   elements.audioEnabled.disabled = active;
   elements.audioBitrateKbps.disabled = active || !elements.audioEnabled.checked;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
-  elements.webpWarning.hidden = elements.imageMode.value !== "webp";
+  elements.webpWarning.hidden = imageMode !== "webp";
   elements.audioWarning.hidden = !elements.audioEnabled.checked;
 }
 
@@ -202,15 +222,40 @@ async function chooseOutputFile(elements: PanelElements): Promise<void> {
   }
 }
 
+function imageQuality(input: HTMLInputElement, label: string): number {
+  const value = Number(input.value);
+  if (!Number.isInteger(value) || value < 1 || value > 100) {
+    throw new TypeError(`${label}必须是 1–100 的整数。`);
+  }
+  return value;
+}
+
 function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
+  const imageMode = elements.imageMode.value as CreatorBuildConfiguration["imageMode"];
+  const tinyPngApiKey = elements.tinyPngApiKey.value.trim();
+  if (imageMode === "tinypng" && tinyPngApiKey.length === 0) {
+    throw new TypeError("选择 TinyPNG 时必须填写 API Key。");
+  }
   return {
     inputDirectory: elements.inputDirectory.value.trim(),
     outputFile: elements.outputFile.value.trim(),
-    imageMode: elements.imageMode.value as CreatorBuildConfiguration["imageMode"],
+    imageMode,
+    pngQuality: imageQuality(elements.pngQuality, "PNG 质量"),
+    jpegQuality: imageQuality(elements.jpegQuality, "JPG 质量"),
+    tinyPngApiKey,
     audioEnabled: elements.audioEnabled.checked,
     audioBitrateKbps: Number(elements.audioBitrateKbps.value) || 48,
     payloadEncoding: elements.payloadEncoding.value as CreatorBuildConfiguration["payloadEncoding"],
   };
+}
+
+async function startBuild(elements: PanelElements): Promise<void> {
+  try {
+    const configuration = configurationFrom(elements);
+    renderTask(elements, await Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "start-build", configuration));
+  } catch (error) {
+    setText(elements, "panelStatus", `启动失败：${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 async function refreshTask(elements: PanelElements): Promise<void> {
@@ -233,8 +278,10 @@ module.exports = Editor.Panel.define({
     bind(this.$.outputFileBrowseButton, "click", () => void chooseOutputFile(this.$));
     bind(this.$.imageMode, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.audioEnabled, "change", () => syncConfigurationState(this.$, false));
-    bind(this.$.startBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "start-build", configurationFrom(this.$)).then((task) => renderTask(this.$, task)).catch((error) => setText(this.$, "panelStatus", `启动失败：${String(error)}`)));
+    bind(this.$.startBuildButton, "click", () => void startBuild(this.$));
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
+    if (this.$.pngQuality.value.trim().length === 0) this.$.pngQuality.value = String(DEFAULT_IMAGE_QUALITY);
+    if (this.$.jpegQuality.value.trim().length === 0) this.$.jpegQuality.value = String(DEFAULT_IMAGE_QUALITY);
     syncConfigurationState(this.$, false);
     void refreshEnvironment(this.$);
     void refreshTask(this.$);
