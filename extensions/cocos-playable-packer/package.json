@@ -1,0 +1,54 @@
+{
+  "package_version": 2,
+  "version": "0.1.0",
+  "name": "cocos-playable-packer",
+  "title": "Cocos Playable Packer",
+  "description": "Cocos Creator 3.8.x Playable 打包工具插件。",
+  "author": "wang-yichun",
+  "editor": ">=3.8.0 <3.9.0",
+  "main": "./dist/main.js",
+  "type": "commonjs",
+  "panels": {
+    "default": {
+      "title": "Cocos Playable Packer",
+      "type": "dockable",
+      "main": "./dist/panels/default",
+      "icon": "./static/icon.svg",
+      "flags": {
+        "resizable": true,
+        "save": true
+      },
+      "size": {
+        "min-width": 420,
+        "min-height": 520,
+        "width": 520,
+        "height": 720
+      }
+    }
+  },
+  "contributions": {
+    "menu": [
+      {
+        "path": "Develop/Cocos Playable Packer",
+        "label": "打开打包面板",
+        "message": "open-panel"
+      }
+    ],
+    "messages": {
+      "open-panel": {
+        "methods": [
+          "openPanel"
+        ]
+      },
+      "query-environment": {
+        "methods": [
+          "queryEnvironment"
+        ]
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json -w"
+  }
+}
