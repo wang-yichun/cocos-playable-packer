@@ -141,7 +141,7 @@ try {
   assert.equal(environment.checks.webMobileDirectoryExists, true);
   assert.equal(environment.checks.packerRootDetected, true);
   assert.equal(environment.checks.coreSourceExists, true);
-  assert.equal(environment.paths.packerRoot, repositoryRoot);
+  assert.equal(environment.paths.packerRoot, path.join(extensionRoot, "runtime"));
   assert.equal(
     environment.paths.webMobileDirectory,
     path.join(projectRoot, "build", "web-mobile"),

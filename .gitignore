@@ -36,3 +36,8 @@ workspaces/*/manifests/applications/
 workspaces/*/manifests/restores/
 workspaces/*/manifests/latest-application.json
 workspaces/*/manifests/latest-restore.json
+
+# Staged into the standalone Creator extension by `npm run creator:runtime`.
+extensions/cocos-playable-packer/runtime/src/
+extensions/cocos-playable-packer/runtime/dist/
+extensions/cocos-playable-packer/runtime/node_modules/

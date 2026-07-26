@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 
 import {
   CREATOR_WORKER_PROTOCOL_VERSION,
+  parseCreatorWorkerControlMessage,
   parseCreatorWorkerRequest,
   serializeCreatorWorkerMessage,
 } from "./protocol.js";
@@ -38,6 +39,12 @@ const tinyPngRequest = parseCreatorWorkerRequest({
 });
 assert.equal(tinyPngRequest.build.image.mode, "tinypng");
 
+assert.deepEqual(
+  parseCreatorWorkerControlMessage({ type: "cancel", taskId: "task-1" }),
+  { type: "cancel", taskId: "task-1" },
+);
+assert.throws(() => parseCreatorWorkerControlMessage({ type: "cancel", taskId: "" }), /控制消息/);
+
 assert.throws(() => parseCreatorWorkerRequest(null), /必须是对象/);
 assert.throws(() => parseCreatorWorkerRequest({ protocolVersion: 999 }), /协议版本/);
 assert.throws(() => parseCreatorWorkerRequest({
@@ -70,5 +77,7 @@ assert.match(workerSource, /process\.env\.TINYPNG_API_KEY/);
 assert.match(workerSource, /path\.join\(request\.packageRoot, "\.env"\)/);
 assert.match(workerSource, /flag: "wx"/);
 assert.match(workerSource, /await cleanupTinyPngEnv\?\.\(\)/);
+assert.match(workerSource, /listenForCancellation/);
+assert.match(workerSource, /signal: cancellation\.signal/);
 
 console.log("Creator Worker protocol self-test passed.");

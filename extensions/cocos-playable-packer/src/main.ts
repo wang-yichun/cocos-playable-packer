@@ -39,17 +39,6 @@ async function exists(targetPath: string): Promise<boolean> {
   }
 }
 
-async function packageNameAt(rootDirectory: string): Promise<string | null> {
-  try {
-    const packageJson = JSON.parse(
-      await readFile(path.join(rootDirectory, "package.json"), "utf8"),
-    ) as { name?: unknown };
-    return typeof packageJson.name === "string" ? packageJson.name : null;
-  } catch {
-    return null;
-  }
-}
-
 async function extensionVersion(extensionRoot: string): Promise<string> {
   try {
     const packageJson = JSON.parse(
@@ -63,13 +52,15 @@ async function extensionVersion(extensionRoot: string): Promise<string> {
 
 async function detectPackerRoot(extensionRoot: string, realExtensionRoot: string): Promise<string | null> {
   const candidates = [
-    process.env.PLAYABLE_PACKER_ROOT,
-    path.resolve(realExtensionRoot, "..", ".."),
-    path.resolve(extensionRoot, "..", ".."),
+    process.env.PLAYABLE_PACKER_RUNTIME_ROOT,
+    path.join(realExtensionRoot, "runtime"),
+    path.join(extensionRoot, "runtime"),
   ].filter((value): value is string => typeof value === "string" && value.length > 0);
 
   for (const candidate of [...new Set(candidates.map((value) => path.resolve(value)))]) {
-    if (await packageNameAt(candidate) === "cocos-playable-packer") return candidate;
+    const worker = path.join(candidate, "dist", "creator-worker", "playable-build-worker.js");
+    const core = path.join(candidate, "dist", "core", "index.js");
+    if (await exists(worker) && await exists(core)) return candidate;
   }
   return null;
 }
@@ -148,7 +139,7 @@ async function queryEnvironment(): Promise<CreatorEnvironmentInfo> {
   const projectPath = path.resolve(Editor.Project.path);
   const webMobileDirectory = path.join(projectPath, "build", "web-mobile");
   const defaultOutputDirectory = path.join(projectPath, "build", "playable");
-  const coreSource = packerRoot === null ? null : path.join(packerRoot, "src", "core", "index.ts");
+  const coreSource = packerRoot === null ? null : path.join(packerRoot, "dist", "core", "index.js");
   const runtime = await detectExternalNode();
   const checks = {
     projectDirectoryExists: await exists(projectPath),
