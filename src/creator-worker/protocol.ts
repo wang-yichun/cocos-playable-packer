@@ -17,29 +17,13 @@ export interface CreatorWorkerRequest {
 }
 
 export type CreatorWorkerMessage =
-  | {
-      type: "ready";
-      taskId: string;
-      pid: number;
-    }
-  | {
-      type: "event";
-      taskId: string;
-      event: PlayableBuildEvent;
-    }
-  | {
-      type: "result";
-      taskId: string;
-      result: PlayableBuildResult;
-    }
+  | { type: "ready"; taskId: string; pid: number }
+  | { type: "event"; taskId: string; event: PlayableBuildEvent }
+  | { type: "result"; taskId: string; result: PlayableBuildResult }
   | {
       type: "error";
       taskId: string;
-      error: {
-        code: string;
-        message: string;
-        stack: string | null;
-      };
+      error: { code: string; message: string; stack: string | null };
     };
 
 export function serializeCreatorWorkerMessage(message: CreatorWorkerMessage): string {
@@ -55,7 +39,8 @@ export function parseCreatorWorkerRequest(value: unknown): CreatorWorkerRequest 
     throw new TypeError(`不支持的 Creator Worker 协议版本：${String(request.protocolVersion)}`);
   }
   for (const key of ["taskId", "packageRoot", "nodeExecutable"] as const) {
-    if (typeof request[key] !== "string" || request[key]!.trim().length === 0) {
+    const field = request[key];
+    if (typeof field !== "string" || field.trim().length === 0) {
       throw new TypeError(`Creator Worker 请求字段 ${key} 不能为空。`);
     }
   }
