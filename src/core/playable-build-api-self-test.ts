@@ -4,9 +4,11 @@ import path from "node:path";
 import {
   PLAYABLE_CORE_API_VERSION,
   createPlayableBuildArguments,
+  createPlayableBuildServiceOptions,
   getPlayableBuildReportPath,
   normalizePlayableBuildRequest,
   playableCoreApi,
+  resolvePlayableRuntimeContext,
   runPlayableBuild,
 } from "./index.js";
 
@@ -17,6 +19,8 @@ assert.equal(playableCoreApi.build, runPlayableBuild);
 assert.equal(playableCoreApi.normalizeRequest, normalizePlayableBuildRequest);
 assert.equal(playableCoreApi.createArguments, createPlayableBuildArguments);
 assert.equal(playableCoreApi.reportPathForOutput, getPlayableBuildReportPath);
+assert.equal(playableCoreApi.resolveRuntime, resolvePlayableRuntimeContext);
+assert.equal(playableCoreApi.createServiceOptions, createPlayableBuildServiceOptions);
 
 const normalized = playableCoreApi.normalizeRequest({
   inputDirectory: "./web-mobile",

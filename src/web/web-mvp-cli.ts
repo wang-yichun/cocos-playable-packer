@@ -11,12 +11,19 @@ import {
 
 async function main(): Promise<void> {
   const host = normalizeWebMvpHost(process.env.PLAYABLE_WEB_HOST);
+  const projectRoot = process.cwd();
   const server = await startEnhancedResourceAnalysisWebMvpServer({
     host,
     port: parseWebMvpPort(process.env.PLAYABLE_WEB_PORT),
     rootDirectory: process.env.PLAYABLE_WEB_ROOT,
-    projectRoot: process.cwd(),
-    buildPlayableImpl: playableCoreApi.build,
+    projectRoot,
+    buildPlayableImpl: (request, options = {}) => playableCoreApi.build(request, {
+      ...options,
+      runtime: {
+        packageRoot: projectRoot,
+        host: "web",
+      },
+    }),
   });
   const urls = createWebMvpAccessUrls(server.host, server.port);
 
