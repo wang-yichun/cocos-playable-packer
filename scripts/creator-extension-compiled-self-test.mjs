@@ -20,8 +20,11 @@ function createPanelElement() {
   const listeners = new Map();
   return {
     textContent: "",
+    innerHTML: "",
+    src: "",
     disabled: false,
     hidden: false,
+    style: {},
     value: "",
     checked: false,
     classList: {
@@ -119,6 +122,10 @@ try {
 assert.equal(typeof mainModule.methods?.cancelBuild, "function");
 assert.equal(typeof mainModule.methods?.openPreview, "function");
 assert.equal(typeof mainModule.methods?.openOutputFolder, "function");
+assert.equal(typeof mainModule.methods?.readBuildReport, "function");
+assert.equal(typeof mainModule.methods?.queryLoadingLogo, "function");
+assert.equal(typeof mainModule.methods?.saveLoadingLogo, "function");
+assert.equal(typeof mainModule.methods?.clearLoadingLogo, "function");
 
   mainModule.load();
   await mainModule.methods.openPanel();
@@ -162,11 +169,23 @@ assert.equal(typeof mainModule.methods?.openOutputFolder, "function");
         return panelEnvironment;
       case "query-build-task":
         return panelTask;
+      case "query-loading-logo":
+        return {
+          dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          filePath: path.join(extensionRoot, "static", "assets", "loading-logo.png"),
+          bytes: 8,
+          mimeType: "image/png",
+        };
+      case "read-build-report":
+        return {};
+      case "clear-loading-logo":
+        return undefined;
       case "start-build":
         assert.equal(configuration.inputDirectory, path.join(projectRoot, "build", "web-mobile"));
         assert.equal(configuration.outputFile, path.join(projectRoot, "build", "playable", "game.html"));
         assert.equal(configuration.imageMode, "squoosh");
         assert.equal(configuration.payloadEncoding, "html7");
+        assert.equal(configuration.loadingScreenEnabled, true);
         panelTask = {
           ...panelTask,
           id: "creator-task-test",
@@ -228,6 +247,7 @@ assert.equal(typeof mainModule.methods?.openOutputFolder, "function");
   panelElements.imageMode.value = "squoosh";
   panelElements.payloadEncoding.value = "html7";
   panelElements.audioBitrateKbps.value = "48";
+  panelElements.loadingScreenEnabled.checked = true;
 
   panelDefinition.ready.call({ $: panelElements });
   await new Promise((resolve) => setImmediate(resolve));
@@ -255,6 +275,15 @@ assert.equal(typeof mainModule.methods?.openOutputFolder, "function");
   assert.equal(panelElements.cancelBuildButton.disabled, true);
   assert.equal(panelElements.previewButton.disabled, true);
   assert.equal(panelElements.outputFolderButton.disabled, true);
+  assert.equal(panelElements.loadingLogoPreview.hidden, false);
+  assert.equal(panelElements.loadingLogoPreviewImage.src, "data:image/png;base64,iVBORw0KGgo=");
+  assert.equal(panelElements.loadingLogoPreviewMeta.textContent, "image/png · 8 B");
+
+  panelElements.clearLogoButton.dispatch("click");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(requestedMessages.includes("clear-loading-logo"));
+  assert.equal(panelElements.loadingLogoPreview.hidden, true);
+  assert.equal(panelElements.loadingLogoPreviewImage.src, "");
 
   panelElements.startBuildButton.dispatch("click");
   await new Promise((resolve) => setImmediate(resolve));

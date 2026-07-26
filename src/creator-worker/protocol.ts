@@ -6,6 +6,15 @@ import type {
 
 export const CREATOR_WORKER_PROTOCOL_VERSION = 1 as const;
 
+export interface CreatorLoadingScreenRequest {
+  enabled: boolean;
+  logoDataUrl: string | null;
+}
+
+export type CreatorPlayableBuildRequest = PlayableBuildRequest & {
+  loadingScreen?: CreatorLoadingScreenRequest;
+};
+
 export interface CreatorWorkerRequest {
   protocolVersion: typeof CREATOR_WORKER_PROTOCOL_VERSION;
   taskId: string;
@@ -13,7 +22,7 @@ export interface CreatorWorkerRequest {
   tempRoot?: string;
   nodeExecutable: string;
   environment?: NodeJS.ProcessEnv;
-  build: PlayableBuildRequest;
+  build: CreatorPlayableBuildRequest;
 }
 
 /** Commands sent by the Creator extension to a running worker through stdin. */

@@ -26,6 +26,9 @@
         "message": "open-panel"
       }
     ],
+    "shortcuts": [
+      { "message": "open-panel", "win": "alt+f3", "mac": "cmd+f3" }
+    ],
     "messages": {
       "open-panel": { "methods": ["openPanel"] },
       "query-environment": { "methods": ["queryEnvironment"] },
@@ -33,7 +36,11 @@
       "query-build-task": { "methods": ["queryBuildTask"] },
       "cancel-build": { "methods": ["cancelBuild"] },
       "open-preview": { "methods": ["openPreview"] },
-      "open-output-folder": { "methods": ["openOutputFolder"] }
+      "open-output-folder": { "methods": ["openOutputFolder"] },
+      "read-build-report": { "methods": ["readBuildReport"] },
+      "query-loading-logo": { "methods": ["queryLoadingLogo"] },
+      "save-loading-logo": { "methods": ["saveLoadingLogo"] },
+      "clear-loading-logo": { "methods": ["clearLoadingLogo"] }
     }
   },
   "scripts": {
