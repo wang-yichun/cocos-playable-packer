@@ -15,6 +15,37 @@ const extensionRoot = path.join(
 const require = createRequire(import.meta.url);
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "creator-extension-compiled-"));
 
+function createPanelElement() {
+  const classes = new Set();
+  const listeners = new Map();
+  return {
+    textContent: "",
+    disabled: false,
+    classList: {
+      toggle(name, force) {
+        const enabled = force === undefined ? !classes.has(name) : Boolean(force);
+        if (enabled) classes.add(name);
+        else classes.delete(name);
+        return enabled;
+      },
+      contains(name) {
+        return classes.has(name);
+      },
+    },
+    addEventListener(type, listener) {
+      const values = listeners.get(type) ?? new Set();
+      values.add(listener);
+      listeners.set(type, values);
+    },
+    removeEventListener(type, listener) {
+      listeners.get(type)?.delete(listener);
+    },
+    listenerCount(type) {
+      return listeners.get(type)?.size ?? 0;
+    },
+  };
+}
+
 try {
   const projectRoot = path.join(temporaryRoot, "game143");
   const projectTmpDir = path.join(temporaryRoot, "creator-temp");
@@ -47,7 +78,7 @@ try {
     },
     Message: {
       async request() {
-        throw new Error("compiled self-test does not invoke panel ready");
+        throw new Error("panel message handler has not been installed");
       },
     },
   };
@@ -90,7 +121,12 @@ try {
   );
   assert.ok(environment.logs.some((line) => line.includes("已找到外部 Node.js")));
   assert.ok(environment.logs.some((line) => line.includes("已找到 Web Mobile 构建目录")));
-  mainModule.unload();
+
+  globalThis.Editor.Message.request = async (packageName, message) => {
+    assert.equal(packageName, "cocos-playable-packer");
+    assert.equal(message, "query-environment");
+    return environment;
+  };
 
   const panelModulePath = path.join(
     extensionRoot,
@@ -108,6 +144,36 @@ try {
   assert.match(panelDefinition?.template ?? "", /id="refreshEnvironmentButton"/);
   assert.match(panelDefinition?.template ?? "", /id="nodeCheck"/);
   assert.match(panelDefinition?.style ?? "", /\.status-grid/);
+  assert.equal(panelDefinition?.$.refreshEnvironmentButton, "#refreshEnvironmentButton");
+  assert.equal(panelDefinition?.$.panelStatus, "#panelStatus");
+  assert.equal(panelDefinition?.$.projectCheck, "#projectCheck");
+  assert.equal(panelDefinition?.$.nodeCheck, "#nodeCheck");
+
+  const panelElements = Object.fromEntries(
+    Object.keys(panelDefinition.$).map((key) => [key, createPanelElement()]),
+  );
+  panelDefinition.ready.call({ $: panelElements });
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(panelElements.refreshEnvironmentButton.listenerCount("click"), 1);
+  assert.equal(panelElements.refreshEnvironmentButton.disabled, false);
+  assert.equal(panelElements.refreshEnvironmentButton.textContent, "重新检测");
+  assert.equal(
+    panelElements.panelStatus.textContent,
+    "环境检测完成。当前阶段只验证插件壳层，不会启动压缩任务。",
+  );
+  assert.equal(panelElements.projectName.textContent, "game143");
+  assert.equal(panelElements.projectUuid.textContent, "game143-test-uuid");
+  assert.equal(panelElements.projectCheck.textContent, "项目结构正常");
+  assert.equal(panelElements.buildCheck.textContent, "已找到 Web Mobile 构建");
+  assert.equal(panelElements.packerCheck.textContent, "已连接 Packer Core");
+  assert.equal(panelElements.nodeCheck.textContent, "外部 Node.js 22+ 可用");
+  assert.equal(panelElements.projectCheck.classList.contains("status-ok"), true);
+  assert.equal(panelElements.nodeCheck.classList.contains("status-ok"), true);
+
+  panelDefinition.close();
+  assert.equal(panelElements.refreshEnvironmentButton.listenerCount("click"), 0);
+  mainModule.unload();
 } finally {
   delete globalThis.Editor;
   await rm(temporaryRoot, { recursive: true, force: true });
