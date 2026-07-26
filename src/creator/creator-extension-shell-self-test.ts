@@ -73,6 +73,11 @@ assert.match(template, /id="packerCheck"/);
 assert.match(template, /id="nodeCheck"/);
 assert.match(template, /id="externalNodeExecutable"/);
 assert.match(template, /当前阶段只验证插件加载/);
+assert.match(style, /:host\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow:\s*hidden;/);
+assert.match(style, /\.shell\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow-x:\s*hidden;[\s\S]*overflow-y:\s*auto;/);
+assert.match(style, /scrollbar-gutter:\s*stable/);
+assert.match(style, /\.shell::-webkit-scrollbar/);
+assert.match(style, /overflow-wrap:\s*anywhere/);
 assert.match(style, /\.status-grid/);
 assert.match(linkScript, /process\.platform === "win32" \? "junction" : "dir"/);
 assert.ok(
