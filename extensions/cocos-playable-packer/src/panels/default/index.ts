@@ -40,8 +40,14 @@ function renderEnvironment(info: CreatorEnvironmentInfo): void {
   setText("projectName", info.project.name);
   setText("projectPath", info.project.path);
   setText("projectUuid", info.project.uuid);
-  setText("nodeVersion", `${info.runtime.nodeVersion} · ${info.runtime.platform}/${info.runtime.architecture}`);
-  setText("nodeExecutable", info.runtime.nodeExecutable);
+  setText(
+    "hostNodeVersion",
+    `${info.runtime.hostNodeVersion} · ${info.runtime.platform}/${info.runtime.architecture}`,
+  );
+  setText("hostExecutable", info.runtime.hostExecutable);
+  setText("externalNodeVersion", info.runtime.externalNodeVersion ?? "未检测到");
+  setText("externalNodeExecutable", info.runtime.externalNodeExecutable ?? "未检测到");
+  setText("externalNodeError", info.runtime.externalNodeError ?? "-");
   setText("extensionRoot", info.paths.extensionRoot);
   setText("realExtensionRoot", info.paths.realExtensionRoot);
   setText("packerRoot", info.paths.packerRoot ?? "未检测到");
@@ -69,6 +75,12 @@ function renderEnvironment(info: CreatorEnvironmentInfo): void {
     info.checks.packerRootDetected && info.checks.coreSourceExists,
     "已连接 Packer Core",
     "未连接 Packer Core",
+  );
+  setCheck(
+    "nodeCheck",
+    info.runtime.externalNodeSupported,
+    "外部 Node.js 22+ 可用",
+    info.runtime.externalNodeAvailable ? "外部 Node.js 版本过低" : "未找到外部 Node.js",
   );
 }
 
