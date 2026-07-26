@@ -1,33 +1,165 @@
 <main class="shell">
   <header class="hero">
-    <div><p class="eyebrow">Cocos Creator 3.8.x Extension</p><h1>Cocos Playable Packer</h1><p id="panelStatus" class="subtitle">正在初始化插件面板…</p></div>
-    <button id="refreshEnvironmentButton" class="primary" type="button">重新检测</button>
+    <div class="hero-copy">
+      <p class="eyebrow">Cocos Creator 3.8.x Extension</p>
+      <h1>Cocos Playable Packer</h1>
+      <p id="panelStatus" class="subtitle">正在初始化插件面板…</p>
+    </div>
+    <button id="refreshEnvironmentButton" class="button button--ghost" type="button">
+      <span class="button-icon">↻</span>
+      重新检测
+    </button>
   </header>
+
   <section class="status-grid" aria-label="环境状态">
     <article class="status-card"><span>Creator 项目</span><strong id="projectCheck" class="status-warning">检测中</strong></article>
     <article class="status-card"><span>Web Mobile</span><strong id="buildCheck" class="status-warning">检测中</strong></article>
     <article class="status-card"><span>Packer Core</span><strong id="packerCheck" class="status-warning">检测中</strong></article>
     <article class="status-card"><span>外部 Node.js</span><strong id="nodeCheck" class="status-warning">检测中</strong></article>
   </section>
-  <section class="panel-section">
-    <div class="section-title"><h2>构建任务</h2><span id="taskStatus">等待构建</span></div>
-    <div class="form-grid">
-      <label>输入目录<input id="inputDirectory" type="text"></label>
-      <label>输出文件<input id="outputFile" type="text"></label>
-      <label>图片压缩<select id="imageMode"><option value="squoosh">Squoosh</option><option value="none">无压缩</option><option value="tinypng">TinyPNG</option><option value="webp">WebP</option></select></label>
-      <label>Payload<select id="payloadEncoding"><option value="html7">HTML7</option><option value="base91">Base91</option><option value="base64">Base64</option></select></label>
-      <label class="check-row"><input id="audioEnabled" type="checkbox">启用音频压缩</label>
-      <label>音频码率<input id="audioBitrateKbps" type="number" min="16" max="320" value="48"></label>
+
+  <section class="panel-section build-section">
+    <div class="section-title">
+      <div>
+        <p class="section-kicker">BUILD CONFIGURATION</p>
+        <h2>构建任务</h2>
+      </div>
+      <span id="taskStatus" class="status-pill">等待构建</span>
     </div>
-    <div class="actions"><button id="startBuildButton" class="primary" type="button">开始构建</button><button id="cancelBuildButton" type="button" disabled>取消任务</button></div>
-    <pre id="taskLogOutput" class="logs">暂无构建日志。</pre>
+
+    <div class="config-stack">
+      <article class="config-card config-card--wide">
+        <div class="config-card-heading">
+          <span class="config-index">01</span>
+          <div><h3>路径与输出</h3><p>选择 Cocos Web Mobile 构建目录和最终 HTML 文件。</p></div>
+        </div>
+        <div class="path-fields">
+          <label class="field">
+            <span class="field-label">输入目录</span>
+            <span class="field-help">应指向 Creator 生成的 <code>build/web-mobile</code> 目录。</span>
+            <span class="path-picker">
+              <input id="inputDirectory" type="text" spellcheck="false" placeholder="选择 Web Mobile 构建目录">
+              <button id="inputDirectoryBrowseButton" class="picker-button" type="button">选择目录</button>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">输出文件</span>
+            <span class="field-help">选择单文件 Playable HTML 的保存位置。</span>
+            <span class="path-picker">
+              <input id="outputFile" type="text" spellcheck="false" placeholder="选择输出 HTML 文件">
+              <button id="outputFileBrowseButton" class="picker-button" type="button">选择文件</button>
+            </span>
+          </label>
+        </div>
+      </article>
+
+      <div class="config-grid">
+        <article class="config-card">
+          <div class="config-card-heading">
+            <span class="config-index">02</span>
+            <div><h3>图片压缩</h3><p>控制 PNG、JPEG 等图片资源的优化方式。</p></div>
+          </div>
+          <label class="field">
+            <span class="field-label">压缩模式</span>
+            <select id="imageMode">
+              <option value="squoosh">Squoosh（推荐）</option>
+              <option value="none">无压缩</option>
+              <option value="tinypng">TinyPNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+          <p id="webpWarning" class="inline-warning" hidden>WebP 在部分旧设备或渠道 WebView 中可能存在兼容性问题，交付前请做真机验证。</p>
+        </article>
+
+        <article id="audioSettings" class="config-card config-card--muted">
+          <div class="config-card-heading">
+            <span class="config-index">03</span>
+            <div><h3>音频压缩</h3><p>按需重新编码音频；推荐配置默认关闭。</p></div>
+          </div>
+          <label class="switch-row">
+            <span><strong>启用音频压缩</strong><small>适合需要进一步降低音频体积的项目</small></span>
+            <input id="audioEnabled" class="switch-input" type="checkbox">
+          </label>
+          <label class="field compact-field">
+            <span class="field-label">目标码率</span>
+            <span class="number-input"><input id="audioBitrateKbps" type="number" min="16" max="320" value="48"><em>kbps</em></span>
+          </label>
+          <p id="audioWarning" class="inline-warning" hidden>已启用音频压缩。构建后请重点试听音乐、音效和循环衔接。</p>
+        </article>
+
+        <article class="config-card">
+          <div class="config-card-heading">
+            <span class="config-index">04</span>
+            <div><h3>Payload 编码</h3><p>决定 Brotli 数据写入最终 HTML 的文本编码。</p></div>
+          </div>
+          <label class="field">
+            <span class="field-label">编码方式</span>
+            <select id="payloadEncoding">
+              <option value="html7">HTML7（推荐）</option>
+              <option value="base91">Base91</option>
+              <option value="base64">Base64</option>
+            </select>
+          </label>
+          <p class="field-note">HTML7 体积最小；Base64 通用性最高，适合兼容性排查。</p>
+        </article>
+
+        <article class="config-card config-card--summary">
+          <div class="config-card-heading">
+            <span class="config-index">✓</span>
+            <div><h3>构建说明</h3><p>任务会交给外部 Node.js 22+ Worker 执行。</p></div>
+          </div>
+          <ul class="summary-list">
+            <li>关闭面板不会终止正在运行的任务</li>
+            <li>构建期间配置项会自动锁定</li>
+            <li>完成后请在浏览器和真机环境试玩</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+
+    <div class="build-toolbar">
+      <div class="build-toolbar-copy"><strong>准备开始构建</strong><span>确认路径和压缩策略后启动任务。</span></div>
+      <div class="actions">
+        <button id="startBuildButton" class="button button--primary action-button" type="button"><span class="button-icon">▶</span>开始构建</button>
+        <button id="cancelBuildButton" class="button button--danger action-button" type="button" disabled><span class="button-icon">■</span>取消任务</button>
+      </div>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-panel-heading"><strong>构建日志</strong><span>实时更新</span></div>
+      <pre id="taskLogOutput" class="logs">暂无构建日志。</pre>
+    </div>
   </section>
-  <section class="panel-section"><div class="section-title"><h2>当前项目</h2><span id="checkedAt">-</span></div><dl class="details">
-    <div><dt>项目名称</dt><dd id="projectName">-</dd></div><div><dt>项目路径</dt><dd id="projectPath">-</dd></div><div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div><div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div><div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
-  </dl></section>
-  <section class="panel-section"><div class="section-title"><h2>插件运行环境</h2><span>Shell v<span id="extensionVersion">-</span></span></div><dl class="details">
-    <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div><div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div><div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div><div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div><div id="externalNodeErrorRow" hidden><dt>Node 检测错误</dt><dd id="externalNodeError"></dd></div><div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div><div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div><div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
-  </dl></section>
-  <section class="panel-section"><div class="section-title"><h2>开发日志</h2><span>最近 100 行</span></div><pre id="logOutput" class="logs">暂无日志。</pre></section>
-  <footer class="notice">构建任务由外部 Node.js 22+ Worker 执行；关闭面板不会终止正在运行的任务。</footer>
+
+  <section class="panel-section">
+    <div class="section-title"><div><p class="section-kicker">PROJECT</p><h2>当前项目</h2></div><span id="checkedAt">-</span></div>
+    <dl class="details">
+      <div><dt>项目名称</dt><dd id="projectName">-</dd></div>
+      <div><dt>项目路径</dt><dd id="projectPath">-</dd></div>
+      <div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div>
+      <div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div>
+      <div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
+    </dl>
+  </section>
+
+  <section class="panel-section">
+    <div class="section-title"><div><p class="section-kicker">RUNTIME</p><h2>插件运行环境</h2></div><span>Shell v<span id="extensionVersion">-</span></span></div>
+    <dl class="details">
+      <div><dt>Creator Node Runtime</dt><dd id="hostNodeVersion">-</dd></div>
+      <div><dt>Creator 宿主程序</dt><dd id="hostExecutable">-</dd></div>
+      <div><dt>外部 Node.js</dt><dd id="externalNodeVersion">-</dd></div>
+      <div><dt>外部 node.exe</dt><dd id="externalNodeExecutable">-</dd></div>
+      <div id="externalNodeErrorRow" hidden><dt>Node 检测错误</dt><dd id="externalNodeError"></dd></div>
+      <div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div>
+      <div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div>
+      <div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
+    </dl>
+  </section>
+
+  <section class="panel-section">
+    <div class="section-title"><div><p class="section-kicker">DIAGNOSTICS</p><h2>开发日志</h2></div><span>最近 100 行</span></div>
+    <pre id="logOutput" class="logs">暂无日志。</pre>
+  </section>
+
+  <footer class="notice">Cocos Playable Packer · Creator 3.8.x · 构建结果仍需在目标渠道和真机环境中验证。</footer>
 </main>
