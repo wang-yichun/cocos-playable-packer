@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 const scriptFile = fileURLToPath(import.meta.url);
 const repositoryRoot = path.resolve(path.dirname(scriptFile), "..");
 const GIT_EXCLUDE_MARKER = "# cocos-playable-packer managed Creator extension link";
-const GIT_EXCLUDE_PATTERN = "/extensions/cocos-playable-packer/";
+const GIT_EXCLUDE_PATTERN = "/extensions/cocos-playable-packer";
 export const defaultExtensionSource = path.join(
   repositoryRoot,
   "extensions",
