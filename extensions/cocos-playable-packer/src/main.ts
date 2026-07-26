@@ -1,10 +1,14 @@
+import { execFile } from "node:child_process";
 import { access, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 
-import type { CreatorEnvironmentInfo } from "./shared/types.js";
+import type { CreatorEnvironmentInfo, CreatorRuntimeInfo } from "./shared/types.js";
 
 const PACKAGE_NAME = "cocos-playable-packer";
 const MAX_LOG_LINES = 100;
+const MINIMUM_EXTERNAL_NODE_MAJOR = 22;
+const execFileAsync = promisify(execFile);
 const logs: string[] = [];
 
 function timestamp(): string {
@@ -68,6 +72,82 @@ async function detectPackerRoot(
   return null;
 }
 
+function externalNodeMajor(version: string): number | null {
+  const match = /^v?(\d+)/i.exec(version.trim());
+  if (match?.[1] === undefined) {
+    return null;
+  }
+  const major = Number(match[1]);
+  return Number.isInteger(major) ? major : null;
+}
+
+async function commandOutput(command: string, args: readonly string[]): Promise<string> {
+  const result = await execFileAsync(command, [...args], {
+    encoding: "utf8",
+    timeout: 5_000,
+    windowsHide: true,
+  });
+  return result.stdout.trim();
+}
+
+async function resolveExternalNodeExecutable(command: string): Promise<string> {
+  if (path.isAbsolute(command)) {
+    return path.resolve(command);
+  }
+
+  try {
+    const output = process.platform === "win32"
+      ? await commandOutput("where.exe", [command])
+      : await commandOutput("which", [command]);
+    const first = output.split(/\r?\n/).map((line) => line.trim()).find(Boolean);
+    return first === undefined ? command : path.resolve(first);
+  } catch {
+    return command;
+  }
+}
+
+async function detectExternalNode(): Promise<CreatorRuntimeInfo> {
+  const command = process.env.PLAYABLE_PACKER_NODE?.trim() || "node";
+  try {
+    const version = (await commandOutput(command, ["--version"]))
+      .split(/\r?\n/)[0]
+      ?.trim() || "unknown";
+    const major = externalNodeMajor(version);
+    const executable = await resolveExternalNodeExecutable(command);
+    const supported = major !== null && major >= MINIMUM_EXTERNAL_NODE_MAJOR;
+    appendLog(
+      supported
+        ? `已找到外部 Node.js：${version} (${executable})`
+        : `外部 Node.js 版本低于要求：${version}，需要 Node.js ${MINIMUM_EXTERNAL_NODE_MAJOR}+。`,
+    );
+    return {
+      hostNodeVersion: process.version,
+      hostExecutable: process.execPath,
+      platform: process.platform,
+      architecture: process.arch,
+      externalNodeAvailable: true,
+      externalNodeSupported: supported,
+      externalNodeVersion: version,
+      externalNodeExecutable: executable,
+      externalNodeError: null,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    appendLog(`未找到可用的外部 Node.js：${message}`);
+    return {
+      hostNodeVersion: process.version,
+      hostExecutable: process.execPath,
+      platform: process.platform,
+      architecture: process.arch,
+      externalNodeAvailable: false,
+      externalNodeSupported: false,
+      externalNodeVersion: null,
+      externalNodeExecutable: null,
+      externalNodeError: message,
+    };
+  }
+}
+
 async function queryEnvironment(): Promise<CreatorEnvironmentInfo> {
   const extensionRoot = path.resolve(__dirname, "..");
   const realExtensionRoot = await realpath(extensionRoot).catch(() => extensionRoot);
@@ -78,6 +158,7 @@ async function queryEnvironment(): Promise<CreatorEnvironmentInfo> {
   const coreSource = packerRoot === null
     ? null
     : path.join(packerRoot, "src", "core", "index.ts");
+  const runtime = await detectExternalNode();
 
   const checks = {
     projectDirectoryExists: await exists(projectPath),
@@ -103,12 +184,7 @@ async function queryEnvironment(): Promise<CreatorEnvironmentInfo> {
       tmpDir: Editor.Project.tmpDir,
       uuid: Editor.Project.uuid,
     },
-    runtime: {
-      nodeVersion: process.version,
-      nodeExecutable: process.execPath,
-      platform: process.platform,
-      architecture: process.arch,
-    },
+    runtime,
     paths: {
       extensionRoot,
       realExtensionRoot,
