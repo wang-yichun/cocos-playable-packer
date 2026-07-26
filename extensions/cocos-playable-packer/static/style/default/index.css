@@ -1,4 +1,10 @@
 :host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   color: var(--color-normal-contrast-weakest, #d1d5db);
   background: var(--color-normal-fill, #1f2937);
   font-family: Arial, "Microsoft YaHei", sans-serif;
@@ -13,10 +19,35 @@ button {
 }
 
 .shell {
-  min-height: 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   padding: 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   background: #111827;
   color: #e5e7eb;
+}
+
+.shell::-webkit-scrollbar {
+  width: 10px;
+}
+
+.shell::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.shell::-webkit-scrollbar-thumb {
+  border: 2px solid #0f172a;
+  border-radius: 999px;
+  background: #4b5563;
+}
+
+.shell::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 .hero {
@@ -117,6 +148,7 @@ h2 {
 }
 
 .panel-section {
+  min-width: 0;
   margin-top: 12px;
   padding: 16px;
   border: 1px solid #374151;
@@ -129,6 +161,7 @@ h2 {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
   margin-bottom: 12px;
 }
 
@@ -139,6 +172,7 @@ h2 {
 
 .details {
   display: grid;
+  min-width: 0;
   gap: 0;
   margin: 0;
 }
@@ -147,6 +181,7 @@ h2 {
   display: grid;
   grid-template-columns: 125px minmax(0, 1fr);
   gap: 12px;
+  min-width: 0;
   padding: 9px 0;
   border-bottom: 1px solid #303b4d;
 }
@@ -166,10 +201,13 @@ h2 {
   color: #e5e7eb;
   font-size: 12px;
   overflow-wrap: anywhere;
+  word-break: break-word;
   user-select: text;
 }
 
 .logs {
+  width: 100%;
+  min-width: 0;
   min-height: 120px;
   max-height: 220px;
   margin: 0;
@@ -182,6 +220,7 @@ h2 {
   font-family: Consolas, "Courier New", monospace;
   font-size: 11px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
   user-select: text;
 }
@@ -198,6 +237,10 @@ h2 {
 }
 
 @media (max-width: 560px) {
+  .shell {
+    padding: 12px;
+  }
+
   .hero {
     flex-direction: column;
   }
