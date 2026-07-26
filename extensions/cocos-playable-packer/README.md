@@ -7,7 +7,8 @@
 - Creator 菜单和可停靠面板；
 - 当前项目路径、UUID 和临时目录识别；
 - `build/web-mobile` 构建目录检测；
-- Node.js 运行环境检测；
+- Creator 宿主运行时识别；
+- 外部 Node.js 22+ 与实际 `node.exe` 路径检测；
 - Packer 仓库和 Core 源码连接检测；
 - 开发日志显示。
 
