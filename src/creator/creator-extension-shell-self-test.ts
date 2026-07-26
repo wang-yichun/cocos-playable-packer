@@ -40,6 +40,9 @@ assert.equal(panels.default?.main, "./dist/panels/default");
 assert.equal(panels.default?.type, "dockable");
 
 const contributions = packageJson.contributions as Record<string, unknown>;
+const menus = contributions.menu as Array<Record<string, unknown>>;
+assert.equal(menus[0]?.path, "i18n:menu.develop/Cocos Playable Packer");
+assert.equal(menus[0]?.message, "open-panel");
 const messages = contributions.messages as Record<string, { methods?: string[] }>;
 assert.deepEqual(messages["open-panel"]?.methods, ["openPanel"]);
 assert.deepEqual(messages["query-environment"]?.methods, ["queryEnvironment"]);
