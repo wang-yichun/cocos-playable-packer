@@ -49,10 +49,10 @@ D:\Projects\Cocos\game143\extensions\cocos-playable-packer
 脚本还会在 `game143/.git/info/exclude` 中加入本地排除：
 
 ```text
-/extensions/cocos-playable-packer/
+/extensions/cocos-playable-packer
 ```
 
-该文件不会提交到仓库。脚本不会修改 `game143/.gitignore`。
+该文件不会提交到仓库。脚本不会修改 `game143/.gitignore`。无尾斜杠的规则会匹配 Junction 或目录符号链接本身。
 
 检查状态：
 
