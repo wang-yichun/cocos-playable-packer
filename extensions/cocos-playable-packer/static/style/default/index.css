@@ -1,0 +1,260 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  color: var(--color-normal-contrast-weakest, #d1d5db);
+  background: var(--color-normal-fill, #1f2937);
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button {
+  font: inherit;
+}
+
+.shell {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.shell::-webkit-scrollbar {
+  width: 10px;
+}
+
+.shell::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.shell::-webkit-scrollbar-thumb {
+  border: 2px solid #0f172a;
+  border-radius: 999px;
+  background: #4b5563;
+}
+
+.shell::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  background: #1f2937;
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 7px;
+  font-size: 22px;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 15px;
+}
+
+.subtitle {
+  max-width: 620px;
+  margin-bottom: 0;
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.primary {
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.primary:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.status-card {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  background: #1f2937;
+}
+
+.status-card span {
+  display: block;
+  margin-bottom: 7px;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.status-card strong {
+  font-size: 13px;
+}
+
+.status-ok {
+  color: #86efac;
+}
+
+.status-warning {
+  color: #fbbf24;
+}
+
+.panel-section {
+  min-width: 0;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid #374151;
+  border-radius: 11px;
+  background: #1f2937;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.section-title span {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.details {
+  display: grid;
+  min-width: 0;
+  gap: 0;
+  margin: 0;
+}
+
+.details > div {
+  display: grid;
+  grid-template-columns: 125px minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid #303b4d;
+}
+
+.details > div:last-child {
+  border-bottom: 0;
+}
+
+.details dt {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.details dd {
+  min-width: 0;
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  user-select: text;
+}
+
+.logs {
+  width: 100%;
+  min-width: 0;
+  min-height: 120px;
+  max-height: 220px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.notice {
+  margin-top: 12px;
+  padding: 11px 13px;
+  border-left: 3px solid #2563eb;
+  border-radius: 7px;
+  background: #172554;
+  color: #bfdbfe;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 560px) {
+  .shell {
+    padding: 12px;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details > div {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+}
