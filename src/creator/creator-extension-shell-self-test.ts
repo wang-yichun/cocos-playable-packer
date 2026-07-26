@@ -12,6 +12,9 @@ const extensionRoot = path.join(
 const packageJson = JSON.parse(
   await readFile(path.join(extensionRoot, "package.json"), "utf8"),
 ) as Record<string, unknown>;
+const tsconfig = JSON.parse(
+  await readFile(path.join(extensionRoot, "tsconfig.json"), "utf8"),
+) as { compilerOptions?: Record<string, unknown> };
 const mainSource = await readFile(path.join(extensionRoot, "src", "main.ts"), "utf8");
 const panelSource = await readFile(
   path.join(extensionRoot, "src", "panels", "default", "index.ts"),
@@ -34,6 +37,9 @@ assert.equal(packageJson.package_version, 2);
 assert.equal(packageJson.name, "cocos-playable-packer");
 assert.equal(packageJson.editor, ">=3.8.0 <3.9.0");
 assert.equal(packageJson.main, "./dist/main.js");
+assert.equal(packageJson.type, "commonjs");
+assert.equal(tsconfig.compilerOptions?.module, "Node16");
+assert.equal(tsconfig.compilerOptions?.moduleResolution, "Node16");
 
 const panels = packageJson.panels as Record<string, Record<string, unknown>>;
 assert.equal(panels.default?.main, "./dist/panels/default");
