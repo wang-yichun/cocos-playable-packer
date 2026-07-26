@@ -232,6 +232,7 @@ function imageQuality(input: HTMLInputElement, label: string): number {
 
 function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
   const imageMode = elements.imageMode.value as CreatorBuildConfiguration["imageMode"];
+  const qualityEnabled = imageMode === "squoosh" || imageMode === "webp";
   const tinyPngApiKey = elements.tinyPngApiKey.value.trim();
   if (imageMode === "tinypng" && tinyPngApiKey.length === 0) {
     throw new TypeError("选择 TinyPNG 时必须填写 API Key。");
@@ -240,8 +241,8 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
     inputDirectory: elements.inputDirectory.value.trim(),
     outputFile: elements.outputFile.value.trim(),
     imageMode,
-    pngQuality: imageQuality(elements.pngQuality, "PNG 质量"),
-    jpegQuality: imageQuality(elements.jpegQuality, "JPG 质量"),
+    pngQuality: qualityEnabled ? imageQuality(elements.pngQuality, "PNG 质量") : DEFAULT_IMAGE_QUALITY,
+    jpegQuality: qualityEnabled ? imageQuality(elements.jpegQuality, "JPG 质量") : DEFAULT_IMAGE_QUALITY,
     tinyPngApiKey,
     audioEnabled: elements.audioEnabled.checked,
     audioBitrateKbps: Number(elements.audioBitrateKbps.value) || 48,
