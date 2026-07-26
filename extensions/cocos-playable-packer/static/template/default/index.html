@@ -1,0 +1,65 @@
+<main class="shell">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Cocos Creator 3.8.x Extension</p>
+      <h1>Cocos Playable Packer</h1>
+      <p id="panelStatus" class="subtitle">正在初始化插件面板…</p>
+    </div>
+    <button id="refreshEnvironmentButton" class="primary" type="button">重新检测</button>
+  </header>
+
+  <section class="status-grid" aria-label="环境状态">
+    <article class="status-card">
+      <span>Creator 项目</span>
+      <strong id="projectCheck" class="status-warning">检测中</strong>
+    </article>
+    <article class="status-card">
+      <span>Web Mobile</span>
+      <strong id="buildCheck" class="status-warning">检测中</strong>
+    </article>
+    <article class="status-card">
+      <span>Packer Core</span>
+      <strong id="packerCheck" class="status-warning">检测中</strong>
+    </article>
+  </section>
+
+  <section class="panel-section">
+    <div class="section-title">
+      <h2>当前项目</h2>
+      <span id="checkedAt">-</span>
+    </div>
+    <dl class="details">
+      <div><dt>项目名称</dt><dd id="projectName">-</dd></div>
+      <div><dt>项目路径</dt><dd id="projectPath">-</dd></div>
+      <div><dt>项目 UUID</dt><dd id="projectUuid">-</dd></div>
+      <div><dt>Web Mobile</dt><dd id="webMobileDirectory">-</dd></div>
+      <div><dt>默认输出目录</dt><dd id="defaultOutputDirectory">-</dd></div>
+    </dl>
+  </section>
+
+  <section class="panel-section">
+    <div class="section-title">
+      <h2>插件运行环境</h2>
+      <span>Shell v<span id="extensionVersion">-</span></span>
+    </div>
+    <dl class="details">
+      <div><dt>Node.js</dt><dd id="nodeVersion">-</dd></div>
+      <div><dt>Node 可执行文件</dt><dd id="nodeExecutable">-</dd></div>
+      <div><dt>插件加载路径</dt><dd id="extensionRoot">-</dd></div>
+      <div><dt>插件真实路径</dt><dd id="realExtensionRoot">-</dd></div>
+      <div><dt>Packer 仓库</dt><dd id="packerRoot">-</dd></div>
+    </dl>
+  </section>
+
+  <section class="panel-section">
+    <div class="section-title">
+      <h2>开发日志</h2>
+      <span>最近 100 行</span>
+    </div>
+    <pre id="logOutput" class="logs">暂无日志。</pre>
+  </section>
+
+  <footer class="notice">
+    当前阶段只验证插件加载、面板通信、项目识别与运行环境，不会修改游戏工程或执行 Playable 压缩。
+  </footer>
+</main>
