@@ -161,6 +161,7 @@ const selectors: Record<keyof PanelElements, string> = {
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let handlers: Array<readonly [HTMLElement, string, EventListener]> = [];
 let lastReportTaskId = "";
+let startValidationError: string | null = null;
 
 function reportObject(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -427,7 +428,7 @@ function renderTask(elements: PanelElements, task: CreatorBuildTask): void {
   syncConfigurationState(elements, active);
   setText(elements, "taskStatus", task.status === "idle" ? "等待构建" : `${task.status}${task.stage ? ` · ${task.stage}` : ""}`);
   setText(elements, "taskLogOutput", task.logs.length === 0 ? "暂无构建日志。" : task.logs.join("\n"));
-  setText(elements, "panelStatus", task.error ?? (task.status === "succeeded" ? `构建完成：${task.outputFile}` : active ? "构建任务正在运行…" : "环境检测完成。"));
+  setText(elements, "panelStatus", task.error ?? startValidationError ?? (task.status === "succeeded" ? `构建完成：${task.outputFile}` : active ? "构建任务正在运行…" : "环境检测完成。"));
   void loadBuildReport(elements, task);
 }
 
@@ -512,11 +513,18 @@ async function startBuild(elements: PanelElements): Promise<void> {
   try {
     elements.reportSection.hidden = true;
     lastReportTaskId = "";
+    startValidationError = null;
+    if (elements.loadingScreenEnabled.checked && await loadLoadingLogo(elements) === null) {
+      startValidationError = "无法启动构建：已启用 Logo 与蓝色进度条，但尚未导入 Logo。请先导入 PNG、JPG 或 WebP Logo，或关闭该选项。";
+      setText(elements, "panelStatus", startValidationError);
+      return;
+    }
     saveConfiguration(elements);
     const configuration = configurationFrom(elements);
     renderTask(elements, await Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "start-build", configuration));
   } catch (error) {
-    setText(elements, "panelStatus", `启动失败：${error instanceof Error ? error.message : String(error)}`);
+    startValidationError = `启动失败：${error instanceof Error ? error.message : String(error)}`;
+    setText(elements, "panelStatus", startValidationError);
   }
 }
 

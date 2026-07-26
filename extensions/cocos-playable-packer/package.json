@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "name": "cocos-playable-packer",
   "title": "Cocos Playable Packer",
-  "description": "Cocos Creator 3.8.x Playable 打包工具插件。",
+  "description": "Cocos Creator 3.8.x Playable packaging extension.",
   "author": "wang-yichun",
   "editor": ">=3.8.0 <3.9.0",
   "main": "./dist/main.js",

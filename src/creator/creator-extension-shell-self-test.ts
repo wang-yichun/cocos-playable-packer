@@ -183,7 +183,8 @@ assert.match(template, /id="outputFolderButton" class="button button--ghost acti
 assert.doesNotMatch(template, /id="reportButton"/);
 assert.match(template, /id="importLogoButton"/);
 assert.match(template, /id="clearLogoButton"/);
-assert.match(template, /id="loadingScreenEnabled"[^>]*checked/);
+assert.match(template, /id="loadingScreenEnabled"/);
+assert.doesNotMatch(template, /id="loadingScreenEnabled"[^>]*checked/);
 assert.match(template, /id="loadingLogoPreview"/);
 assert.match(template, /id="loadingLogoPreviewImage"/);
 assert.match(template, /config-index">05/);

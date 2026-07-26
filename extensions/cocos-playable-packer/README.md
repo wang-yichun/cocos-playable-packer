@@ -24,16 +24,27 @@
 
 1. 仅支持 **Cocos Creator 3.8.x**（`>=3.8.0 <3.9.0`）。
 2. 请安装并配置 **Node.js 22 或更高版本**，确保在命令行执行 `node --version` 能返回版本号。
-3. 插件依赖随发行包附带的 Packer Runtime；请保持 `runtime` 目录及其内容完整，不要单独移动或删除。
-4. 使用前须先在 Creator 中构建 **Web Mobile**，默认输入目录为项目的 `build/web-mobile`。
-5. 若选择 TinyPNG，请自行准备有效的 TinyPNG API Key；该 Key 仅用于当前构建，不会写入构建报告或日志。
-6. 使用 WebP 或音频压缩后，请务必在目标广告渠道的真机/WebView 环境试玩验证兼容性与音质。
+3. 如需启用 **音频压缩**，必须先安装 **FFmpeg** 并加入系统 `PATH`；请在命令行执行 `ffmpeg -version` 确认可用。插件会调用 FFmpeg 进行音频转码，Node.js/npm 不会自动安装它。建议同时执行 `ffmpeg -encoders`，确认输出包含 `libmp3lame`。
+
+   Windows 已安装 Chocolatey 时，可在**管理员 PowerShell**中快速安装：
+
+   ```powershell
+   choco install ffmpeg
+   ```
+
+   安装后请重新打开 Cocos Creator，再执行 `ffmpeg -version` 验证。
+4. 插件依赖随发行包附带的 Packer Runtime；请保持 `runtime` 目录及其内容完整，不要单独移动或删除。
+5. 使用前须先在 Creator 中构建 **Web Mobile**，默认输入目录为项目的 `build/web-mobile`。
+6. 若选择 TinyPNG，请自行准备有效的 TinyPNG API Key；该 Key 仅用于当前构建，不会写入构建报告或日志。
+7. 使用 WebP 或音频压缩后，请务必在目标广告渠道的真机/WebView 环境试玩验证兼容性与音质。
 
 ## 使用教程
 
 ![使用流程示意](./static/branding/usage-workflow.svg)
 
 ### Step 1：安装并启用插件
+
+> 如果 Cocos Creator 无法自动解压或安装 ZIP，请手动解压 ZIP，并将其中的 `cocos-playable-packer` **整个文件夹**复制到项目的 `extensions` 目录。最终目录应为：`你的项目/extensions/cocos-playable-packer/package.json`。复制完成后重启 Creator，或在扩展管理器中重新加载插件。
 
 将 `cocos-playable-packer` 文件夹放入 Cocos Creator 项目的 `extensions` 目录；重启 Creator，或在 **扩展管理器**中重新加载插件。随后通过菜单 **扩展 → Cocos Playable Packer → 打开打包面板** 启动插件。
 
@@ -75,6 +86,10 @@
 ### 面板提示“未检测到可用的外部 Node.js 22+”
 
 安装 Node.js 22 或更高版本，确认 `node --version` 可用后重启 Cocos Creator。若 Node.js 不在系统 PATH 中，可将其可执行文件路径设置到环境变量 `PLAYABLE_PACKER_NODE`。
+
+### 启用音频压缩后提示找不到 FFmpeg 或转码失败
+
+请安装 FFmpeg，并将其可执行文件所在目录加入系统 `PATH`。关闭并重新打开 Cocos Creator 后，在命令行执行 `ffmpeg -version` 确认可用；若需要 MP3 转码，还应确认 `ffmpeg -encoders` 的输出中包含 `libmp3lame`。不启用音频压缩时不需要安装 FFmpeg。
 
 ### 面板提示“未找到 Web Mobile 构建目录”
 
