@@ -16,6 +16,15 @@ npm run creator:build
 npm run test:creator-extension
 ```
 
+确认系统 Node.js：
+
+```powershell
+node --version
+(Get-Command node).Source
+```
+
+Node.js 主版本应不低于 22。第二条命令应输出实际 `node.exe` 路径。
+
 确认 `game143` 已克隆并位于 `develop`：
 
 ```powershell
@@ -80,10 +89,44 @@ git status --short
 3. 选择项目扩展，找到 **Cocos Playable Packer**。
 4. 启用或重新加载插件。
 5. 从 **开发者 → Cocos Playable Packer → 打开打包面板** 打开面板。
-6. 检查面板中的项目名称、项目路径、Node.js、插件路径和 Packer 仓库路径。
-7. 若 `game143/build/web-mobile` 已存在，应显示“已找到 Web Mobile 构建”；否则显示“尚未构建 Web Mobile”。
+6. 检查面板中的项目名称、项目路径、插件路径和 Packer 仓库路径。
+7. 检查“外部 Node.js”状态应为绿色的“外部 Node.js 22+ 可用”。
+8. “Creator Node Runtime”和“Creator 宿主程序”只描述编辑器自己的宿主；未来启动 Pipeline Worker 时使用的是单独检测到的“外部 node.exe”。
+9. 若 `game143/build/web-mobile` 已存在，应显示“已找到 Web Mobile 构建”；否则显示“尚未构建 Web Mobile”。
 
-Creator 会从项目的 `extensions` 目录加载项目扩展；修改插件后需要在扩展管理器中重新载入。本项目统一使用可脚本化、可验证的 Junction 开发流程。
+Creator 会从项目的 `extensions` 目录加载项目扩展；修改插件后需要在扩展管理器中重新载入。本项目统一使用可脚本化、可验证的 Junction 开发流程。官方扩展系统通过 `package.json` 定义入口、面板与菜单，并通过消息系统完成面板和扩展主进程通信。
+
+## 外部 Node.js 未检测到时
+
+先在普通 PowerShell 中确认：
+
+```powershell
+node --version
+(Get-Command node).Source
+```
+
+若 PowerShell 可找到 Node.js，但 Creator 面板仍显示未找到，可以显式设置插件使用的 Node 路径：
+
+```powershell
+$NodeExe = (Get-Command node).Source
+[Environment]::SetEnvironmentVariable(
+  "PLAYABLE_PACKER_NODE",
+  $NodeExe,
+  "User"
+)
+```
+
+然后完全关闭 Cocos Creator 和 Dashboard，再重新打开项目并点击“重新检测”。
+
+清除该覆盖设置：
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+  "PLAYABLE_PACKER_NODE",
+  $null,
+  "User"
+)
+```
 
 ## 修改插件后的循环
 
@@ -118,7 +161,8 @@ npm run creator:unlink -- `
 - 插件可启用、重新加载和禁用；
 - 开发者菜单可以打开面板；
 - 面板显示 `game143` 的真实项目路径和 UUID；
-- Node.js 信息能够显示；
+- Creator 宿主运行时与外部 Node.js 信息分开显示；
+- 外部 Node.js 22+ 与实际 `node.exe` 路径能够检测；
 - Junction 加载路径和真实源码路径都能显示；
 - Packer 仓库与 `src/core/index.ts` 能被检测；
 - `build/web-mobile` 存在与不存在两种状态都显示正确；
