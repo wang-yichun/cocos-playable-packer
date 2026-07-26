@@ -15,6 +15,10 @@ const packageJson = JSON.parse(
 const tsconfig = JSON.parse(
   await readFile(path.join(extensionRoot, "tsconfig.json"), "utf8"),
 ) as { compilerOptions?: Record<string, unknown> };
+const editorTypes = await readFile(
+  path.join(extensionRoot, "src", "editor.d.ts"),
+  "utf8",
+);
 const mainSource = await readFile(path.join(extensionRoot, "src", "main.ts"), "utf8");
 const panelSource = await readFile(
   path.join(extensionRoot, "src", "panels", "default", "index.ts"),
@@ -44,10 +48,16 @@ assert.equal(tsconfig.compilerOptions?.moduleResolution, "Node16");
 const panels = packageJson.panels as Record<string, Record<string, unknown>>;
 assert.equal(panels.default?.main, "./dist/panels/default");
 assert.equal(panels.default?.type, "dockable");
+assert.deepEqual(panels.default?.size, {
+  "min-width": 460,
+  "min-height": 600,
+  width: 720,
+  height: 820,
+});
 
 const contributions = packageJson.contributions as Record<string, unknown>;
 const menus = contributions.menu as Array<Record<string, unknown>>;
-assert.equal(menus[0]?.path, "i18n:menu.develop/Cocos Playable Packer");
+assert.equal(menus[0]?.path, "i18n:menu.extension/Cocos Playable Packer");
 assert.equal(menus[0]?.message, "open-panel");
 const messages = contributions.messages as Record<string, { methods?: string[] }>;
 assert.deepEqual(messages["open-panel"]?.methods, ["openPanel"]);
@@ -56,6 +66,9 @@ assert.deepEqual(messages["start-build"]?.methods, ["startBuild"]);
 assert.deepEqual(messages["query-build-task"]?.methods, ["queryBuildTask"]);
 assert.deepEqual(messages["cancel-build"]?.methods, ["cancelBuild"]);
 
+assert.match(editorTypes, /namespace Dialog/);
+assert.match(editorTypes, /function select\(options\?: SelectDialogOptions\)/);
+assert.match(editorTypes, /function save\(options\?: SelectDialogOptions\)/);
 assert.match(mainSource, /Editor\.Project\.path/);
 assert.match(mainSource, /build["'], ["']web-mobile/);
 assert.match(mainSource, /PLAYABLE_PACKER_ROOT/);
@@ -67,6 +80,10 @@ assert.match(mainSource, /startBuild/);
 assert.match(mainSource, /queryBuildTask/);
 assert.match(mainSource, /cancelBuild/);
 assert.match(panelSource, /Editor\.Message\.request<CreatorEnvironmentInfo>/);
+assert.match(panelSource, /Editor\.Dialog\.select/);
+assert.match(panelSource, /Editor\.Dialog\.save/);
+assert.match(panelSource, /type: "directory"/);
+assert.match(panelSource, /extensions: \["html"\]/);
 assert.match(panelSource, /externalNodeSupported/);
 assert.match(panelSource, /query-environment/);
 assert.match(panelSource, /query-build-task/);
@@ -74,7 +91,8 @@ assert.match(panelSource, /start-build/);
 assert.match(panelSource, /cancel-build/);
 assert.match(panelSource, /\$: selectors/);
 assert.match(panelSource, /ready\(this: PanelContext\)/);
-assert.match(panelSource, /this\.\$\.refreshEnvironmentButton/);
+assert.match(panelSource, /this\.\$\.inputDirectoryBrowseButton/);
+assert.match(panelSource, /this\.\$\.outputFileBrowseButton/);
 assert.match(panelSource, /elements\.externalNodeErrorRow\.hidden = info\.runtime\.externalNodeError === null/);
 assert.match(panelSource, /info\.runtime\.externalNodeError \?\? ""/);
 assert.match(panelSource, /setInterval\(\(\) => void refreshTask\(this\.\$\), 750\)/);
@@ -85,10 +103,16 @@ assert.match(template, /id="packerCheck"/);
 assert.match(template, /id="nodeCheck"/);
 assert.match(template, /id="externalNodeExecutable"/);
 assert.match(template, /id="externalNodeErrorRow" hidden/);
-assert.doesNotMatch(template, /id="externalNodeError">-</);
-assert.match(template, /id="startBuildButton"/);
-assert.match(template, /id="cancelBuildButton"/);
+assert.doesNotMatch(template, /id="externalNodeError">-/);
+assert.match(template, /id="inputDirectoryBrowseButton"/);
+assert.match(template, /id="outputFileBrowseButton"/);
+assert.match(template, /id="startBuildButton" class="button button--primary action-button"/);
+assert.match(template, /id="cancelBuildButton" class="button button--danger action-button"/);
 assert.match(template, /id="taskLogOutput"/);
+assert.match(template, /class="config-grid"/);
+assert.match(template, /Squoosh（推荐）/);
+assert.match(template, /WebP 在部分旧设备或渠道 WebView 中可能存在兼容性问题/);
+assert.match(template, /推荐配置默认关闭/);
 assert.match(template, /关闭面板不会终止正在运行的任务/);
 assert.match(style, /:host\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow:\s*hidden;/);
 assert.match(style, /\.shell\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow-x:\s*hidden;[\s\S]*overflow-y:\s*auto;/);
@@ -97,6 +121,10 @@ assert.match(style, /scrollbar-gutter:\s*stable/);
 assert.match(style, /\.shell::-webkit-scrollbar/);
 assert.match(style, /overflow-wrap:\s*anywhere/);
 assert.match(style, /\.status-grid/);
+assert.match(style, /\.config-grid/);
+assert.match(style, /\.path-picker/);
+assert.match(style, /\.button--primary/);
+assert.match(style, /\.button--danger/);
 assert.match(linkScript, /process\.platform === "win32" \? "junction" : "dir"/);
 assert.ok(
   linkScript.includes(
