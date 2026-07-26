@@ -1,6 +1,8 @@
 import { execFile } from "node:child_process";
 import { access, mkdir, readFile, realpath } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { CreatorBuildTaskManager } from "./services/task-manager.js";
@@ -16,6 +18,7 @@ const MAX_LOG_LINES = 100;
 const MINIMUM_EXTERNAL_NODE_MAJOR = 22;
 const DEFAULT_IMAGE_QUALITY = 80;
 const execFileAsync = promisify(execFile);
+const extensionRequire = createRequire(__filename);
 const logs: string[] = [];
 const taskManager = new CreatorBuildTaskManager();
 
@@ -203,6 +206,42 @@ async function startBuild(configuration: CreatorBuildConfiguration): Promise<Cre
   });
 }
 
+async function openInDefaultBrowser(filePath: string): Promise<void> {
+  const target = path.resolve(filePath);
+  if (!(await exists(target))) throw new Error(`预览文件不存在：${target}`);
+  const url = pathToFileURL(target).href;
+  if (process.platform === "win32") {
+    await execFileAsync("cmd.exe", ["/d", "/c", "start", "", url], {
+      windowsHide: true,
+      timeout: 5_000,
+    });
+    return;
+  }
+  if (process.platform === "darwin") {
+    await execFileAsync("open", [url], { timeout: 5_000 });
+    return;
+  }
+  await execFileAsync("xdg-open", [url], { timeout: 5_000 });
+}
+
+async function openInFileManager(directoryPath: string): Promise<void> {
+  const target = path.resolve(directoryPath);
+  if (!(await exists(target))) throw new Error(`资源目录不存在：${target}`);
+  if (process.platform === "win32") {
+    // 使用 Creator 官方内置扩展所使用的 Electron shell API。
+    const electronShell = extensionRequire("electron").shell as {
+      showItemInFolder(fullPath: string): void;
+    };
+    electronShell.showItemInFolder(target);
+    return;
+  }
+  if (process.platform === "darwin") {
+    await execFileAsync("open", [target], { timeout: 5_000 });
+    return;
+  }
+  await execFileAsync("xdg-open", [target], { timeout: 5_000 });
+}
+
 export const methods = {
   async openPanel(): Promise<void> {
     appendLog("正在打开 Cocos Playable Packer 面板。");
@@ -215,6 +254,19 @@ export const methods = {
   },
   cancelBuild(): CreatorBuildTask {
     return taskManager.cancel();
+  },
+  async openPreview(): Promise<void> {
+    const task = taskManager.current();
+    if (task.status !== "succeeded") throw new Error("请先完成一次构建，再打开浏览器预览。");
+    await openInDefaultBrowser(task.outputFile);
+    appendLog(`已在默认浏览器打开预览：${task.outputFile}`);
+  },
+  async openOutputFolder(): Promise<void> {
+    const task = taskManager.current();
+    if (task.status !== "succeeded") throw new Error("请先完成一次构建，再打开资源目录。");
+    const directory = path.dirname(path.resolve(task.outputFile));
+    await openInFileManager(directory);
+    appendLog(`已打开生成的资源目录：${directory}`);
   },
 };
 
