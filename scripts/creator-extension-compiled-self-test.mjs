@@ -70,6 +70,13 @@ try {
   assert.equal(environment.project.path, path.resolve(projectRoot));
   assert.equal(environment.project.tmpDir, projectTmpDir);
   assert.equal(environment.project.uuid, "game143-test-uuid");
+  assert.equal(environment.runtime.hostNodeVersion, process.version);
+  assert.equal(environment.runtime.hostExecutable, process.execPath);
+  assert.equal(environment.runtime.externalNodeAvailable, true);
+  assert.equal(environment.runtime.externalNodeSupported, true);
+  assert.match(environment.runtime.externalNodeVersion, /^v?\d+/);
+  assert.equal(typeof environment.runtime.externalNodeExecutable, "string");
+  assert.equal(environment.runtime.externalNodeError, null);
   assert.equal(environment.checks.projectDirectoryExists, true);
   assert.equal(environment.checks.assetsDirectoryExists, true);
   assert.equal(environment.checks.projectPackageExists, true);
@@ -81,6 +88,7 @@ try {
     environment.paths.webMobileDirectory,
     path.join(projectRoot, "build", "web-mobile"),
   );
+  assert.ok(environment.logs.some((line) => line.includes("已找到外部 Node.js")));
   assert.ok(environment.logs.some((line) => line.includes("已找到 Web Mobile 构建目录")));
   mainModule.unload();
 
@@ -98,6 +106,7 @@ try {
   assert.equal(typeof panelDefinition?.close, "function");
   assert.match(panelDefinition?.template ?? "", /Cocos Playable Packer/);
   assert.match(panelDefinition?.template ?? "", /id="refreshEnvironmentButton"/);
+  assert.match(panelDefinition?.template ?? "", /id="nodeCheck"/);
   assert.match(panelDefinition?.style ?? "", /\.status-grid/);
 } finally {
   delete globalThis.Editor;
