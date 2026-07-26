@@ -26,16 +26,41 @@ export interface RunningBuildWorker {
   cleanup(): Promise<void>;
 }
 
+function imageRequest(configuration: CreatorBuildConfiguration) {
+  if (configuration.imageMode === "squoosh" || configuration.imageMode === "webp") {
+    return {
+      mode: configuration.imageMode,
+      pngQuality: configuration.pngQuality ?? 80,
+      jpegQuality: configuration.jpegQuality ?? 80,
+    };
+  }
+  if (configuration.imageMode === "tinypng") {
+    return { mode: "tinypng" as const, scope: { type: "all" as const } };
+  }
+  return { mode: "none" as const };
+}
+
 function buildRequest(configuration: CreatorBuildConfiguration, projectName: string) {
   return {
     inputDirectory: configuration.inputDirectory,
     outputFile: configuration.outputFile,
-    image: configuration.imageMode === "tinypng"
-      ? { mode: "tinypng" as const, scope: { type: "all" as const } }
-      : { mode: configuration.imageMode },
+    image: imageRequest(configuration),
     audio: configuration.audioEnabled ? { bitrateKbps: configuration.audioBitrateKbps } : null,
     payloadEncoding: configuration.payloadEncoding,
     projectName,
+  };
+}
+
+function workerEnvironment(configuration: CreatorBuildConfiguration, packageRoot: string, tempRoot: string): NodeJS.ProcessEnv {
+  const tinyPngApiKey = configuration.tinyPngApiKey?.trim();
+  return {
+    ...process.env,
+    PLAYABLE_PACKER_RUNTIME_HOST: "creator",
+    PLAYABLE_PACKER_PACKAGE_ROOT: packageRoot,
+    PLAYABLE_PACKER_TEMP_ROOT: tempRoot,
+    ...(configuration.imageMode === "tinypng" && tinyPngApiKey
+      ? { TINYPNG_API_KEY: tinyPngApiKey }
+      : {}),
   };
 }
 
@@ -69,12 +94,7 @@ export async function startBuildWorker(options: BuildWorkerClientOptions): Promi
 
   const child = spawn(options.nodeExecutable, [workerScript, requestFile, options.taskId], {
     cwd: options.packageRoot,
-    env: {
-      ...process.env,
-      PLAYABLE_PACKER_RUNTIME_HOST: "creator",
-      PLAYABLE_PACKER_PACKAGE_ROOT: options.packageRoot,
-      PLAYABLE_PACKER_TEMP_ROOT: options.tempRoot,
-    },
+    env: workerEnvironment(options.configuration, options.packageRoot, options.tempRoot),
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
   });

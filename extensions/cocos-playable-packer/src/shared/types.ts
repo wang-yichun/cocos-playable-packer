@@ -59,6 +59,9 @@ export interface CreatorBuildConfiguration {
   inputDirectory: string;
   outputFile: string;
   imageMode: CreatorImageMode;
+  pngQuality?: number;
+  jpegQuality?: number;
+  tinyPngApiKey?: string;
   audioEnabled: boolean;
   audioBitrateKbps: number;
   payloadEncoding: CreatorPayloadEncoding;
