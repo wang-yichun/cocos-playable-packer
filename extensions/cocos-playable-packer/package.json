@@ -15,13 +15,13 @@
       "main": "./dist/panels/default",
       "icon": "./static/icon.svg",
       "flags": { "resizable": true, "save": true },
-      "size": { "min-width": 420, "min-height": 520, "width": 520, "height": 720 }
+      "size": { "min-width": 460, "min-height": 600, "width": 720, "height": 820 }
     }
   },
   "contributions": {
     "menu": [
       {
-        "path": "i18n:menu.develop/Cocos Playable Packer",
+        "path": "i18n:menu.extension/Cocos Playable Packer",
         "label": "打开打包面板",
         "message": "open-panel"
       }
