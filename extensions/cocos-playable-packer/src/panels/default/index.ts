@@ -121,7 +121,7 @@ function setCheck(element: HTMLElement, passed: boolean, ok: string, failed: str
 
 function syncConfigurationState(elements: PanelElements, active: boolean): void {
   const imageMode = elements.imageMode.value;
-  const qualityEnabled = imageMode === "squoosh";
+  const qualityEnabled = imageMode === "squoosh" || imageMode === "webp";
   const tinyPngEnabled = imageMode === "tinypng";
 
   elements.inputDirectory.disabled = active;
