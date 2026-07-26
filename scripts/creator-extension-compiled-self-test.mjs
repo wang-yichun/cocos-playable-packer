@@ -116,7 +116,9 @@ try {
   assert.equal(typeof mainModule.methods?.queryEnvironment, "function");
   assert.equal(typeof mainModule.methods?.queryBuildTask, "function");
   assert.equal(typeof mainModule.methods?.startBuild, "function");
-  assert.equal(typeof mainModule.methods?.cancelBuild, "function");
+assert.equal(typeof mainModule.methods?.cancelBuild, "function");
+assert.equal(typeof mainModule.methods?.openPreview, "function");
+assert.equal(typeof mainModule.methods?.openOutputFolder, "function");
 
   mainModule.load();
   await mainModule.methods.openPanel();
@@ -204,6 +206,8 @@ try {
   assert.match(panelDefinition?.template ?? "", /id="refreshEnvironmentButton"/);
   assert.match(panelDefinition?.template ?? "", /id="startBuildButton"/);
   assert.match(panelDefinition?.template ?? "", /id="cancelBuildButton"/);
+  assert.match(panelDefinition?.template ?? "", /id="previewButton"/);
+  assert.match(panelDefinition?.template ?? "", /id="outputFolderButton"/);
   assert.match(panelDefinition?.template ?? "", /id="taskStatus"/);
   assert.match(panelDefinition?.template ?? "", /id="nodeCheck"/);
   assert.match(panelDefinition?.template ?? "", /id="externalNodeErrorRow" hidden/);
@@ -211,6 +215,8 @@ try {
   assert.equal(panelDefinition?.$.refreshEnvironmentButton, "#refreshEnvironmentButton");
   assert.equal(panelDefinition?.$.startBuildButton, "#startBuildButton");
   assert.equal(panelDefinition?.$.cancelBuildButton, "#cancelBuildButton");
+  assert.equal(panelDefinition?.$.previewButton, "#previewButton");
+  assert.equal(panelDefinition?.$.outputFolderButton, "#outputFolderButton");
   assert.equal(panelDefinition?.$.panelStatus, "#panelStatus");
   assert.equal(panelDefinition?.$.projectCheck, "#projectCheck");
   assert.equal(panelDefinition?.$.nodeCheck, "#nodeCheck");
@@ -247,6 +253,8 @@ try {
   assert.equal(panelElements.taskStatus.textContent, "等待构建");
   assert.equal(panelElements.startBuildButton.disabled, false);
   assert.equal(panelElements.cancelBuildButton.disabled, true);
+  assert.equal(panelElements.previewButton.disabled, true);
+  assert.equal(panelElements.outputFolderButton.disabled, true);
 
   panelElements.startBuildButton.dispatch("click");
   await new Promise((resolve) => setImmediate(resolve));
@@ -263,6 +271,8 @@ try {
   assert.equal(panelElements.taskStatus.textContent, "cancelled · cancelled");
   assert.equal(panelElements.startBuildButton.disabled, false);
   assert.equal(panelElements.cancelBuildButton.disabled, true);
+  assert.equal(panelElements.previewButton.disabled, true);
+  assert.equal(panelElements.outputFolderButton.disabled, true);
   assert.match(panelElements.taskLogOutput.textContent, /任务已取消/);
 
   panelEnvironment = {

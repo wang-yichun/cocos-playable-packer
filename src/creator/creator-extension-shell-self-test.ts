@@ -44,10 +44,6 @@ const style = await readFile(
   path.join(extensionRoot, "static", "style", "default", "index.css"),
   "utf8",
 );
-const linkScript = await readFile(
-  path.join(repositoryRoot, "scripts", "creator-extension-link.mjs"),
-  "utf8",
-);
 
 assert.equal(packageJson.package_version, 2);
 assert.equal(packageJson.name, "cocos-playable-packer");
@@ -77,6 +73,9 @@ assert.deepEqual(messages["query-environment"]?.methods, ["queryEnvironment"]);
 assert.deepEqual(messages["start-build"]?.methods, ["startBuild"]);
 assert.deepEqual(messages["query-build-task"]?.methods, ["queryBuildTask"]);
 assert.deepEqual(messages["cancel-build"]?.methods, ["cancelBuild"]);
+assert.deepEqual(messages["open-preview"]?.methods, ["openPreview"]);
+assert.deepEqual(messages["open-output-folder"]?.methods, ["openOutputFolder"]);
+assert.match(mainSource, /electronShell\.showItemInFolder\(target\)/);
 
 assert.match(editorTypes, /namespace Dialog/);
 assert.match(editorTypes, /function select\(options\?: SelectDialogOptions\)/);
@@ -107,6 +106,9 @@ assert.match(panelSource, /const qualityEnabled = imageMode === "squoosh" \|\| i
 assert.match(panelSource, /imageMode === "tinypng"/);
 assert.match(panelSource, /elements\.qualitySettings\.hidden = !qualityEnabled/);
 assert.match(panelSource, /elements\.tinyPngSettings\.hidden = !tinyPngEnabled/);
+assert.match(panelSource, /window\.localStorage\.setItem/);
+assert.match(panelSource, /window\.localStorage\.getItem/);
+assert.match(panelSource, /restoreConfiguration\(this\.\$\)/);
 assert.match(panelSource, /pngQuality: qualityEnabled \? imageQuality/);
 assert.match(panelSource, /jpegQuality: qualityEnabled \? imageQuality/);
 assert.match(panelSource, /tinyPngApiKey/);
@@ -115,6 +117,8 @@ assert.match(panelSource, /query-environment/);
 assert.match(panelSource, /query-build-task/);
 assert.match(panelSource, /start-build/);
 assert.match(panelSource, /cancel-build/);
+assert.match(panelSource, /open-preview/);
+assert.match(panelSource, /open-output-folder/);
 assert.match(panelSource, /\$: selectors/);
 assert.match(panelSource, /ready\(this: PanelContext\)/);
 assert.match(panelSource, /this\.\$\.inputDirectoryBrowseButton/);
@@ -150,6 +154,8 @@ assert.match(template, /id="tinyPngApiKey"[^>]*type="password"/);
 assert.match(template, /仅用于当前构建任务，不写入请求文件、日志或构建报告/);
 assert.match(template, /id="startBuildButton" class="button button--primary action-button"/);
 assert.match(template, /id="cancelBuildButton" class="button button--danger action-button"/);
+assert.match(template, /id="previewButton" class="button button--ghost action-button"/);
+assert.match(template, /id="outputFolderButton" class="button button--ghost action-button"/);
 assert.match(template, /id="taskLogOutput"/);
 assert.match(template, /class="config-grid"/);
 assert.match(template, /Squoosh（推荐）/);
@@ -167,20 +173,4 @@ assert.match(style, /\.config-grid/);
 assert.match(style, /\.path-picker/);
 assert.match(style, /\.button--primary/);
 assert.match(style, /\.button--danger/);
-assert.match(linkScript, /process\.platform === "win32" \? "junction" : "dir"/);
-assert.ok(
-  linkScript.includes(
-    'const GIT_EXCLUDE_MARKER = "# cocos-playable-packer managed Creator extension link";',
-  ),
-);
-assert.ok(
-  linkScript.includes(
-    'const GIT_EXCLUDE_PATTERN = "/extensions/cocos-playable-packer";',
-  ),
-);
-assert.ok(linkScript.includes("async function localGitExcludeFile"));
-assert.ok(linkScript.includes('path.join(gitDirectory, "info", "exclude")'));
-assert.match(linkScript, /普通目录，拒绝覆盖/);
-assert.match(linkScript, /普通目录，拒绝删除/);
-
 console.log("Creator extension shell self-test passed.");

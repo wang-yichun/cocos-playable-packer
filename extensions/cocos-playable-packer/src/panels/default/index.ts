@@ -9,6 +9,7 @@ import type {
 
 const PACKAGE_NAME = "cocos-playable-packer";
 const DEFAULT_IMAGE_QUALITY = 80;
+const CONFIGURATION_STORAGE_PREFIX = "cocos-playable-packer.configuration.v1";
 const template = readFileSync(path.join(__dirname, "../../../static/template/default/index.html"), "utf8");
 const style = readFileSync(path.join(__dirname, "../../../static/style/default/index.css"), "utf8");
 
@@ -16,6 +17,8 @@ interface PanelElements {
   refreshEnvironmentButton: HTMLButtonElement;
   startBuildButton: HTMLButtonElement;
   cancelBuildButton: HTMLButtonElement;
+  previewButton: HTMLButtonElement;
+  outputFolderButton: HTMLButtonElement;
   inputDirectoryBrowseButton: HTMLButtonElement;
   outputFileBrowseButton: HTMLButtonElement;
   panelStatus: HTMLElement;
@@ -60,10 +63,24 @@ interface PanelElements {
 
 interface PanelContext { $: PanelElements }
 
+interface PersistedConfiguration {
+  inputDirectory: string;
+  outputFile: string;
+  imageMode: string;
+  pngQuality: string;
+  jpegQuality: string;
+  tinyPngApiKey: string;
+  payloadEncoding: string;
+  audioEnabled: boolean;
+  audioBitrateKbps: string;
+}
+
 const selectors: Record<keyof PanelElements, string> = {
   refreshEnvironmentButton: "#refreshEnvironmentButton",
   startBuildButton: "#startBuildButton",
   cancelBuildButton: "#cancelBuildButton",
+  previewButton: "#previewButton",
+  outputFolderButton: "#outputFolderButton",
   inputDirectoryBrowseButton: "#inputDirectoryBrowseButton",
   outputFileBrowseButton: "#outputFileBrowseButton",
   panelStatus: "#panelStatus",
@@ -108,6 +125,52 @@ const selectors: Record<keyof PanelElements, string> = {
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let handlers: Array<readonly [HTMLElement, string, EventListener]> = [];
+
+function configurationStorageKey(): string {
+  const projectIdentity = Editor.Project.uuid || Editor.Project.path;
+  return `${CONFIGURATION_STORAGE_PREFIX}:${projectIdentity}`;
+}
+
+function persistedConfigurationFrom(elements: PanelElements): PersistedConfiguration {
+  return {
+    inputDirectory: elements.inputDirectory.value,
+    outputFile: elements.outputFile.value,
+    imageMode: elements.imageMode.value,
+    pngQuality: elements.pngQuality.value,
+    jpegQuality: elements.jpegQuality.value,
+    tinyPngApiKey: elements.tinyPngApiKey.value,
+    payloadEncoding: elements.payloadEncoding.value,
+    audioEnabled: elements.audioEnabled.checked,
+    audioBitrateKbps: elements.audioBitrateKbps.value,
+  };
+}
+
+function saveConfiguration(elements: PanelElements): void {
+  try {
+    window.localStorage.setItem(configurationStorageKey(), JSON.stringify(persistedConfigurationFrom(elements)));
+  } catch {
+    // Creator 的面板存储不可用时仍允许正常构建。
+  }
+}
+
+function restoreConfiguration(elements: PanelElements): void {
+  try {
+    const raw = window.localStorage.getItem(configurationStorageKey());
+    if (!raw) return;
+    const saved = JSON.parse(raw) as Partial<PersistedConfiguration>;
+    if (typeof saved.inputDirectory === "string") elements.inputDirectory.value = saved.inputDirectory;
+    if (typeof saved.outputFile === "string") elements.outputFile.value = saved.outputFile;
+    if (typeof saved.imageMode === "string") elements.imageMode.value = saved.imageMode;
+    if (typeof saved.pngQuality === "string") elements.pngQuality.value = saved.pngQuality;
+    if (typeof saved.jpegQuality === "string") elements.jpegQuality.value = saved.jpegQuality;
+    if (typeof saved.tinyPngApiKey === "string") elements.tinyPngApiKey.value = saved.tinyPngApiKey;
+    if (typeof saved.payloadEncoding === "string") elements.payloadEncoding.value = saved.payloadEncoding;
+    if (typeof saved.audioEnabled === "boolean") elements.audioEnabled.checked = saved.audioEnabled;
+    if (typeof saved.audioBitrateKbps === "string") elements.audioBitrateKbps.value = saved.audioBitrateKbps;
+  } catch {
+    // 忽略损坏或不可用的历史配置，回退到默认值。
+  }
+}
 
 function setText(elements: PanelElements, key: keyof PanelElements, value: string): void {
   elements[key].textContent = value;
@@ -172,6 +235,8 @@ function renderTask(elements: PanelElements, task: CreatorBuildTask): void {
   const active = task.status === "starting" || task.status === "running";
   elements.startBuildButton.disabled = active;
   elements.cancelBuildButton.disabled = !active;
+  elements.previewButton.disabled = task.status !== "succeeded";
+  elements.outputFolderButton.disabled = task.status !== "succeeded";
   syncConfigurationState(elements, active);
   setText(elements, "taskStatus", task.status === "idle" ? "等待构建" : `${task.status}${task.stage ? ` · ${task.stage}` : ""}`);
   setText(elements, "taskLogOutput", task.logs.length === 0 ? "暂无构建日志。" : task.logs.join("\n"));
@@ -199,7 +264,10 @@ async function chooseInputDirectory(elements: PanelElements): Promise<void> {
       multi: false,
     });
     const selectedDirectory = result.filePaths[0];
-    if (selectedDirectory) elements.inputDirectory.value = selectedDirectory;
+    if (selectedDirectory) {
+      elements.inputDirectory.value = selectedDirectory;
+      saveConfiguration(elements);
+    }
   } catch (error) {
     setText(elements, "panelStatus", `打开目录选择器失败：${error instanceof Error ? error.message : String(error)}`);
   }
@@ -216,6 +284,7 @@ async function chooseOutputFile(elements: PanelElements): Promise<void> {
     });
     if (result.filePath) {
       elements.outputFile.value = result.filePath.toLowerCase().endsWith(".html") ? result.filePath : `${result.filePath}.html`;
+      saveConfiguration(elements);
     }
   } catch (error) {
     setText(elements, "panelStatus", `打开输出文件选择器失败：${error instanceof Error ? error.message : String(error)}`);
@@ -252,6 +321,7 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
 
 async function startBuild(elements: PanelElements): Promise<void> {
   try {
+    saveConfiguration(elements);
     const configuration = configurationFrom(elements);
     renderTask(elements, await Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "start-build", configuration));
   } catch (error) {
@@ -261,6 +331,24 @@ async function startBuild(elements: PanelElements): Promise<void> {
 
 async function refreshTask(elements: PanelElements): Promise<void> {
   renderTask(elements, await Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "query-build-task"));
+}
+
+async function openPreview(elements: PanelElements): Promise<void> {
+  try {
+    await Editor.Message.request<void>(PACKAGE_NAME, "open-preview");
+    setText(elements, "panelStatus", "已在默认浏览器打开预览。");
+  } catch (error) {
+    setText(elements, "panelStatus", `打开预览失败：${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+async function openOutputFolder(elements: PanelElements): Promise<void> {
+  try {
+    await Editor.Message.request<void>(PACKAGE_NAME, "open-output-folder");
+    setText(elements, "panelStatus", "已打开生成的资源目录。");
+  } catch (error) {
+    setText(elements, "panelStatus", `打开资源目录失败：${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 function bind(element: HTMLElement, event: string, listener: EventListener): void {
@@ -274,13 +362,30 @@ module.exports = Editor.Panel.define({
   $: selectors,
   methods: {},
   ready(this: PanelContext): void {
+    restoreConfiguration(this.$);
     bind(this.$.refreshEnvironmentButton, "click", () => void refreshEnvironment(this.$));
     bind(this.$.inputDirectoryBrowseButton, "click", () => void chooseInputDirectory(this.$));
     bind(this.$.outputFileBrowseButton, "click", () => void chooseOutputFile(this.$));
     bind(this.$.imageMode, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.audioEnabled, "change", () => syncConfigurationState(this.$, false));
+    for (const key of [
+      "inputDirectory",
+      "outputFile",
+      "imageMode",
+      "pngQuality",
+      "jpegQuality",
+      "tinyPngApiKey",
+      "payloadEncoding",
+      "audioEnabled",
+      "audioBitrateKbps",
+    ] as const) {
+      bind(this.$[key], "change", () => saveConfiguration(this.$));
+      bind(this.$[key], "input", () => saveConfiguration(this.$));
+    }
     bind(this.$.startBuildButton, "click", () => void startBuild(this.$));
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
+    bind(this.$.previewButton, "click", () => void openPreview(this.$));
+    bind(this.$.outputFolderButton, "click", () => void openOutputFolder(this.$));
     if (this.$.pngQuality.value.trim().length === 0) this.$.pngQuality.value = String(DEFAULT_IMAGE_QUALITY);
     if (this.$.jpegQuality.value.trim().length === 0) this.$.jpegQuality.value = String(DEFAULT_IMAGE_QUALITY);
     syncConfigurationState(this.$, false);

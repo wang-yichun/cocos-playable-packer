@@ -31,7 +31,9 @@
       "query-environment": { "methods": ["queryEnvironment"] },
       "start-build": { "methods": ["startBuild"] },
       "query-build-task": { "methods": ["queryBuildTask"] },
-      "cancel-build": { "methods": ["cancelBuild"] }
+      "cancel-build": { "methods": ["cancelBuild"] },
+      "open-preview": { "methods": ["openPreview"] },
+      "open-output-folder": { "methods": ["openOutputFolder"] }
     }
   },
   "scripts": {
