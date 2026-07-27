@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { access, readFile, readdir, stat } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
+import { detectImageMimeType } from "./image-content-type.js";
 
 type Mode = "none" | "tinypng" | "squoosh";
 type TinyMode = { type: "all" } | { type: "limit"; limit: number };
@@ -257,7 +258,11 @@ async function collectPngFiles(buildDirectory: string): Promise<BuildFile[]> {
       const absolutePath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
         await visit(absolutePath);
-      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".png")) {
+      } else if (
+        entry.isFile() &&
+        [".png", ".jpg", ".jpeg"].includes(path.extname(entry.name).toLowerCase()) &&
+        detectImageMimeType(await readFile(absolutePath)) === "image/png"
+      ) {
         paths.push(absolutePath);
       }
     }

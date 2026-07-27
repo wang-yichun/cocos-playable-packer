@@ -9,6 +9,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import encodeWebp, { init as initWebpEncode } from "@jsquash/webp/encode.js";
 import sharp from "sharp";
+import { detectImageMimeType } from "../images/image-content-type.js";
 
 interface Options {
   inputDirectory: string;
@@ -153,8 +154,7 @@ export async function benchmarkBuildWebp(options: Options): Promise<void> {
   for (const absolutePath of images) {
     const startedAt = performance.now();
     const relativePath = path.relative(inputRoot, absolutePath).replace(/\\/g, "/");
-    const extension = path.extname(absolutePath).toLowerCase();
-    const sourceFormat = extension === ".png" ? "png" : "jpeg";
+    const sourceFormat = detectImageMimeType(await readFile(absolutePath)) === "image/png" ? "png" : "jpeg";
     const quality = sourceFormat === "png" ? options.pngQuality : options.jpegQuality;
     const source = await readFile(absolutePath);
     const webp = await encodeWebpCandidate(source, quality);

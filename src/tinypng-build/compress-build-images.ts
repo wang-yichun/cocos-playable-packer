@@ -234,18 +234,17 @@ function inspectAndValidateImage(
     const metadata =
         inspectImageBufferMetadata(buffer);
 
-    const expectedFormat =
-        getExpectedFormat(extension);
-
-    if (metadata.format !== expectedFormat) {
+    if (metadata.format !== "png" && metadata.format !== "jpeg") {
         throw new Error(
-            `图片扩展名与文件内容不一致：${displayPath}，` +
-            `扩展名=${extension}，检测格式=${metadata.format}`,
+            `不支持的图片内容格式：${displayPath}（扩展名=${extension}）`,
         );
     }
 
     return {
-        format: expectedFormat,
+        // Cocos Creator may retain a source .jpg name for PNG cube-map faces.
+        // The encoded bytes are authoritative; preserving the path keeps asset
+        // references intact while allowing TinyPNG to process the actual format.
+        format: metadata.format,
         ...(metadata.width !== null
             ? { width: metadata.width }
             : {}),

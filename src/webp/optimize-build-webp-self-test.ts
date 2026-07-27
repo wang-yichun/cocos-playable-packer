@@ -8,7 +8,9 @@ import { optimizeBuildWebp } from "./optimize-build-webp.js";
 
 const root = await mkdtemp(path.join(tmpdir(), "webp-optimize-"));
 const build = path.join(root, "web-mobile");
-const image = path.join(build, "assets", "sprite.png");
+// Creator's cube-map importer can render PNG data while retaining the source
+// JPEG extension for generated faces.
+const image = path.join(build, "assets", "sunnySkyBox-face.jpg");
 await mkdir(path.dirname(image), { recursive: true });
 const pixels = Buffer.alloc(128 * 128 * 4);
 for (let index = 0; index < 128 * 128; index += 1) {
@@ -21,6 +23,7 @@ await sharp(pixels, { raw: { width: 128, height: 128, channels: 4 } }).png().toF
 const before = await readFile(image);
 const preview = await optimizeBuildWebp({ buildDirectory: build, pngQuality: 80, jpegQuality: 75, confirm: false, reportFile: path.join(root, "preview.json") });
 assert.equal((preview.summary as { wouldOptimizeImages: number }).wouldOptimizeImages, 1);
+assert.equal((preview.files as Array<{ sourceFormat: string }>)[0]?.sourceFormat, "png");
 assert.equal(detectImageMimeType(await readFile(image)), "image/png");
 const applied = await optimizeBuildWebp({ buildDirectory: build, pngQuality: 80, jpegQuality: 75, confirm: true, reportFile: path.join(root, "applied.json") });
 assert.equal((applied.summary as { optimizedImages: number }).optimizedImages, 1);

@@ -15,6 +15,7 @@ import {
 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { detectImageMimeType } from "../images/image-content-type.js";
 import { performance } from "node:perf_hooks";
 import { pathToFileURL } from "node:url";
 
@@ -448,7 +449,11 @@ async function collectJpegFiles(
       if (entry.isDirectory()) {
         await visit(absolutePath);
       } else if (entry.isFile() && isJpegFileName(entry.name)) {
-        absolutePaths.push(absolutePath);
+        // Creator can emit PNG data using the original .jpg cube-map-face name.
+        // Route based on the byte signature so the JPEG decoder never sees PNG.
+        if (detectImageMimeType(await readFile(absolutePath)) === "image/jpeg") {
+          absolutePaths.push(absolutePath);
+        }
       }
     }
   }

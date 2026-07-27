@@ -14,6 +14,7 @@ import {
 import { createRequire } from "node:module";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
+import { detectImageMimeType } from "../images/image-content-type.js";
 
 import optimisePng, {
     init as initOxiPng,
@@ -770,7 +771,8 @@ async function scanPngFiles(
 
             if (
                 entry.isFile() &&
-                path.extname(entry.name).toLowerCase() === ".png"
+                [".png", ".jpg", ".jpeg"].includes(path.extname(entry.name).toLowerCase()) &&
+                detectImageMimeType(await readFile(absolutePath)) === "image/png"
             ) {
                 output.push(absolutePath);
             }

@@ -76,10 +76,10 @@ export async function optimizeBuildWebp(options: OptimizeBuildWebpOptions): Prom
   const files: FileReport[] = [];
   for (const absolutePath of await collectImages(root)) {
     const relativePath = path.relative(root, absolutePath).replace(/\\/g, "/");
-    const extension = path.extname(absolutePath).toLowerCase();
-    const sourceFormat = extension === ".png" ? "png" : "jpeg";
-    const quality = sourceFormat === "png" ? options.pngQuality : options.jpegQuality;
     const before = await readFile(absolutePath);
+    const detectedMimeType = detectImageMimeType(before);
+    const sourceFormat = detectedMimeType === "image/png" ? "png" : "jpeg";
+    const quality = sourceFormat === "png" ? options.pngQuality : options.jpegQuality;
     const beforeHash = sha256(before);
     const beforeCompressed = brotliBytes(before);
     if (detectImageMimeType(before) === "image/webp") {
