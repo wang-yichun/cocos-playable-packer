@@ -17,3 +17,5 @@ runtime/dist/**/*.encoding-report.json
 runtime/dist/**/*.channel-validation.json
 runtime/dist/**/reports/
 runtime/dist/**/manifests/
+
+demo/

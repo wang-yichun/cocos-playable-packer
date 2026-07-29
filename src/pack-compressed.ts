@@ -830,6 +830,16 @@ function createRuntimeSource(): string {
     var BASE = BOOT.base;
 
     var archiveBytes = null;
+    var bootStage = 'created';
+
+    function setBootStage(stage) {
+        bootStage = stage;
+        window.__PACK_BOOT_STAGE__ = stage;
+        console.info(
+            '[Playable Packer] 启动阶段：'
+            + stage
+        );
+    }
 
     var paths = Object.keys(FILES).sort(
         function (a, b) {
@@ -840,6 +850,31 @@ function createRuntimeSource(): string {
     var byteCache = Object.create(null);
     var textCache = Object.create(null);
     var blobUrlCache = Object.create(null);
+    var resourceStats = {
+        fetchMapped: 0,
+        fetchUnmapped: 0,
+        xhrMapped: 0,
+        xhrUnmapped: 0,
+        bundleLoads: 0,
+        imageLoads: 0,
+        imageLoaded: 0,
+        imageFailed: 0,
+    };
+
+    function reportUnmappedResource(kind, value) {
+        var raw = String(value || '');
+
+        if (!/(?:^|\/)(?:assets|cocos-js|src)\//i.test(raw)) {
+            return;
+        }
+
+        console.warn(
+            '[Playable Packer] 未映射的 '
+            + kind
+            + ' 资源请求：'
+            + raw
+        );
+    }
 
     /**
      * 消除路径中的：
@@ -1369,6 +1404,9 @@ function createRuntimeSource(): string {
         var key = normalizeUrl(input);
 
         if (!key) {
+            resourceStats.fetchUnmapped += 1;
+            reportUnmappedResource('fetch', input);
+
             if (!nativeFetch) {
                 return Promise.reject(
                     new Error(
@@ -1386,6 +1424,8 @@ function createRuntimeSource(): string {
 
         var entry = FILES[key];
         var bytes = getBytes(key);
+
+        resourceStats.fetchMapped += 1;
 
         if (
             !entry
@@ -1594,6 +1634,7 @@ function createRuntimeSource(): string {
                 );
 
             if (key) {
+                resourceStats.xhrMapped += 1;
                 this._readyState = 1;
 
                 dispatchHandler(
@@ -2016,6 +2057,230 @@ function createRuntimeSource(): string {
 
     window.XMLHttpRequest =
         PackXMLHttpRequest;
+
+    /*
+     * Cocos 3 loads the initial bundles after cc.game.init(). In a normal
+     * web build the downloader reads those files from the network.  Register
+     * equivalent in-memory handlers before index.js is evaluated so the
+     * scene preload cannot wait forever for a URL that does not exist in the
+     * Meta iframe.
+     */
+    function installCocosAssetMapDownloader() {
+        var cocos = window.cc;
+
+        if (
+            !cocos
+            || !cocos.assetManager
+            || !cocos.assetManager.downloader
+            || typeof cocos.assetManager.downloader.register
+                !== 'function'
+        ) {
+            return false;
+        }
+
+        function asJson(url, _options, onComplete) {
+            try {
+                var key = normalizeUrl(url);
+                var source = key ? getText(key) : null;
+                onComplete(
+                    source === null
+                        ? new Error('Embedded JSON not found: ' + url)
+                        : null,
+                    source === null
+                        ? null
+                        : JSON.parse(source)
+                );
+            } catch (error) {
+                onComplete(error, null);
+            }
+
+            resourceStats.xhrUnmapped += 1;
+            reportUnmappedResource('XMLHttpRequest', this._url);
+        }
+
+        function asArrayBuffer(url, _options, onComplete) {
+            var key = normalizeUrl(url);
+            var bytes = key ? getBytes(key) : null;
+            onComplete(
+                bytes ? null : new Error('Embedded binary not found: ' + url),
+                bytes
+                    ? bytes.buffer.slice(
+                        bytes.byteOffset,
+                        bytes.byteOffset + bytes.byteLength
+                    )
+                    : null
+            );
+        }
+
+        function asText(url, _options, onComplete) {
+            var key = normalizeUrl(url);
+            var source = key ? getText(key) : null;
+            onComplete(
+                source === null
+                    ? new Error('Embedded text not found: ' + url)
+                    : null,
+                source
+            );
+        }
+
+        function bytesToDataUrl(key) {
+            var entry = FILES[key];
+            var bytes = getBytes(key);
+
+            if (!entry || !bytes) {
+                return null;
+            }
+
+            var chunks = [];
+            var chunkSize = 0x8000;
+
+            for (
+                var offset = 0;
+                offset < bytes.length;
+                offset += chunkSize
+            ) {
+                chunks.push(
+                    String.fromCharCode.apply(
+                        null,
+                        bytes.subarray(
+                            offset,
+                            Math.min(
+                                offset + chunkSize,
+                                bytes.length
+                            )
+                        )
+                    )
+                );
+            }
+
+            return 'data:'
+                + (entry.m || 'application/octet-stream')
+                + ';base64,'
+                + btoa(chunks.join(''));
+        }
+
+        function asImage(url, _options, onComplete) {
+            var key = normalizeUrl(url);
+            var dataUrl = key ? bytesToDataUrl(key) : null;
+
+            resourceStats.imageLoads += 1;
+
+            if (!dataUrl) {
+                resourceStats.imageFailed += 1;
+                onComplete(
+                    new Error('Embedded image not found: ' + url),
+                    null
+                );
+                return null;
+            }
+
+            var image = new Image();
+            var completed = false;
+
+            function finish(error) {
+                if (completed) {
+                    return;
+                }
+
+                completed = true;
+                image.onload = null;
+                image.onerror = null;
+
+                if (error) {
+                    resourceStats.imageFailed += 1;
+                    onComplete(error, null);
+                } else {
+                    resourceStats.imageLoaded += 1;
+                    onComplete(null, image);
+                }
+            }
+
+            image.onload = function () {
+                finish(null);
+            };
+            image.onerror = function () {
+                finish(
+                    new Error('Embedded image decode failed: ' + url)
+                );
+            };
+            image.src = dataUrl;
+
+            return image;
+        }
+
+        function asBundle(bundleName, _options, onComplete) {
+            // Cocos registers Downloader callbacks after this handler returns.
+            // A synchronous completion loses its callback list while creating
+            // the builtin internal bundle, so emulate native async I/O.
+            window.setTimeout(function () {
+            try {
+                resourceStats.bundleLoads += 1;
+                var name = String(bundleName)
+                    .replace(/\\\\/g, '/')
+                    .replace(/^assets\//, '')
+                    .replace(/\/$/, '');
+                var keys = Object.keys(FILES);
+                var indexPath = null;
+                var configPath = null;
+
+                for (var index = 0; index < keys.length; index += 1) {
+                    var candidate = keys[index];
+                    if (
+                        candidate.indexOf('assets/' + name + '/') >= 0
+                        && /\/index\.js$/i.test(candidate)
+                    ) {
+                        indexPath = candidate;
+                    }
+                    if (
+                        candidate.indexOf('assets/' + name + '/') >= 0
+                        && /\/config\.json$/i.test(candidate)
+                    ) {
+                        configPath = candidate;
+                    }
+                }
+
+                if (!configPath) {
+                    console.error(
+                        '[Playable Packer] 未找到内嵌 Bundle：'
+                        + name
+                    );
+                    onComplete(new Error('Embedded bundle not found: ' + name), null);
+                    return;
+                }
+
+                console.info(
+                    '[Playable Packer] 加载内嵌 Bundle：'
+                    + name
+                );
+
+                if (indexPath) {
+                    evaluateFile(indexPath);
+                }
+
+                var config = JSON.parse(getText(configPath));
+                config.base = 'assets/' + name + '/';
+                onComplete(null, config);
+            } catch (error) {
+                onComplete(error, null);
+            }
+            }, 0);
+        }
+
+        cocos.assetManager.downloader.register({
+            bundle: asBundle,
+            '.png': asImage,
+            '.jpg': asImage,
+            '.jpeg': asImage,
+            '.bmp': asImage,
+            '.gif': asImage,
+            '.ico': asImage,
+            '.tiff': asImage,
+            '.webp': asImage,
+            '.image': asImage,
+        });
+
+        return true;
+    }
 
     /**
      * 拦截 DOM 元素的 src 属性。
@@ -2487,20 +2752,30 @@ function createRuntimeSource(): string {
     function evaluateFile(filePath) {
         var source =
             getText(filePath);
+        var script = document.createElement(
+            'script'
+        );
 
-        (0, eval)(
-            source
+        /*
+         * Meta Preview's iframe can prohibit eval() through CSP.  A classic
+         * script element is permitted there and matches the established
+         * asset-map playable loader behaviour.
+         */
+        script.text = source
             + '\n//# sourceURL='
             + BASE
-            + filePath
-        );
+            + filePath;
+        document.head.appendChild(script);
+        script.remove();
     }
 
     async function boot() {
         /*
          * 先恢复完整资源归档，之后 VFS 才能同步读取文件。
          */
+        setBootStage('archive:decode');
         await initializeArchive();
+        setBootStage('archive:ready');
 
         /*
          * 原始执行顺序：
@@ -2508,6 +2783,7 @@ function createRuntimeSource(): string {
          * polyfills
          * system.bundle
          */
+        setBootStage('runtime:load');
         for (
             var runtimeIndex = 0;
             runtimeIndex
@@ -2526,10 +2802,71 @@ function createRuntimeSource(): string {
                 'SystemJS 初始化失败。'
             );
         }
+        setBootStage('systemjs:ready');
 
         /*
-         * 安装 Import Map。
+         * Meta Playable Preview 的 iframe 会通过 Permissions Policy
+         * 禁用 Gamepad API。部分 Cocos 运行时会在初始化输入系统时
+         * 直接调用 navigator.getGamepads()，该调用会同步抛异常并中断
+         * 整个游戏启动。这里仅在调用受限时回退为空手柄列表。
          */
+        if (
+            window.navigator
+            && typeof window.navigator.getGamepads
+                === 'function'
+        ) {
+            var nativeGetGamepads =
+                window.navigator.getGamepads.bind(
+                    window.navigator
+                );
+
+            try {
+                Object.defineProperty(
+                    window.navigator,
+                    'getGamepads',
+                    {
+                        configurable: true,
+                        value: function () {
+                            try {
+                                return nativeGetGamepads();
+                            } catch (error) {
+                                return [];
+                            }
+                        },
+                    }
+                );
+            } catch (error) {
+                /* 浏览器不允许覆写时保持原实现。 */
+            }
+        }
+
+        /*
+         * 安装 Import Map。Cocos Creator 附带的 SystemJS 精简版
+         * 不一定包含动态 Import Map extra；因此同时补上 resolve
+         * 映射，保证 cc 等裸模块名在所有 WebView 中都能解析。
+         */
+        var originalSystemResolve =
+            System.resolve;
+
+        System.resolve = function (
+            moduleName,
+            parentUrl
+        ) {
+            var imports =
+                BOOT.importMap
+                && BOOT.importMap.imports;
+
+            var mappedModuleName =
+                imports
+                && imports[moduleName];
+
+            return originalSystemResolve.call(
+                this,
+                mappedModuleName || moduleName,
+                parentUrl
+            );
+        };
+
         if (
             typeof System.addImportMap
             === 'function'
@@ -2556,12 +2893,14 @@ function createRuntimeSource(): string {
                 importMapElement
             );
         }
+        setBootStage('import-map:ready');
 
         /*
          * 执行全部 System.register 文件。
          *
          * 这里只注册模块，不立即执行模块主体。
          */
+        setBootStage('modules:register');
         for (
             var moduleIndex = 0;
             moduleIndex
@@ -2580,12 +2919,193 @@ function createRuntimeSource(): string {
          * 先执行完毕。
          */
         await Promise.resolve();
+        setBootStage('engine:preload');
+
+        if (
+            BOOT.importMap
+            && BOOT.importMap.imports
+            && BOOT.importMap.imports.cc
+        ) {
+            await System.import('cc');
+        }
+
+        if (installCocosAssetMapDownloader()) {
+            console.info(
+                '[Playable Packer] Cocos 资源映射下载器已安装。'
+            );
+        } else {
+            console.warn(
+                '[Playable Packer] 未找到 Cocos 资源下载器；将使用通用 VFS。'
+            );
+        }
+
+        setBootStage('entry:import');
+
+        var entryImportWatchdog = setTimeout(
+            function () {
+                if (bootStage === 'entry:import') {
+                    console.error(
+                        '[Playable Packer] 启动仍在等待入口模块：'
+                        + BOOT.entry
+                    );
+                }
+            },
+            8000
+        );
 
         /*
          * 导入 Cocos 启动入口。
          */
-        await System.import(
-            BOOT.entry
+        try {
+            await System.import(
+                BOOT.entry
+            );
+        } finally {
+            clearTimeout(entryImportWatchdog);
+        }
+        setBootStage('completed');
+
+        /*
+         * Meta Playable Preview occasionally starts the iframe while it is
+         * still visually suspended. Cocos has completed game.run() in that
+         * state, but its first requestAnimationFrame callback never arrives,
+         * leaving _shouldLoadLaunchScene pending forever. This is deliberately
+         * a narrow recovery path: a real first frame always wins, and we only
+         * invoke the same Cocos update method once after the game is running.
+         */
+        window.setTimeout(
+            function () {
+                var cocos = window.cc;
+                var game = cocos && cocos.game;
+                var director = cocos && cocos.director;
+
+                if (
+                    !game
+                    || !director
+                    || typeof game.isPaused !== 'function'
+                    || game.isPaused()
+                    || (typeof director.getScene === 'function'
+                        && director.getScene())
+                    || typeof game._updateCallback !== 'function'
+                ) {
+                    return;
+                }
+
+                var launchScene =
+                    cocos.settings
+                    && typeof cocos.settings.querySettings
+                        === 'function'
+                    ? cocos.settings.querySettings(
+                        'launch',
+                        'launchScene'
+                    )
+                    : null;
+                var mainBundle =
+                    cocos.assetManager
+                    && typeof cocos.assetManager.getBundle
+                        === 'function'
+                    ? cocos.assetManager.getBundle('main')
+                    : null;
+                var hasLaunchScene =
+                    !!mainBundle
+                    && typeof mainBundle.getSceneInfo
+                        === 'function'
+                    && !!mainBundle.getSceneInfo(
+                        launchScene
+                    );
+
+                console.warn(
+                    '[Playable Packer] 首帧未调度，触发 Cocos 首场景恢复：'
+                    + JSON.stringify({
+                        launchScene: launchScene,
+                        hasMainBundle: !!mainBundle,
+                        hasLaunchScene: hasLaunchScene,
+                        loadingScene:
+                            director._loadingScene || null,
+                    })
+                );
+
+                // If a prior, throttled frame already consumed
+                // _shouldLoadLaunchScene, calling _updateCallback again is a
+                // no-op. Request the exact configured scene directly instead.
+                if (
+                    launchScene
+                    && !director._loadingScene
+                    && typeof director.loadScene === 'function'
+                ) {
+                    director.loadScene(
+                        launchScene,
+                        function (error) {
+                            if (error) {
+                                console.error(
+                                    '[Playable Packer] 首场景恢复失败：',
+                                    error
+                                );
+                            }
+                        }
+                    );
+                    return;
+                }
+
+                game._shouldLoadLaunchScene = true;
+                game._updateCallback();
+            },
+            1500
+        );
+
+        /*
+         * The established Cocos asset-map delivery removes its preloader as
+         * soon as the entry module has finished.  Meta Preview can suppress
+         * the WebGL hook used by our visual loading-screen heuristic, which
+         * otherwise leaves an opaque black overlay above a successfully
+         * started canvas.
+         */
+        window.setTimeout(
+            function () {
+                var loadingScreen =
+                    window.__CPP_LOADING_SCREEN__;
+
+                if (
+                    loadingScreen
+                    && typeof loadingScreen.complete
+                        === 'function'
+                ) {
+                    loadingScreen.complete();
+                }
+            },
+            180
+        );
+
+        window.setTimeout(
+            function () {
+                var cocos = window.cc;
+                var sceneName = null;
+                var paused = null;
+
+                try {
+                    sceneName = cocos
+                        && cocos.director
+                        && cocos.director.getScene()
+                            ? cocos.director.getScene().name
+                            : null;
+                    paused = cocos
+                        && cocos.game
+                        && typeof cocos.game.isPaused
+                            === 'function'
+                                ? cocos.game.isPaused()
+                                : null;
+                } catch (_error) {}
+
+                console.info(
+                    '[Playable Packer] 首场景诊断：'
+                    + JSON.stringify({
+                        scene: sceneName,
+                        paused: paused,
+                        resources: resourceStats,
+                    })
+                );
+            },
+            8000
         );
     }
 

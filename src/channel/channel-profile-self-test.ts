@@ -36,7 +36,7 @@ assert.equal(CHANNEL_PROFILES.Google.deliveryFormat, "zip-html-res-js");
 assert.deepEqual(CHANNEL_PROFILES.Google.requiredGlobals, ["ExitApi"]);
 assert.match(CHANNEL_PROFILES.Google.externalScripts[0] ?? "", /exitapi\.js$/);
 assert.equal(CHANNEL_PROFILES.Facebook.bridge, "facebook-cta");
-assert.equal(CHANNEL_PROFILES.Facebook.deliveryFormat, "zip-html-res-js");
+assert.equal(CHANNEL_PROFILES.Facebook.deliveryFormat, "zip-multi-file");
 assert.equal(CHANNEL_PROFILES.Facebook.startupPolicy, "window-load");
 assert.deepEqual(CHANNEL_PROFILES.Facebook.requiredGlobals, ["FbPlayableAd"]);
 assert.equal(CHANNEL_PROFILES.Liftoff.deliveryFormat, "zip-single-html");
@@ -89,8 +89,8 @@ const facebookReport = createChannelReport({
   iosStoreUrl: TEST_IOS_STORE_URL,
 });
 assert.equal(facebookReport.bridge, "facebook-cta");
-assert.equal(facebookReport.deliveryFormat, "zip-html-res-js");
-assert.ok(facebookReport.warnings.some((warning) => warning.includes("index.html + res.js")));
+assert.equal(facebookReport.deliveryFormat, "zip-multi-file");
+assert.ok(facebookReport.warnings.some((warning) => warning.includes("index.html")));
 
 for (const platform of ["IronSource", "Unity", "Moloco", "Pangle", "TikTok"] as const) {
   const channelReport = createChannelReport({

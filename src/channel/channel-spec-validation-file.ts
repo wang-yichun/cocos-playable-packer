@@ -55,6 +55,9 @@ function detectZipFormat(entries: readonly string[]): ChannelArtifactFormat {
   if (lower.includes("index.html") && lower.includes("res.js")) {
     return "zip-html-res-js";
   }
+  if (lower.includes("index.html")) {
+    return "zip-multi-file";
+  }
   return "zip-other";
 }
 

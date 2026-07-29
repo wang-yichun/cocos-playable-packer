@@ -3,7 +3,10 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { createChannelDownloadArtifact } from "./liftoff-delivery.js";
+import {
+  createChannelDownloadArtifact,
+  createFacebookMultiFileArtifact,
+} from "./liftoff-delivery.js";
 import {
   TEST_ANDROID_STORE_URL,
   TEST_IOS_STORE_URL,
@@ -118,6 +121,19 @@ const passiveXhrMoloco = validateChannelArtifact({
 });
 assert.equal(passiveXhrMoloco.valid, true);
 assert.ok(issueCodes(passiveXhrMoloco).includes("XMLHTTPREQUEST_REFERENCE_PRESENT"));
+
+const cocosShaderFacebook = validateChannelArtifact({
+  platform: "Facebook",
+  deliveryFormat: "zip-multi-file",
+  artifactBytes: 4_000_000,
+  entries: ["index.html", "assets/internal/import/effect.json"],
+  textFiles: {
+    "index.html": "<script>FbPlayableAd.onCTAClick();</script>",
+    "assets/internal/import/effect.json": "vec2 location = getPixelLocation();",
+  },
+});
+assert.equal(cocosShaderFacebook.valid, true);
+assert.ok(!issueCodes(cocosShaderFacebook).includes("FACEBOOK_JAVASCRIPT_REDIRECT_PRESENT"));
 
 const invalidPangle = validateChannelArtifact({
   platform: "Pangle",
@@ -237,15 +253,17 @@ try {
   assert.equal(moloco.report.actualFormat, "single-html");
   assert.ok(!issueCodes(moloco.report).includes("MOLOCO_JAVASCRIPT_REDIRECT_PRESENT"));
 
-  const facebookArtifact = createChannelDownloadArtifact(
-    sourceHtml,
-    config("Facebook"),
-  );
+  const facebookArtifact = createFacebookMultiFileArtifact([
+    { name: "index.html", content: Buffer.from(sourceHtml, "utf8") },
+    { name: "src/placeholder.js", content: Buffer.from("window.__placeholder = true;", "utf8") },
+  ], config("Facebook"));
   const facebookFile = path.join(temporaryRoot, facebookArtifact.fileName);
   await writeFile(facebookFile, facebookArtifact.body);
   const facebook = await validateChannelArtifactFile(facebookFile, "Facebook");
   assert.equal(facebook.report.valid, true);
-  assert.ok(issueCodes(facebook.report).includes("OFFICIAL_SPEC_UNVERIFIED"));
+  assert.equal(facebook.report.specificationStatus, "official-confirmed");
+  assert.equal(facebook.report.maximumArtifactBytes, 5_000_000);
+  assert.equal(facebook.report.actualFormat, "zip-multi-file");
 
   const ironSourceArtifact = createChannelDownloadArtifact(
     sourceHtml,

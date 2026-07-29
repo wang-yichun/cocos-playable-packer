@@ -99,6 +99,18 @@
           <p id="webpWarning" class="inline-warning" hidden>WebP 在部分旧设备或渠道 WebView 中可能存在兼容性问题，交付前请做真机验证。</p>
         </article>
 
+        <article class="config-card config-card--wide">
+          <div class="config-card-heading">
+            <span class="config-index">06</span>
+            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；当前已启用 Meta / Facebook 交付包。</p></div>
+          </div>
+          <label class="switch-row">
+            <span><strong>Meta / Facebook</strong><small>生成 facebook-playable.zip，自动注入 CTA、输出根目录 index.html，并生成渠道校验报告。</small></span>
+            <input id="facebookChannelEnabled" class="switch-input" type="checkbox">
+          </label>
+          <p class="field-note">Meta 包禁止 MRAID、JavaScript 跳转和外部网络资源；最终 ZIP 必须小于 5 MB。</p>
+        </article>
+
         <article id="audioSettings" class="config-card config-card--muted">
           <div class="config-card-heading">
             <span class="config-index">03</span>

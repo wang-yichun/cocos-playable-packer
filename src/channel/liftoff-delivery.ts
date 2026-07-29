@@ -46,6 +46,11 @@ export interface RuntimeSplitResult {
   resourceJavaScript: string;
 }
 
+export interface ChannelArchiveEntry {
+  name: string;
+  content: Buffer;
+}
+
 const ZIP_UTF8_FLAG = 0x0800;
 const ZIP_DEFLATE_METHOD = 8;
 const ZIP_STORE_METHOD = 0;
@@ -69,7 +74,14 @@ function createDeterministicZip(entries: readonly ZipEntry[]): Buffer {
   let localOffset = 0;
 
   for (const entry of entries) {
-    if (!/^[A-Za-z0-9._-]+$/.test(entry.name)) {
+    if (
+      !/^[A-Za-z0-9@._/-]+$/.test(entry.name)
+      || entry.name.startsWith("/")
+      || entry.name.endsWith("/")
+      || entry.name.split("/").some((segment) => (
+        segment.length === 0 || segment === "." || segment === ".."
+      ))
+    ) {
       throw new Error(`ZIP 条目名称不安全：${entry.name}`);
     }
     if (names.has(entry.name)) {
@@ -330,13 +342,141 @@ export function createChannelHtml(
   sourceHtml: string,
   config: ChannelBuildConfig,
 ): string {
-  const channelSourceHtml = config.platform === "Moloco"
+  const channelSourceHtml = config.platform === "Moloco" || config.platform === "Facebook"
     ? removePreviewMraidStub(sourceHtml)
     : sourceHtml;
   const bridgeHtml = injectChannelDownloadBridge(channelSourceHtml, config);
   return isByteDanceChannel(config.platform)
     ? injectByteDancePlayableSdk(bridgeHtml, config.platform)
     : bridgeHtml;
+}
+
+/**
+ * Meta preview is more compatible with Cocos' original multi-file web build:
+ * index.html plus its relative JS, WASM, JSON, and asset files in the same ZIP.
+ */
+export function createFacebookMultiFileArtifact(
+  sourceEntries: readonly ChannelArchiveEntry[],
+  config: ChannelBuildConfig,
+): ChannelDownloadArtifact {
+  if (config.platform !== "Facebook") {
+    throw new Error("多文件试玩 ZIP 目前仅用于 Meta / Facebook。");
+  }
+
+  const indexEntry = sourceEntries.find((entry) => entry.name === "index.html");
+  if (indexEntry === undefined) {
+    throw new Error("Meta 多文件 ZIP 缺少根目录 index.html。");
+  }
+
+  const names = new Set<string>();
+  const entries = sourceEntries.map((entry) => {
+    const name = entry.name.replace(/[^A-Za-z0-9._/-]/g, "_");
+    if (names.has(name)) {
+      throw new Error(`Meta 文件名规范化后发生冲突：${entry.name} -> ${name}`);
+    }
+    names.add(name);
+
+    if (entry.name === "index.html") {
+      return {
+        name,
+        content: Buffer.from(
+          createChannelHtml(entry.content.toString("utf8"), config),
+          "utf8",
+        ),
+      };
+    }
+
+    if (/\.(?:js|mjs)$/i.test(entry.name)) {
+      /* Cocos sys.openURL uses window.open internally; Meta requires CTA only. */
+      return {
+        name,
+        content: Buffer.from(
+          entry.content.toString("utf8").replace(
+            /\bwindow\.open\s*\([^)]*\)/g,
+            "window.__PLAYABLE_ADAPTER__&&window.__PLAYABLE_ADAPTER__.cta&&window.__PLAYABLE_ADAPTER__.cta()",
+          ),
+          "utf8",
+        ),
+      };
+    }
+
+    return { name, content: entry.content };
+  });
+  const indexHtml = entries.find((entry) => entry.name === "index.html");
+  if (indexHtml === undefined) {
+    throw new Error("Meta 多文件 ZIP 未能生成 index.html。");
+  }
+  const body = createDeterministicZip(entries);
+
+  return {
+    body,
+    contentType: "application/zip",
+    fileName: "facebook-playable.zip",
+    deliveryFormat: "zip-multi-file",
+    entries: entries.map((entry) => entry.name),
+    entryBytes: Object.fromEntries(entries.map((entry) => [entry.name, entry.content.length])),
+    sha256: sha256(body),
+    htmlBytes: indexHtml.content.length,
+  };
+}
+
+/**
+ * Creates Meta's small, safe-name ZIP layout from the already packed
+ * `game.html`.  The packer has already Brotli-compressed every Cocos file
+ * into `__PACK_ARCHIVE__`; this function merely moves the decoder, asset map
+ * and VFS bootstrap into ordered external scripts.  In particular, no Cocos
+ * file name (such as `foo@hash.cconb`) becomes a ZIP entry.
+ */
+export function createFacebookEncodedAssetMapArtifact(
+  sourceHtml: string,
+  config: ChannelBuildConfig,
+): ChannelDownloadArtifact {
+  if (config.platform !== "Facebook") {
+    throw new Error("编码资源映射 ZIP 目前仅用于 Meta / Facebook。");
+  }
+
+  const html = createChannelHtml(sourceHtml, config);
+  const scripts = scanScriptBlocks(html);
+  const fallback = scripts.find((block) => block.body.includes("window.__PACK_BROTLI_DECOMPRESS__="));
+  const archive = scripts.find((block) => block.body.includes("window.__PACK_FILES__=")
+    && block.body.includes("window.__PACK_ARCHIVE__="));
+  const runtime = scripts.find((block) => block.body.includes("var FILES = window.__PACK_FILES__;")
+    && block.body.includes("function collapsePath("));
+
+  if (fallback === undefined || archive === undefined || runtime === undefined) {
+    throw new Error("Meta 编码资源映射 ZIP 无法定位 Brotli 解码器、资源映射或启动运行时。");
+  }
+
+  const selected = [fallback, archive, runtime].sort((left, right) => left.start - right.start);
+  let indexHtml = html;
+  for (const block of [...selected].sort((left, right) => right.start - left.start)) {
+    indexHtml = indexHtml.slice(0, block.start) + indexHtml.slice(block.end);
+  }
+  const scriptTags = [
+    '<script defer src="assets/script_1.js"></script>',
+    '<script defer src="assets/script_2.js"></script>',
+    '<script defer src="assets/script_3.js"></script>',
+  ].join("\n");
+  indexHtml = indexHtml.replace(/<\/body\s*>/i, `${scriptTags}\n</body>`);
+
+  const entries = [
+    { name: "index.html", content: Buffer.from(indexHtml, "utf8") },
+    { name: "assets/script_1.js", content: Buffer.from(fallback.body, "utf8") },
+    { name: "assets/script_2.js", content: Buffer.from(archive.body, "utf8") },
+    { name: "assets/script_3.js", content: Buffer.from(runtime.body, "utf8") },
+  ] as const;
+  const body = createDeterministicZip(entries);
+
+  return {
+    body,
+    contentType: "application/zip",
+    fileName: "facebook-playable.zip",
+    deliveryFormat: "zip-multi-file",
+    entries: entries.map((entry) => entry.name),
+    entryBytes: Object.fromEntries(entries.map((entry) => [entry.name, entry.content.length])),
+    sha256: sha256(body),
+    htmlBytes: entries[0].content.length,
+  };
 }
 
 export function createChannelDownloadArtifact(
@@ -351,7 +491,25 @@ export function createChannelDownloadArtifact(
   }
 
   if (config.platform === "Facebook") {
-    return createZipHtmlResJsArtifact(html, "Facebook", "facebook-playable.zip");
+    /*
+     * Meta only requires index.html at the ZIP root. Keeping the runtime
+     * inline makes the uploaded asset byte-for-byte equivalent to the
+     * verified standalone game.html and avoids Preview iframe differences
+     * around secondary script loading.
+     */
+    const htmlBuffer = Buffer.from(html, "utf8");
+    const entries = [{ name: "index.html", content: htmlBuffer }] as const;
+    const body = createDeterministicZip(entries);
+    return {
+      body,
+      contentType: "application/zip",
+      fileName: "facebook-playable.zip",
+      deliveryFormat: "zip-single-html",
+      entries: ["index.html"],
+      entryBytes: { "index.html": htmlBuffer.length },
+      sha256: sha256(body),
+      htmlBytes: htmlBuffer.length,
+    };
   }
 
   const htmlBuffer = Buffer.from(html, "utf8");

@@ -59,6 +59,10 @@ $releaseRoot = Join-Path $repositoryRoot "release"
 $archivePath = Join-Path $releaseRoot "$extensionName-v$version.zip"
 $stagingRoot = Join-Path $releaseRoot ".package-staging-$extensionName"
 $stagingExtensionRoot = Join-Path $stagingRoot $extensionName
+$demoProjectRoot = Join-Path $repositoryRoot "CocosDemo"
+$demoExtensionsRoot = Join-Path $demoProjectRoot "extensions"
+$demoExtensionRoot = Join-Path $demoExtensionsRoot $extensionName
+$demoInstallStagingRoot = Join-Path $releaseRoot ".demo-install-$extensionName"
 
 New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
 Remove-Item -LiteralPath $stagingRoot -Recurse -Force -ErrorAction SilentlyContinue
@@ -112,8 +116,33 @@ try {
     if ($archiveEntries -notcontains $relativePath) { throw "Release archive is missing: $relativePath" }
   }
 
+  # Install the exact release archive into CocosDemo. This deliberately avoids
+  # copying from the working extension directory, so demo verification always
+  # exercises the same files that will be distributed to users.
+  if (-not (Test-Path -LiteralPath $demoProjectRoot)) {
+    throw "CocosDemo project was not found: $demoProjectRoot"
+  }
+  Remove-Item -LiteralPath $demoInstallStagingRoot -Recurse -Force -ErrorAction SilentlyContinue
+  Expand-Archive -LiteralPath $archivePath -DestinationPath $demoInstallStagingRoot -Force
+  $installedPackageFile = Join-Path $demoInstallStagingRoot "$extensionName\package.json"
+  if (-not (Test-Path -LiteralPath $installedPackageFile)) {
+    throw "Release archive could not be installed into CocosDemo: missing $extensionName/package.json"
+  }
+  New-Item -ItemType Directory -Force -Path $demoExtensionsRoot | Out-Null
+  Remove-Item -LiteralPath $demoExtensionRoot -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Force -Path $demoExtensionRoot | Out-Null
+  Get-ChildItem -LiteralPath (Join-Path $demoInstallStagingRoot $extensionName) -Force | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination $demoExtensionRoot -Recurse -Force
+  }
+  $installedVersion = (Get-Content -LiteralPath (Join-Path $demoExtensionRoot "package.json") -Raw | ConvertFrom-Json).version
+  if ($installedVersion -ne $version) {
+    throw "CocosDemo extension version mismatch: expected $version, got $installedVersion"
+  }
+
   $sizeMiB = [Math]::Round((Get-Item -LiteralPath $archivePath).Length / 1MB, 2)
   Write-Host "Release archive created: $archivePath ($sizeMiB MiB)"
+  Write-Host "Release archive installed into CocosDemo: $demoExtensionRoot"
 } finally {
   Remove-Item -LiteralPath $stagingRoot -Recurse -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath $demoInstallStagingRoot -Recurse -Force -ErrorAction SilentlyContinue
 }

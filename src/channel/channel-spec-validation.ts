@@ -78,11 +78,11 @@ const CHANNEL_RULES: Readonly<Record<ChannelPlatform, ChannelRuleSet>> = {
     maximumEntries: 512,
   },
   Facebook: {
-    specificationStatus: "unverified",
-    expectedFormat: "zip-html-res-js",
-    maximumArtifactBytes: null,
-    sizeSeverity: "warning",
-    maximumEntries: null,
+    specificationStatus: "official-confirmed",
+    expectedFormat: "zip-multi-file",
+    maximumArtifactBytes: FIVE_MB,
+    sizeSeverity: "error",
+    maximumEntries: 100,
   },
   Liftoff: {
     specificationStatus: "official-partial",
@@ -133,7 +133,8 @@ const EXTERNAL_CSS_RESOURCE = /url\(\s*["']?\s*(?:https?:)?\/\//i;
 const EXTERNAL_DYNAMIC_RESOURCE = /\b(?:fetch|importScripts)\s*\(\s*["']\s*https?:\/\//i;
 const XHR_REFERENCE = /\bXMLHttpRequest\b/;
 const MRAID_SCRIPT = /<script\b[^>]*src\s*=\s*["'][^"']*mraid(?:\.min)?\.js(?:[?#][^"']*)?["']/i;
-const JAVASCRIPT_REDIRECT = /\b(?:window\.)?location(?:\.href)?\s*=|\blocation\.(?:assign|replace)\s*\(|\bwindow\.open\s*\(/i;
+/* Do not match shader locals such as `vec2 location = ...` embedded in Cocos JSON. */
+const JAVASCRIPT_REDIRECT = /\b(?:window|top|parent)\.location(?:\.href)?\s*=|\blocation\.(?:assign|replace)\s*\(|\bwindow\.open\s*\(/i;
 
 function pushIssue(
   issues: ChannelValidationIssue[],
@@ -440,6 +441,17 @@ export function validateChannelArtifact(
           code: "FACEBOOK_CTA_MISSING",
           severity: "warning",
           message: "未发现 FbPlayableAd.onCTAClick()；当前 Meta 规范尚待账号内资料确认。",
+        });
+      }
+      checkNoExternalResources(issues, input.textFiles, "error");
+      checkNoMraidScript(issues, input.textFiles, "error");
+      const facebookRedirectFile = matchingFile(input.textFiles, JAVASCRIPT_REDIRECT);
+      if (facebookRedirectFile !== undefined) {
+        pushIssue(issues, {
+          code: "FACEBOOK_JAVASCRIPT_REDIRECT_PRESENT",
+          severity: "error",
+          message: "Meta 产物包含 JavaScript 跳转；请仅通过 FbPlayableAd.onCTAClick() 打开商店。",
+          file: facebookRedirectFile,
         });
       }
       break;

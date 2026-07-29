@@ -42,3 +42,4 @@ workspaces/*/manifests/latest-restore.json
 extensions/cocos-playable-packer/runtime/src/
 extensions/cocos-playable-packer/runtime/dist/
 extensions/cocos-playable-packer/runtime/node_modules/
+demo/

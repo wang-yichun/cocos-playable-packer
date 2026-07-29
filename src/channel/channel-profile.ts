@@ -22,7 +22,8 @@ export type ChannelPlatform = typeof CHANNEL_PLATFORMS[number];
 export type ChannelDeliveryFormat =
   | "single-html"
   | "zip-single-html"
-  | "zip-html-res-js";
+  | "zip-html-res-js"
+  | "zip-multi-file";
 export type ChannelBridge =
   | "preview"
   | "mraid"
@@ -127,7 +128,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
   Facebook: {
     platform: "Facebook",
     displayName: "Facebook",
-    deliveryFormat: "zip-html-res-js",
+    deliveryFormat: "zip-multi-file",
     bridge: "facebook-cta",
     startupPolicy: "window-load",
     analyticsAdapter: "none",
