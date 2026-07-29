@@ -1,0 +1,4 @@
+interface:
+  display_name: Cocos Playable Pipeline
+  short_description: Build and debug Cocos Creator playable ads across channels
+  default_prompt: Use $cocos-playable-pipeline to package, validate, debug, or extend a Cocos Creator playable ad for a delivery channel.

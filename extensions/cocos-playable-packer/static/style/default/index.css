@@ -458,6 +458,10 @@ select:disabled {
   padding: 16px;
 }
 
+.config-card--channel {
+  grid-column: 1 / -1;
+}
+
 .config-card--muted {
   border-color: rgba(83, 99, 120, .26);
   background: linear-gradient(180deg, rgba(24, 33, 47, .78), rgba(18, 25, 36, .82));
@@ -903,6 +907,25 @@ select {
   font-size: 10px;
   line-height: 1.55;
   text-align: center;
+}
+
+.channel-option-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.channel-preview-link {
+  color: #8bb8ff;
+  font-size: 10px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.channel-preview-link:hover {
+  color: #dceaff;
+  text-decoration: underline;
 }
 
 .advanced-details {

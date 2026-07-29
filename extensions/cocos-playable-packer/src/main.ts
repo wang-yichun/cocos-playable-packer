@@ -1,9 +1,10 @@
 import { execFile } from "node:child_process";
-import { access, copyFile, mkdir, readFile, readdir, realpath, unlink } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, readdir, realpath, rm, unlink, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+import { inflateRawSync } from "node:zlib";
 
 import { CreatorBuildTaskManager } from "./services/task-manager.js";
 import type {
@@ -17,7 +18,8 @@ const PACKAGE_NAME = "cocos-playable-packer";
 const MAX_LOG_LINES = 100;
 const MINIMUM_EXTERNAL_NODE_MAJOR = 22;
 const DEFAULT_IMAGE_QUALITY = 80;
-const LOADING_LOGO_DIRECTORY = "static/assets";
+const LOADING_LOGO_DIRECTORY = ".logo-cache";
+const LEGACY_LOADING_LOGO_DIRECTORY = "static/assets";
 const LOADING_LOGO_BASENAME = "loading-logo";
 const LOADING_LOGO_MIME_TYPES: Record<string, string> = {
   ".png": "image/png",
@@ -71,20 +73,17 @@ async function queryLoadingLogo(): Promise<{
   bytes: number;
   mimeType: string;
 } | null> {
-  const directory = path.join(extensionRootPath(), LOADING_LOGO_DIRECTORY);
-  for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
-    if (!entry.isFile() || !entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) continue;
-    const extension = path.extname(entry.name).toLowerCase();
-    const mimeType = LOADING_LOGO_MIME_TYPES[extension];
-    if (!mimeType) continue;
-    const filePath = path.join(directory, entry.name);
-    const data = await readFile(filePath);
-    return {
-      dataUrl: `data:${mimeType};base64,${data.toString("base64")}`,
-      filePath,
-      bytes: data.byteLength,
-      mimeType,
-    };
+  for (const directoryName of [LOADING_LOGO_DIRECTORY, LEGACY_LOADING_LOGO_DIRECTORY]) {
+    const directory = path.join(extensionRootPath(), directoryName);
+    for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
+      if (!entry.isFile() || !entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) continue;
+      const extension = path.extname(entry.name).toLowerCase();
+      const mimeType = LOADING_LOGO_MIME_TYPES[extension];
+      if (!mimeType) continue;
+      const filePath = path.join(directory, entry.name);
+      const data = await readFile(filePath);
+      return { dataUrl: `data:${mimeType};base64,${data.toString("base64")}`, filePath, bytes: data.byteLength, mimeType };
+    }
   }
   return null;
 }
@@ -300,6 +299,35 @@ async function openInDefaultBrowser(filePath: string): Promise<void> {
   await execFileAsync("xdg-open", [url], { timeout: 5_000 });
 }
 
+async function extractPreviewHtml(zipFile: string, taskId: string): Promise<string> {
+  const archive = await readFile(zipFile);
+  const previewRoot = path.join(Editor.Project.tmpDir, PACKAGE_NAME, "channel-preview", taskId);
+  await rm(previewRoot, { recursive: true, force: true });
+  await mkdir(previewRoot, { recursive: true });
+  let offset = 0;
+  let indexFile: string | null = null;
+  while (offset + 30 <= archive.length && archive.readUInt32LE(offset) === 0x04034b50) {
+    const method = archive.readUInt16LE(offset + 8);
+    const compressedSize = archive.readUInt32LE(offset + 18);
+    const nameLength = archive.readUInt16LE(offset + 26);
+    const extraLength = archive.readUInt16LE(offset + 28);
+    const name = archive.subarray(offset + 30, offset + 30 + nameLength).toString("utf8");
+    const safeName = path.normalize(name).replace(/^([.][.][\\/])+/, "");
+    if (safeName.startsWith("..") || path.isAbsolute(safeName)) throw new Error(`渠道包包含不安全路径：${name}`);
+    const dataStart = offset + 30 + nameLength + extraLength;
+    const compressed = archive.subarray(dataStart, dataStart + compressedSize);
+    const content = method === 0 ? compressed : method === 8 ? inflateRawSync(compressed) : null;
+    if (content === null) throw new Error(`预览暂不支持 ZIP 压缩方式：${method}`);
+    const target = path.join(previewRoot, safeName);
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, content);
+    if (safeName.toLowerCase() === "index.html") indexFile = target;
+    offset = dataStart + compressedSize;
+  }
+  if (indexFile === null) throw new Error("渠道包中没有可预览的 index.html");
+  return indexFile;
+}
+
 async function openInFileManager(directoryPath: string): Promise<void> {
   const target = path.resolve(directoryPath);
   if (!(await exists(target))) throw new Error(`资源目录不存在：${target}`);
@@ -334,8 +362,11 @@ export const methods = {
   async openPreview(): Promise<void> {
     const task = taskManager.current();
     if (task.status !== "succeeded") throw new Error("请先完成一次构建，再打开浏览器预览。");
-    await openInDefaultBrowser(task.outputFile);
-    appendLog(`已在默认浏览器打开预览：${task.outputFile}`);
+    const previewFile = path.extname(task.outputFile).toLowerCase() === ".zip"
+      ? await extractPreviewHtml(task.outputFile, task.id)
+      : task.outputFile;
+    await openInDefaultBrowser(previewFile);
+    appendLog(`已在默认浏览器打开预览：${previewFile}`);
   },
   async openOutputFolder(): Promise<void> {
     const task = taskManager.current();
