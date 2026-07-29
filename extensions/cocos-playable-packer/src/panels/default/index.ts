@@ -28,6 +28,7 @@ interface PanelElements {
   importLogoButton: HTMLButtonElement;
   clearLogoButton: HTMLButtonElement;
   loadingScreenEnabled: HTMLInputElement;
+  facebookChannelEnabled: HTMLInputElement;
   loadingLogoPreview: HTMLElement;
   loadingLogoPreviewImage: HTMLImageElement;
   loadingLogoPreviewMeta: HTMLElement;
@@ -94,6 +95,7 @@ interface PersistedConfiguration {
   audioEnabled: boolean;
   audioBitrateKbps: string;
   loadingScreenEnabled: boolean;
+  facebookChannelEnabled: boolean;
 }
 
 const selectors: Record<keyof PanelElements, string> = {
@@ -105,6 +107,7 @@ const selectors: Record<keyof PanelElements, string> = {
   importLogoButton: "#importLogoButton",
   clearLogoButton: "#clearLogoButton",
   loadingScreenEnabled: "#loadingScreenEnabled",
+  facebookChannelEnabled: "#facebookChannelEnabled",
   loadingLogoPreview: "#loadingLogoPreview",
   loadingLogoPreviewImage: "#loadingLogoPreviewImage",
   loadingLogoPreviewMeta: "#loadingLogoPreviewMeta",
@@ -324,6 +327,7 @@ function persistedConfigurationFrom(elements: PanelElements): PersistedConfigura
     audioEnabled: elements.audioEnabled.checked,
     audioBitrateKbps: elements.audioBitrateKbps.value,
     loadingScreenEnabled: elements.loadingScreenEnabled.checked,
+    facebookChannelEnabled: elements.facebookChannelEnabled.checked,
   };
 }
 
@@ -350,6 +354,7 @@ function restoreConfiguration(elements: PanelElements): void {
     if (typeof saved.audioEnabled === "boolean") elements.audioEnabled.checked = saved.audioEnabled;
     if (typeof saved.audioBitrateKbps === "string") elements.audioBitrateKbps.value = saved.audioBitrateKbps;
     if (typeof saved.loadingScreenEnabled === "boolean") elements.loadingScreenEnabled.checked = saved.loadingScreenEnabled;
+    if (typeof saved.facebookChannelEnabled === "boolean") elements.facebookChannelEnabled.checked = saved.facebookChannelEnabled;
   } catch {
     // 忽略损坏或不可用的历史配置，回退到默认值。
   }
@@ -384,6 +389,7 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
   elements.audioEnabled.disabled = active;
   elements.audioBitrateKbps.disabled = active || !elements.audioEnabled.checked;
   elements.loadingScreenEnabled.disabled = active;
+  elements.facebookChannelEnabled.disabled = active;
   elements.importLogoButton.disabled = active;
   elements.clearLogoButton.disabled = active;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
@@ -506,6 +512,7 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
     audioBitrateKbps: Number(elements.audioBitrateKbps.value) || 48,
     payloadEncoding: elements.payloadEncoding.value as CreatorBuildConfiguration["payloadEncoding"],
     loadingScreenEnabled: elements.loadingScreenEnabled.checked,
+    channels: elements.facebookChannelEnabled.checked ? ["Facebook"] : [],
   };
 }
 
@@ -580,6 +587,7 @@ module.exports = Editor.Panel.define({
       "audioEnabled",
       "audioBitrateKbps",
       "loadingScreenEnabled",
+      "facebookChannelEnabled",
     ] as const) {
       bind(this.$[key], "change", () => saveConfiguration(this.$));
       bind(this.$[key], "input", () => saveConfiguration(this.$));

@@ -1,4 +1,4 @@
-import { access, readFile, rm, writeFile } from "node:fs/promises";
+import { access, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { runPlayableBuild } from "../core/index.js";
@@ -13,6 +13,10 @@ import {
   type CreatorWorkerMessage,
   type CreatorWorkerRequest,
 } from "./protocol.js";
+import {
+  createFacebookEncodedAssetMapArtifact,
+} from "../channel/liftoff-delivery.js";
+import { validateChannelArtifactFile } from "../channel/channel-spec-validation-file.js";
 
 function write(message: CreatorWorkerMessage): void {
   process.stdout.write(serializeCreatorWorkerMessage(message));
@@ -96,7 +100,8 @@ async function main(): Promise<void> {
 
   const cleanupTinyPngEnv = await ensureTinyPngEnvCompatibility(request);
   try {
-    const result = await runPlayableBuild(request.build, {
+    const isFacebookBuild = request.build.channels?.includes("Facebook") === true;
+    let result = await runPlayableBuild(request.build, {
       runtime: {
         packageRoot: request.packageRoot,
         host: "creator",
@@ -116,6 +121,39 @@ async function main(): Promise<void> {
     const loadingScreen = normalizeLoadingScreenConfig(request.build.loadingScreen);
     if (loadingScreen?.enabled) {
       await applyLoadingScreenToArtifact(result.outputFile, result.reportFile, loadingScreen);
+    }
+
+    if (isFacebookBuild) {
+      const outputDirectory = path.dirname(result.outputFile);
+      const facebookOutputFile = path.join(outputDirectory, "facebook-playable.zip");
+      const artifact = createFacebookEncodedAssetMapArtifact(
+        await readFile(result.outputFile, "utf8"),
+        {
+        platform: "Facebook", androidStoreUrl: "", iosStoreUrl: "",
+        },
+      );
+      await writeFile(facebookOutputFile, artifact.body);
+      const validation = await validateChannelArtifactFile(facebookOutputFile, "Facebook");
+      const validationReportFile = `${facebookOutputFile}.channel-validation.json`;
+      await writeFile(validationReportFile, `${JSON.stringify({
+        inputFile: validation.inputFile,
+        entries: validation.entries,
+        ...validation.report,
+      }, null, 2)}\n`, "utf8");
+      if (!validation.report.valid) {
+        throw new Error(`Meta / Facebook 渠道包校验失败：${validation.report.issues.map((issue) => issue.message).join("；")}`);
+      }
+      const artifactInfo = await stat(facebookOutputFile);
+      write({ type: "event", taskId: request.taskId, event: {
+        type: "log", stream: "stdout", timestamp: new Date().toISOString(), elapsedMs: result.durationMs,
+        line: `已生成 Meta / Facebook 渠道包：${facebookOutputFile}；校验报告：${validationReportFile}`,
+      }});
+      result = {
+        ...result,
+        outputFile: facebookOutputFile,
+        outputBytes: artifactInfo.size,
+        outputSha256: artifact.sha256,
+      };
     }
 
     write({ type: "result", taskId: request.taskId, result });

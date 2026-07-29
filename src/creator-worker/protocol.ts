@@ -13,6 +13,7 @@ export interface CreatorLoadingScreenRequest {
 
 export type CreatorPlayableBuildRequest = PlayableBuildRequest & {
   loadingScreen?: CreatorLoadingScreenRequest;
+  channels?: readonly "Facebook"[];
 };
 
 export interface CreatorWorkerRequest {

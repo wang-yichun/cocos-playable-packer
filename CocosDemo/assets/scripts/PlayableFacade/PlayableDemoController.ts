@@ -14,6 +14,10 @@ export class PlayableDemoController extends Component {
   @property({ type: Label, tooltip: "可选：显示按钮调用结果。" })
   public statusLabel: Label | null = null;
 
+  protected onLoad(): void {
+    console.info(`[PlayableDemoController] onLoad`);
+  }
+
   /** 绑定到任意“CTA / Install / Download”按钮。 */
   public onCtaClick(): void {
     const invoked = PlayableFacade.cta();

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,9 @@ const extensionRoot = path.join(
   "cocos-playable-packer",
 );
 const require = createRequire(import.meta.url);
+const expectedExtensionVersion = JSON.parse(
+  await readFile(path.join(extensionRoot, "package.json"), "utf8"),
+).version;
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "creator-extension-compiled-"));
 
 function createPanelElement() {
@@ -132,7 +135,7 @@ assert.equal(typeof mainModule.methods?.clearLoadingLogo, "function");
   assert.deepEqual(openedPanels, ["cocos-playable-packer"]);
 
   const environment = await mainModule.methods.queryEnvironment();
-  assert.equal(environment.extensionVersion, "0.1.0");
+  assert.equal(environment.extensionVersion, expectedExtensionVersion);
   assert.equal(environment.project.name, "game143");
   assert.equal(environment.project.path, path.resolve(projectRoot));
   assert.equal(environment.project.tmpDir, projectTmpDir);

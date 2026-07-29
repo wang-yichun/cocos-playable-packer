@@ -108,9 +108,83 @@ function createMolocoDownloadBridgeSource(config: ChannelBuildConfig): string {
 })();`;
 }
 
+/** Meta statically rejects MRAID and JavaScript redirects, so its output must not share the generic bridge. */
+function createFacebookDownloadBridgeSource(config: ChannelBuildConfig): string {
+  const serializedConfig = safeJson(config);
+
+  return `(() => {
+  const config = ${serializedConfig};
+  window.__PLATFORM = config.platform;
+  window.__PLAYABLE_CHANNEL_CONFIG__ = config;
+
+  const bridge = window.xsd_playable && typeof window.xsd_playable === "object"
+    ? window.xsd_playable
+    : {};
+
+  function showStartupError(error) {
+    var root = document.getElementById("cpp-loading-screen");
+    if (!root || root.getAttribute("data-cpp-startup-error") === "true") { return; }
+    root.setAttribute("data-cpp-startup-error", "true");
+    var message = error && error.message ? error.message : String(error || "Unknown startup error");
+    var detail = document.createElement("div");
+    detail.textContent = "Playable startup failed: " + message;
+    detail.style.cssText = "position:absolute;left:8%;right:8%;bottom:10%;color:#fff;font:14px/1.45 Arial,sans-serif;text-align:center;word-break:break-word;";
+    root.appendChild(detail);
+  }
+  window.addEventListener("error", function(event) { showStartupError(event.error || event.message); });
+  window.addEventListener("unhandledrejection", function(event) { showStartupError(event.reason); });
+  var nativeConsoleError = window.console && window.console.error;
+  if (typeof nativeConsoleError === "function") {
+    window.console.error = function() {
+      showStartupError(arguments[0]);
+      return nativeConsoleError.apply(window.console, arguments);
+    };
+  }
+
+  /* Meta Preview iframe blocks Gamepad API by Permissions Policy. */
+  if (window.navigator && typeof window.navigator.getGamepads === "function") {
+    var nativeGetGamepads = window.navigator.getGamepads.bind(window.navigator);
+    try {
+      Object.defineProperty(window.navigator, "getGamepads", {
+        configurable: true,
+        value: function () {
+          try { return nativeGetGamepads(); } catch (_error) { return []; }
+        }
+      });
+    } catch (_error) {}
+  }
+
+  bridge.download = function download() {
+    if (window.FbPlayableAd && typeof window.FbPlayableAd.onCTAClick === "function") {
+      window.FbPlayableAd.onCTAClick();
+      return;
+    }
+    console.warn("[Playable Channel] Meta 宿主未提供 FbPlayableAd.onCTAClick()。");
+  };
+  bridge.install = bridge.download;
+  bridge.mraidOpen = bridge.download;
+  bridge.adapter = typeof bridge.adapter === "function" ? bridge.adapter : function adapter() {};
+  bridge.gameReady = typeof bridge.gameReady === "function" ? bridge.gameReady : function gameReady() {};
+  bridge.gameEnd = typeof bridge.gameEnd === "function" ? bridge.gameEnd : function gameEnd() {};
+  bridge.onInteracted = typeof bridge.onInteracted === "function" ? bridge.onInteracted : function onInteracted() {};
+  bridge.playableSDKsendEvent = typeof bridge.playableSDKsendEvent === "function" ? bridge.playableSDKsendEvent : function playableSDKsendEvent() {};
+  window.xsd_playable = bridge;
+  window.__PLAYABLE_ADAPTER__ = {
+    cta: bridge.download,
+    gameReady: bridge.gameReady,
+    gameStart: bridge.onInteracted,
+    gameEnd: bridge.gameEnd,
+    track: bridge.playableSDKsendEvent
+  };
+})();`;
+}
+
 export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): string {
   if (config.platform === "Moloco") {
     return createMolocoDownloadBridgeSource(config);
+  }
+  if (config.platform === "Facebook") {
+    return createFacebookDownloadBridgeSource(config);
   }
 
   const serializedConfig = safeJson(config);
@@ -442,6 +516,11 @@ export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): s
       return;
     }
 
+    if (platform === "Facebook") {
+      console.warn("[Playable Channel] Meta 宿主未提供 FbPlayableAd.onCTAClick()。");
+      return;
+    }
+
     if (isMraidPlatform
       && window.mraid
       && typeof window.mraid.open === "function"
@@ -466,6 +545,13 @@ export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): s
     : function playableSDKsendEvent() {};
 
   window.xsd_playable = bridge;
+  window.__PLAYABLE_ADAPTER__ = {
+    cta: bridge.download,
+    gameReady: bridge.gameReady,
+    gameStart: bridge.onInteracted,
+    gameEnd: bridge.gameEnd,
+    track: bridge.playableSDKsendEvent
+  };
   installMraidLifecycle();
 })();`;
 }

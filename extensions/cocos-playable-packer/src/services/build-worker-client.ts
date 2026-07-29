@@ -51,6 +51,7 @@ function buildRequest(configuration: CreatorBuildConfiguration, projectName: str
       enabled: configuration.loadingScreenEnabled,
       logoDataUrl: configuration.loadingLogoDataUrl ?? null,
     },
+    channels: configuration.channels,
     projectName,
   };
 }

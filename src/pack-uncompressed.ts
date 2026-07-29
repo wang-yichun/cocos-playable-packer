@@ -2227,13 +2227,17 @@ function createRuntimeSource(): string {
     function evaluateFile(filePath) {
         var source =
             getText(filePath);
+        var script = document.createElement(
+            'script'
+        );
 
-        (0, eval)(
-            source
+        /* Meta Preview CSP may block eval(), but permits classic scripts. */
+        script.text = source
             + '\n//# sourceURL='
             + BASE
-            + filePath
-        );
+            + filePath;
+        document.head.appendChild(script);
+        script.remove();
     }
 
     async function boot() {
@@ -2263,8 +2267,68 @@ function createRuntimeSource(): string {
         }
 
         /*
-         * 安装 Import Map。
+         * Meta Playable Preview 的 iframe 会通过 Permissions Policy
+         * 禁用 Gamepad API。部分 Cocos 运行时会在初始化输入系统时
+         * 直接调用 navigator.getGamepads()，该调用会同步抛异常并中断
+         * 整个游戏启动。这里仅在调用受限时回退为空手柄列表。
          */
+        if (
+            window.navigator
+            && typeof window.navigator.getGamepads
+                === 'function'
+        ) {
+            var nativeGetGamepads =
+                window.navigator.getGamepads.bind(
+                    window.navigator
+                );
+
+            try {
+                Object.defineProperty(
+                    window.navigator,
+                    'getGamepads',
+                    {
+                        configurable: true,
+                        value: function () {
+                            try {
+                                return nativeGetGamepads();
+                            } catch (error) {
+                                return [];
+                            }
+                        },
+                    }
+                );
+            } catch (error) {
+                /* 浏览器不允许覆写时保持原实现。 */
+            }
+        }
+
+        /*
+         * 安装 Import Map。Cocos Creator 附带的 SystemJS 精简版
+         * 不一定包含动态 Import Map extra；因此同时补上 resolve
+         * 映射，保证 cc 等裸模块名在所有 WebView 中都能解析。
+         */
+        var originalSystemResolve =
+            System.resolve;
+
+        System.resolve = function (
+            moduleName,
+            parentUrl
+        ) {
+            var imports =
+                BOOT.importMap
+                && BOOT.importMap.imports;
+
+            var mappedModuleName =
+                imports
+                && imports[moduleName];
+
+            return originalSystemResolve.call(
+                this,
+                mappedModuleName || moduleName,
+                parentUrl
+            );
+        };
+
         if (
             typeof System.addImportMap
             === 'function'
