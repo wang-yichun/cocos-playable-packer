@@ -48,6 +48,7 @@ export interface ChannelArtifactValidationReport {
 interface ChannelRuleSet {
   specificationStatus: ChannelSpecificationStatus;
   expectedFormat: ChannelDeliveryFormat | null;
+  acceptedFormats?: readonly ChannelArtifactFormat[];
   maximumArtifactBytes: number | null;
   sizeSeverity: ChannelValidationSeverity;
   maximumEntries: number | null;
@@ -80,6 +81,7 @@ const CHANNEL_RULES: Readonly<Record<ChannelPlatform, ChannelRuleSet>> = {
   Facebook: {
     specificationStatus: "official-confirmed",
     expectedFormat: "zip-multi-file",
+    acceptedFormats: ["zip-multi-file", "single-html"],
     maximumArtifactBytes: FIVE_MB,
     sizeSeverity: "error",
     maximumEntries: 100,
@@ -288,7 +290,8 @@ export function validateChannelArtifact(
     });
   }
 
-  if (rules.expectedFormat !== null && input.deliveryFormat !== rules.expectedFormat) {
+  const formatAccepted = rules.acceptedFormats?.includes(input.deliveryFormat) ?? input.deliveryFormat === rules.expectedFormat;
+  if (rules.expectedFormat !== null && !formatAccepted) {
     pushIssue(issues, {
       code: "DELIVERY_FORMAT_MISMATCH",
       severity: "error",

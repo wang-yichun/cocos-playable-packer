@@ -242,11 +242,16 @@ function normalizeBuildConfiguration(configuration: CreatorBuildConfiguration): 
   if (configuration.imageMode === "tinypng" && tinyPngApiKey.length === 0) {
     throw new TypeError("选择 TinyPNG 时必须填写 API Key。");
   }
+  const facebookArtifactFormat = configuration.facebookArtifactFormat ?? "zip";
+  if (facebookArtifactFormat !== "single-html" && facebookArtifactFormat !== "zip") {
+    throw new TypeError("Meta / Facebook 产物格式只支持单 HTML 或 ZIP。");
+  }
   return {
     ...configuration,
     pngQuality: normalizedImageQuality(configuration.pngQuality, "PNG 质量"),
     jpegQuality: normalizedImageQuality(configuration.jpegQuality, "JPG 质量"),
     tinyPngApiKey,
+    facebookArtifactFormat,
   };
 }
 

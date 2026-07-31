@@ -8,6 +8,7 @@ import {
   createChannelDownloadArtifact,
   createFacebookEncodedAssetMapArtifact,
   createFacebookMultiFileArtifact,
+  createFacebookSingleHtmlArtifact,
 } from "./liftoff-delivery.js";
 import {
   TEST_ANDROID_STORE_URL,
@@ -53,6 +54,13 @@ assert.equal(
   true,
   "Facebook ZIP 应使用确定性元数据。",
 );
+
+const singleHtmlArtifact = createFacebookSingleHtmlArtifact(sourceHtml, facebookConfig);
+assert.equal(singleHtmlArtifact.contentType, "text/html; charset=utf-8");
+assert.equal(singleHtmlArtifact.fileName, "facebook-playable.html");
+assert.equal(singleHtmlArtifact.deliveryFormat, "single-html");
+assert.deepEqual(singleHtmlArtifact.entries, ["facebook-playable.html"]);
+assert.match(singleHtmlArtifact.body.toString("utf8"), /window\.FbPlayableAd\.onCTAClick/);
 
 const multiFileArtifact = createFacebookMultiFileArtifact([
   { name: "index.html", content: Buffer.from(sourceHtml, "utf8") },

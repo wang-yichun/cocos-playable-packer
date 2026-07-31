@@ -15,6 +15,7 @@ import {
 } from "./protocol.js";
 import {
   createFacebookEncodedAssetMapArtifact,
+  createFacebookSingleHtmlArtifact,
 } from "../channel/liftoff-delivery.js";
 import { validateChannelArtifactFile } from "../channel/channel-spec-validation-file.js";
 
@@ -125,13 +126,15 @@ async function main(): Promise<void> {
 
     if (isFacebookBuild) {
       const outputDirectory = path.dirname(result.outputFile);
-      const facebookOutputFile = path.join(outputDirectory, "facebook-playable.zip");
-      const artifact = createFacebookEncodedAssetMapArtifact(
-        await readFile(result.outputFile, "utf8"),
-        {
-        platform: "Facebook", androidStoreUrl: "", iosStoreUrl: "",
-        },
-      );
+      const facebookConfig = {
+        platform: "Facebook" as const,
+        androidStoreUrl: "",
+        iosStoreUrl: "",
+      };
+      const artifact = request.build.facebookArtifactFormat === "single-html"
+        ? createFacebookSingleHtmlArtifact(await readFile(result.outputFile, "utf8"), facebookConfig)
+        : createFacebookEncodedAssetMapArtifact(await readFile(result.outputFile, "utf8"), facebookConfig);
+      const facebookOutputFile = path.join(outputDirectory, artifact.fileName);
       await writeFile(facebookOutputFile, artifact.body);
       const validation = await validateChannelArtifactFile(facebookOutputFile, "Facebook");
       const validationReportFile = `${facebookOutputFile}.channel-validation.json`;

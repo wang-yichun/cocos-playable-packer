@@ -29,6 +29,7 @@ interface PanelElements {
   clearLogoButton: HTMLButtonElement;
   loadingScreenEnabled: HTMLInputElement;
   facebookChannelEnabled: HTMLInputElement;
+  facebookArtifactFormat: HTMLSelectElement;
   loadingLogoPreview: HTMLElement;
   loadingLogoPreviewImage: HTMLImageElement;
   loadingLogoPreviewMeta: HTMLElement;
@@ -96,6 +97,7 @@ interface PersistedConfiguration {
   audioBitrateKbps: string;
   loadingScreenEnabled: boolean;
   facebookChannelEnabled: boolean;
+  facebookArtifactFormat: string;
 }
 
 const selectors: Record<keyof PanelElements, string> = {
@@ -108,6 +110,7 @@ const selectors: Record<keyof PanelElements, string> = {
   clearLogoButton: "#clearLogoButton",
   loadingScreenEnabled: "#loadingScreenEnabled",
   facebookChannelEnabled: "#facebookChannelEnabled",
+  facebookArtifactFormat: "#facebookArtifactFormat",
   loadingLogoPreview: "#loadingLogoPreview",
   loadingLogoPreviewImage: "#loadingLogoPreviewImage",
   loadingLogoPreviewMeta: "#loadingLogoPreviewMeta",
@@ -328,6 +331,7 @@ function persistedConfigurationFrom(elements: PanelElements): PersistedConfigura
     audioBitrateKbps: elements.audioBitrateKbps.value,
     loadingScreenEnabled: elements.loadingScreenEnabled.checked,
     facebookChannelEnabled: elements.facebookChannelEnabled.checked,
+    facebookArtifactFormat: elements.facebookArtifactFormat.value,
   };
 }
 
@@ -355,6 +359,9 @@ function restoreConfiguration(elements: PanelElements): void {
     if (typeof saved.audioBitrateKbps === "string") elements.audioBitrateKbps.value = saved.audioBitrateKbps;
     if (typeof saved.loadingScreenEnabled === "boolean") elements.loadingScreenEnabled.checked = saved.loadingScreenEnabled;
     if (typeof saved.facebookChannelEnabled === "boolean") elements.facebookChannelEnabled.checked = saved.facebookChannelEnabled;
+    if (saved.facebookArtifactFormat === "single-html" || saved.facebookArtifactFormat === "zip") {
+      elements.facebookArtifactFormat.value = saved.facebookArtifactFormat;
+    }
   } catch {
     // 忽略损坏或不可用的历史配置，回退到默认值。
   }
@@ -390,6 +397,7 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
   elements.audioBitrateKbps.disabled = active || !elements.audioEnabled.checked;
   elements.loadingScreenEnabled.disabled = active;
   elements.facebookChannelEnabled.disabled = active;
+  elements.facebookArtifactFormat.disabled = active || !elements.facebookChannelEnabled.checked;
   elements.importLogoButton.disabled = active;
   elements.clearLogoButton.disabled = active;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
@@ -513,6 +521,7 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
     payloadEncoding: elements.payloadEncoding.value as CreatorBuildConfiguration["payloadEncoding"],
     loadingScreenEnabled: elements.loadingScreenEnabled.checked,
     channels: elements.facebookChannelEnabled.checked ? ["Facebook"] : [],
+    facebookArtifactFormat: elements.facebookArtifactFormat.value as CreatorBuildConfiguration["facebookArtifactFormat"],
   };
 }
 
@@ -588,10 +597,12 @@ module.exports = Editor.Panel.define({
       "audioBitrateKbps",
       "loadingScreenEnabled",
       "facebookChannelEnabled",
+      "facebookArtifactFormat",
     ] as const) {
       bind(this.$[key], "change", () => saveConfiguration(this.$));
       bind(this.$[key], "input", () => saveConfiguration(this.$));
     }
+    bind(this.$.facebookChannelEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.startBuildButton, "click", () => void startBuild(this.$));
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
     bind(this.$.previewButton, "click", () => void openPreview(this.$));

@@ -14,6 +14,7 @@ export interface CreatorLoadingScreenRequest {
 export type CreatorPlayableBuildRequest = PlayableBuildRequest & {
   loadingScreen?: CreatorLoadingScreenRequest;
   channels?: readonly "Facebook"[];
+  facebookArtifactFormat?: "single-html" | "zip";
 };
 
 export interface CreatorWorkerRequest {

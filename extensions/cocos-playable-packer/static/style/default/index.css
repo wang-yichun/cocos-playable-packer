@@ -666,6 +666,40 @@ select {
   line-height: 1.35;
 }
 
+.channel-format-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 11px 12px;
+  border: 1px solid rgba(90, 113, 144, .34);
+  border-radius: 9px;
+  background: rgba(8, 14, 24, .32);
+}
+
+.channel-format-row > span {
+  display: grid;
+  gap: 3px;
+}
+
+.channel-format-row strong {
+  color: #dce7f4;
+  font-size: 11px;
+}
+
+.channel-format-row small {
+  color: #7f91a8;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+@media (max-width: 620px) {
+  .channel-format-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .switch-input {
   position: relative;
   flex: 0 0 38px;

@@ -479,6 +479,33 @@ export function createFacebookEncodedAssetMapArtifact(
   };
 }
 
+/**
+ * Creates the single-file Meta/Facebook variant from the same channel HTML
+ * used by the ZIP delivery.  Keeping this as a channel artifact lets callers
+ * validate and report both containers identically while leaving the choice to
+ * the user.
+ */
+export function createFacebookSingleHtmlArtifact(
+  sourceHtml: string,
+  config: ChannelBuildConfig,
+): ChannelDownloadArtifact {
+  if (config.platform !== "Facebook") {
+    throw new Error("Meta 单 HTML 产物目前仅用于 Meta / Facebook。");
+  }
+
+  const htmlBuffer = Buffer.from(createChannelHtml(sourceHtml, config), "utf8");
+  return {
+    body: htmlBuffer,
+    contentType: "text/html; charset=utf-8",
+    fileName: "facebook-playable.html",
+    deliveryFormat: "single-html",
+    entries: ["facebook-playable.html"],
+    entryBytes: { "facebook-playable.html": htmlBuffer.length },
+    sha256: sha256(htmlBuffer),
+    htmlBytes: htmlBuffer.length,
+  };
+}
+
 export function createChannelDownloadArtifact(
   sourceHtml: string,
   config: ChannelBuildConfig,

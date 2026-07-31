@@ -24,6 +24,23 @@ const request = parseCreatorWorkerRequest({
 assert.equal(request.taskId, "task-1");
 assert.equal(request.build.payloadEncoding, "html7");
 
+const htmlChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-facebook-html",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["Facebook"],
+    facebookArtifactFormat: "single-html",
+  },
+});
+assert.equal(htmlChannelRequest.build.facebookArtifactFormat, "single-html");
+
 const loadingScreenRequest = parseCreatorWorkerRequest({
   protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
   taskId: "task-loading-screen",
@@ -97,5 +114,6 @@ assert.match(workerSource, /listenForCancellation/);
 assert.match(workerSource, /signal: cancellation\.signal/);
 assert.match(workerSource, /normalizeLoadingScreenConfig\(request\.build\.loadingScreen\)/);
 assert.match(workerSource, /applyLoadingScreenToArtifact/);
+assert.match(workerSource, /createFacebookSingleHtmlArtifact/);
 
 console.log("Creator Worker protocol self-test passed.");

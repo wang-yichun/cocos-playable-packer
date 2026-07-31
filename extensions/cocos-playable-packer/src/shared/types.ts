@@ -54,6 +54,7 @@ export type CreatorBuildTaskStatus =
 
 export type CreatorImageMode = "none" | "squoosh" | "tinypng" | "webp";
 export type CreatorPayloadEncoding = "base64" | "base91" | "html7";
+export type CreatorFacebookArtifactFormat = "single-html" | "zip";
 /** Channel packages selected by the Creator panel. More channels can be added without changing the request shape. */
 export type CreatorChannel = "Facebook";
 
@@ -69,6 +70,8 @@ export interface CreatorBuildConfiguration {
   payloadEncoding: CreatorPayloadEncoding;
   loadingScreenEnabled: boolean;
   channels: readonly CreatorChannel[];
+  /** Explicit Meta/Facebook delivery container. ZIP remains the backwards-compatible default. */
+  facebookArtifactFormat?: CreatorFacebookArtifactFormat;
   /** Populated by the extension main process from the cached Logo, never persisted by the panel. */
   loadingLogoDataUrl?: string | null;
 }

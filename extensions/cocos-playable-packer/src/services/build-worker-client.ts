@@ -52,6 +52,7 @@ function buildRequest(configuration: CreatorBuildConfiguration, projectName: str
       logoDataUrl: configuration.loadingLogoDataUrl ?? null,
     },
     channels: configuration.channels,
+    facebookArtifactFormat: configuration.facebookArtifactFormat ?? "zip",
     projectName,
   };
 }

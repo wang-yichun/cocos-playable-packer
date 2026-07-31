@@ -6,6 +6,7 @@ import path from "node:path";
 import {
   createChannelDownloadArtifact,
   createFacebookMultiFileArtifact,
+  createFacebookSingleHtmlArtifact,
 } from "./liftoff-delivery.js";
 import {
   TEST_ANDROID_STORE_URL,
@@ -264,6 +265,13 @@ try {
   assert.equal(facebook.report.specificationStatus, "official-confirmed");
   assert.equal(facebook.report.maximumArtifactBytes, 5_000_000);
   assert.equal(facebook.report.actualFormat, "zip-multi-file");
+
+  const facebookHtmlArtifact = createFacebookSingleHtmlArtifact(sourceHtml, config("Facebook"));
+  const facebookHtmlFile = path.join(temporaryRoot, facebookHtmlArtifact.fileName);
+  await writeFile(facebookHtmlFile, facebookHtmlArtifact.body);
+  const facebookHtml = await validateChannelArtifactFile(facebookHtmlFile, "Facebook");
+  assert.equal(facebookHtml.report.valid, true);
+  assert.equal(facebookHtml.report.actualFormat, "single-html");
 
   const ironSourceArtifact = createChannelDownloadArtifact(
     sourceHtml,

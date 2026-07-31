@@ -157,13 +157,20 @@
             <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；当前已启用 Meta / Facebook 交付包。</p></div>
           </div>
           <label class="switch-row">
-            <span><strong>Meta / Facebook</strong><small>生成 facebook-playable.zip，自动注入 CTA、输出根目录 index.html，并生成渠道校验报告。</small></span>
+            <span><strong>Meta / Facebook</strong><small>按选择生成单 HTML 或 ZIP，自动注入 CTA，并生成渠道校验报告。</small></span>
             <span class="channel-option-actions">
               <a class="channel-preview-link" href="https://developers.facebook.com/tools/playable-preview/" target="_blank" rel="noreferrer">Meta Playable 测试页 ↗</a>
               <input id="facebookChannelEnabled" class="switch-input" type="checkbox">
             </span>
           </label>
-          <p class="field-note">Meta 包禁止 MRAID、JavaScript 跳转和外部网络资源；最终 ZIP 必须小于 5 MB。</p>
+          <label class="channel-format-row">
+            <span><strong>产物格式</strong><small>格式由你明确选择，不根据压缩后体积自动切换。</small></span>
+            <select id="facebookArtifactFormat" class="config-select">
+              <option value="single-html">单 HTML（facebook-playable.html）</option>
+              <option value="zip" selected>ZIP（facebook-playable.zip）</option>
+            </select>
+          </label>
+          <p class="field-note">Meta 包禁止 MRAID、JavaScript 跳转和外部网络资源；HTML 与 ZIP 均需按 Meta 账号内规范检查。</p>
         </article>
 
         <article class="config-card config-card--summary">

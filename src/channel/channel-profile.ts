@@ -136,7 +136,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      "当前实现会生成 ZIP（index.html + res.js）并注入 FbPlayableAd.onCTAClick；正式投放前仍需通过 Meta Validator。",
+      "当前交付支持单 HTML 或 ZIP，并注入 FbPlayableAd.onCTAClick；正式投放前仍需通过 Meta Validator。",
     ],
   },
   Liftoff: {
