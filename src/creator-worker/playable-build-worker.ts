@@ -134,8 +134,8 @@ async function main(): Promise<void> {
     if (selectedChannels.includes("Facebook")) {
       const facebookConfig = {
         platform: "Facebook" as const,
-        androidStoreUrl: "",
-        iosStoreUrl: "",
+        androidStoreUrl: request.build.androidStoreUrl ?? null,
+        iosStoreUrl: request.build.iosStoreUrl ?? null,
       };
       const artifact = request.build.facebookArtifactFormat === "single-html"
         ? createFacebookSingleHtmlArtifact(sourceHtml, facebookConfig)
@@ -162,8 +162,8 @@ async function main(): Promise<void> {
     if (selectedChannels.includes("Google")) {
       const googleConfig = {
         platform: "Google" as const,
-        androidStoreUrl: "",
-        iosStoreUrl: "",
+        androidStoreUrl: request.build.androidStoreUrl ?? null,
+        iosStoreUrl: request.build.iosStoreUrl ?? null,
       };
       const googleHtml = injectGoogleOrientationMeta(
         sourceHtml,
@@ -190,6 +190,32 @@ async function main(): Promise<void> {
         line: request.build.googleArtifactFormat === "single-html"
           ? `已生成 Google Ads 单 HTML 测试产物：${googleOutputFile}；校验报告：${validationReportFile}`
           : `已生成 Google Ads 渠道包：${googleOutputFile}；校验报告：${validationReportFile}`,
+      }});
+    }
+
+    if (selectedChannels.includes("AppLovin")) {
+      const appLovinConfig = {
+        platform: "AppLovin" as const,
+        androidStoreUrl: request.build.androidStoreUrl ?? null,
+        iosStoreUrl: request.build.iosStoreUrl ?? null,
+      };
+      const artifact = createChannelDownloadArtifact(sourceHtml, appLovinConfig);
+      const appLovinOutputFile = path.join(outputDirectory, artifact.fileName);
+      await writeFile(appLovinOutputFile, artifact.body);
+      const validation = await validateChannelArtifactFile(appLovinOutputFile, "AppLovin");
+      const validationReportFile = `${appLovinOutputFile}.channel-validation.json`;
+      await writeFile(validationReportFile, `${JSON.stringify({
+        inputFile: validation.inputFile,
+        entries: validation.entries,
+        ...validation.report,
+      }, null, 2)}\n`, "utf8");
+      if (!validation.report.valid) {
+        throw new Error(`AppLovin 渠道包校验失败：${validation.report.issues.map((issue) => issue.message).join("；")}`);
+      }
+      generatedArtifacts.push({ fileName: appLovinOutputFile, body: artifact.body, sha256: artifact.sha256 });
+      write({ type: "event", taskId: request.taskId, event: {
+        type: "log", stream: "stdout", timestamp: new Date().toISOString(), elapsedMs: result.durationMs,
+        line: `已生成 AppLovin 渠道包：${appLovinOutputFile}；校验报告：${validationReportFile}`,
       }});
     }
 

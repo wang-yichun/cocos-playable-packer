@@ -58,7 +58,7 @@ export type CreatorFacebookArtifactFormat = "single-html" | "zip";
 export type CreatorGoogleArtifactFormat = "single-html" | "zip";
 export type CreatorGoogleOrientation = "portrait" | "landscape" | "portrait,landscape";
 /** Channel packages selected by the Creator panel. More channels can be added without changing the request shape. */
-export type CreatorChannel = "Facebook" | "Google";
+export type CreatorChannel = "Facebook" | "Google" | "AppLovin";
 
 export interface CreatorBuildConfiguration {
   inputDirectory: string;
@@ -78,6 +78,9 @@ export interface CreatorBuildConfiguration {
   googleOrientation?: CreatorGoogleOrientation;
   /** Explicit Google delivery container. ZIP is the default required by App Campaign uploads. */
   googleArtifactFormat?: CreatorGoogleArtifactFormat;
+  /** Shared app-store targets. Current AppLovin delivery consumes them through mraid.open(). */
+  androidStoreUrl?: string | null;
+  iosStoreUrl?: string | null;
   /** Populated by the extension main process from the cached Logo, never persisted by the panel. */
   loadingLogoDataUrl?: string | null;
 }

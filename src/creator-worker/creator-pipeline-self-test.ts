@@ -61,6 +61,25 @@ assert.deepEqual(googleChannelRequest.build.channels, ["Google"]);
 assert.equal(googleChannelRequest.build.googleOrientation, "landscape");
 assert.equal(googleChannelRequest.build.googleArtifactFormat, "single-html");
 
+const appLovinChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-applovin-html",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["AppLovin"],
+    androidStoreUrl: "https://play.google.com/store/apps/details?id=com.google.android.apps.maps",
+    iosStoreUrl: "https://apps.apple.com/app/google-maps/id585027354",
+  },
+});
+assert.deepEqual(appLovinChannelRequest.build.channels, ["AppLovin"]);
+assert.match(appLovinChannelRequest.build.androidStoreUrl ?? "", /play\.google\.com/);
+
 const loadingScreenRequest = parseCreatorWorkerRequest({
   protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
   taskId: "task-loading-screen",
@@ -138,5 +157,8 @@ assert.match(workerSource, /createFacebookSingleHtmlArtifact/);
 assert.match(workerSource, /createChannelDownloadArtifact/);
 assert.match(workerSource, /injectGoogleOrientationMeta/);
 assert.match(workerSource, /googleArtifactFormat !== "single-html"/);
+assert.match(workerSource, /selectedChannels\.includes\("AppLovin"\)/);
+assert.match(workerSource, /validateChannelArtifactFile\(appLovinOutputFile, "AppLovin"\)/);
+assert.match(workerSource, /androidStoreUrl: request\.build\.androidStoreUrl \?\? null/);
 
 console.log("Creator Worker protocol self-test passed.");

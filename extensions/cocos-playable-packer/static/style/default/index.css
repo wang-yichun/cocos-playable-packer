@@ -489,6 +489,38 @@ select:disabled {
   margin-top: 14px;
 }
 
+.channel-shared-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.channel-shared-heading strong {
+  color: #e8eef8;
+  font-size: 13px;
+}
+
+.channel-shared-heading small {
+  color: #98a9bd;
+  line-height: 1.5;
+}
+
+.channel-store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.field-note--warning {
+  color: #fbbf24;
+}
+
+@media (max-width: 760px) {
+  .channel-store-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .config-card--muted {
   border-color: rgba(83, 99, 120, .26);
   background: linear-gradient(180deg, rgba(24, 33, 47, .78), rgba(18, 25, 36, .82));
@@ -967,9 +999,10 @@ select {
 }
 
 .channel-option-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 

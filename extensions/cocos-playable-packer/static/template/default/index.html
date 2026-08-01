@@ -154,7 +154,7 @@
         <article class="config-card config-card--wide config-card--channel">
           <div class="config-card-heading">
             <span class="config-index">06</span>
-            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；支持 Meta / Facebook 与 Google Ads 交付包。</p></div>
+            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；支持 Meta / Facebook、Google Ads 与 AppLovin 交付包。</p></div>
           </div>
           <section class="channel-group">
             <label class="switch-row">
@@ -201,6 +201,35 @@
               </label>
               <p class="field-note">Google ZIP 需小于 5 MB、最多 512 个文件。CTA 使用 <code>ExitApi.exit()</code>，最终请在 Google Ads App Campaign 预览中验证。</p>
             </div>
+          </section>
+          <section class="channel-group">
+            <label class="switch-row">
+              <span><strong>AppLovin</strong><small>生成单 HTML，注入 MRAID 2.0 生命周期和 CTA 桥，并生成渠道校验报告。</small></span>
+              <span class="channel-option-actions">
+                <a class="channel-preview-link" href="https://p.applov.in/playablePreview?create=1" target="_blank" rel="noreferrer">AppLovin Playable Preview ↗</a>
+                <input id="appLovinChannelEnabled" class="switch-input" type="checkbox">
+              </span>
+            </label>
+            <div id="appLovinChannelDetails" class="channel-group-details" hidden>
+              <p class="field-note">固定生成 <code>applovin-playable.html</code>。要求单文件且不超过 5 MB；资源必须内嵌，CTA 使用 <code>mraid.open()</code>。请在官方 Preview 中测试首个交互、横竖屏、静音和 CTA。</p>
+            </div>
+          </section>
+          <section class="channel-group channel-group--shared-settings">
+            <div class="channel-shared-heading">
+              <strong>安装跳转配置</strong>
+              <small>所有渠道共用。当前 AppLovin 会按设备选择并传给 <code>mraid.open()</code>；Meta 和 Google 仍由广告后台的 CTA 管理。</small>
+            </div>
+            <div class="channel-store-grid">
+              <label class="field">
+                <span>Android 商店 URL</span>
+                <input id="androidStoreUrl" type="url" value="https://play.google.com/store/apps/details?id=com.google.android.apps.maps" spellcheck="false">
+              </label>
+              <label class="field">
+                <span>iOS App Store URL</span>
+                <input id="iosStoreUrl" type="url" value="https://apps.apple.com/app/google-maps/id585027354" spellcheck="false">
+              </label>
+            </div>
+            <p id="defaultStoreUrlsWarning" class="field-note field-note--warning">当前使用 Google Maps 测试链接；正式投放前请替换 Android 和 iOS 两个地址。</p>
           </section>
         </article>
 

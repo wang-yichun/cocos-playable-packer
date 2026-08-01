@@ -37,6 +37,7 @@ assert.match(bridgeSource, /sizeChange/);
 assert.match(bridgeSource, /__MRAID_SIMULATOR__/);
 assert.match(bridgeSource, /Ready \+ 可见/);
 assert.match(bridgeSource, /mraid\.open/);
+assert.match(bridgeSource, /platform === "AppLovin"/);
 
 const runtimeSource = `(function () {
     var bootCount = 0;
@@ -237,5 +238,36 @@ const googleInjected = injectChannelDownloadBridge(html, {
 });
 assert.match(googleInjected, new RegExp(CHANNEL_DOWNLOAD_BRIDGE_MARKER));
 assert.doesNotMatch(googleInjected, new RegExp(CHANNEL_RUNTIME_GATE_MARKER));
+
+let appLovinCtaCalls = 0;
+const appLovinNoUrlWindow: Record<string, unknown> = {
+  location: { pathname: "/artifacts/test/game.html" },
+  innerWidth: 720,
+  innerHeight: 1080,
+  addEventListener() {},
+  dispatchEvent() { return true; },
+  mraid: {
+    getState: () => "default",
+    isViewable: () => false,
+    getScreenSize: () => ({ width: 720, height: 1080 }),
+    getAudioVolume: () => 100,
+    addEventListener() {},
+    open() { appLovinCtaCalls += 1; },
+  },
+};
+new Script(createChannelDownloadBridgeSource({
+  platform: "AppLovin",
+  androidStoreUrl: null,
+  iosStoreUrl: null,
+})).runInNewContext({
+  window: appLovinNoUrlWindow,
+  navigator: { userAgent: "test", platform: "Win32", maxTouchPoints: 0 },
+  document: {},
+  CustomEvent: TestEvent,
+  Event: TestEvent,
+  console,
+});
+(appLovinNoUrlWindow.xsd_playable as { download?: () => void }).download?.();
+assert.equal(appLovinCtaCalls, 1, "AppLovin 无商店 URL 时仍应委托宿主 CTA");
 
 console.log("MRAID channel adapter self-test passed.");

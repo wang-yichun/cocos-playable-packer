@@ -18,6 +18,7 @@ export enum PlayableChannel {
   None = "none",
   Meta = "meta",
   GoogleAds = "google-ads",
+  AppLovin = "applovin",
 }
 
 interface PlayableAdapter {
@@ -39,6 +40,7 @@ interface LegacyPlayableAdapter {
 
 type PlayableGlobal = typeof globalThis & {
   __PLAYABLE_ADAPTER__?: PlayableAdapter;
+  __PLATFORM?: unknown;
   __PLAYABLE_CHANNEL_CONFIG__?: {
     platform?: unknown;
   };
@@ -58,14 +60,19 @@ function runtimeGlobal(): PlayableGlobal {
  */
 export class PlayableFacade {
   /**
-   * 获取当前交付渠道。游戏代码只依赖这个枚举，无需探测 Meta 或 Google 的宿主 SDK。
+   * 获取当前交付渠道。游戏代码只依赖这个枚举，无需探测 Meta、Google 或 AppLovin 的宿主 SDK。
    */
   public static getChannel(): PlayableChannel {
-    switch (runtimeGlobal().__PLAYABLE_CHANNEL_CONFIG__?.platform) {
+    const runtime = runtimeGlobal();
+    const platform = runtime.__PLAYABLE_CHANNEL_CONFIG__?.platform ?? runtime.__PLATFORM;
+
+    switch (platform) {
       case "Facebook":
         return PlayableChannel.Meta;
       case "Google":
         return PlayableChannel.GoogleAds;
+      case "AppLovin":
+        return PlayableChannel.AppLovin;
       default:
         return PlayableChannel.None;
     }

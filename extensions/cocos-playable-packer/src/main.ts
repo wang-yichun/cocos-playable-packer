@@ -237,6 +237,21 @@ function normalizedImageQuality(value: number | undefined, label: string): numbe
   return quality;
 }
 
+function normalizeStoreUrl(value: string | null | undefined, label: string): string | null {
+  const trimmed = value?.trim() ?? "";
+  if (trimmed.length === 0) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new TypeError(`${label}必须是完整的 http 或 https URL。`);
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new TypeError(`${label}只支持 http 或 https URL。`);
+  }
+  return parsed.href;
+}
+
 function normalizeBuildConfiguration(configuration: CreatorBuildConfiguration): CreatorBuildConfiguration {
   const tinyPngApiKey = configuration.tinyPngApiKey?.trim() ?? "";
   if (configuration.imageMode === "tinypng" && tinyPngApiKey.length === 0) {
@@ -252,6 +267,8 @@ function normalizeBuildConfiguration(configuration: CreatorBuildConfiguration): 
     jpegQuality: normalizedImageQuality(configuration.jpegQuality, "JPG 质量"),
     tinyPngApiKey,
     facebookArtifactFormat,
+    androidStoreUrl: normalizeStoreUrl(configuration.androidStoreUrl, "Android 商店 URL"),
+    iosStoreUrl: normalizeStoreUrl(configuration.iosStoreUrl, "iOS App Store URL"),
   };
 }
 

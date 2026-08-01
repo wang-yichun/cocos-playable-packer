@@ -9,6 +9,8 @@ import type {
 
 const PACKAGE_NAME = "cocos-playable-packer";
 const DEFAULT_IMAGE_QUALITY = 80;
+const DEFAULT_ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=com.google.android.apps.maps";
+const DEFAULT_IOS_STORE_URL = "https://apps.apple.com/app/google-maps/id585027354";
 // v2 starts channel delivery from the conservative defaults: no channel selected and ZIP output.
 const CONFIGURATION_STORAGE_PREFIX = "cocos-playable-packer.configuration.v2";
 const panelLogoDataUrl = `data:image/png;base64,${readFileSync(
@@ -36,6 +38,11 @@ interface PanelElements {
   googleOrientation: HTMLSelectElement;
   googleArtifactFormat: HTMLSelectElement;
   googleChannelDetails: HTMLElement;
+  appLovinChannelEnabled: HTMLInputElement;
+  appLovinChannelDetails: HTMLElement;
+  androidStoreUrl: HTMLInputElement;
+  iosStoreUrl: HTMLInputElement;
+  defaultStoreUrlsWarning: HTMLElement;
   loadingLogoPreview: HTMLElement;
   loadingLogoPreviewImage: HTMLImageElement;
   loadingLogoPreviewMeta: HTMLElement;
@@ -107,6 +114,9 @@ interface PersistedConfiguration {
   googleChannelEnabled: boolean;
   googleOrientation: string;
   googleArtifactFormat: string;
+  appLovinChannelEnabled: boolean;
+  androidStoreUrl: string;
+  iosStoreUrl: string;
 }
 
 const selectors: Record<keyof PanelElements, string> = {
@@ -125,6 +135,11 @@ const selectors: Record<keyof PanelElements, string> = {
   googleOrientation: "#googleOrientation",
   googleArtifactFormat: "#googleArtifactFormat",
   googleChannelDetails: "#googleChannelDetails",
+  appLovinChannelEnabled: "#appLovinChannelEnabled",
+  appLovinChannelDetails: "#appLovinChannelDetails",
+  androidStoreUrl: "#androidStoreUrl",
+  iosStoreUrl: "#iosStoreUrl",
+  defaultStoreUrlsWarning: "#defaultStoreUrlsWarning",
   loadingLogoPreview: "#loadingLogoPreview",
   loadingLogoPreviewImage: "#loadingLogoPreviewImage",
   loadingLogoPreviewMeta: "#loadingLogoPreviewMeta",
@@ -349,6 +364,9 @@ function persistedConfigurationFrom(elements: PanelElements): PersistedConfigura
     googleChannelEnabled: elements.googleChannelEnabled.checked,
     googleOrientation: elements.googleOrientation.value,
     googleArtifactFormat: elements.googleArtifactFormat.value,
+    appLovinChannelEnabled: elements.appLovinChannelEnabled.checked,
+    androidStoreUrl: elements.androidStoreUrl.value,
+    iosStoreUrl: elements.iosStoreUrl.value,
   };
 }
 
@@ -386,6 +404,9 @@ function restoreConfiguration(elements: PanelElements): void {
     if (saved.googleArtifactFormat === "single-html" || saved.googleArtifactFormat === "zip") {
       elements.googleArtifactFormat.value = saved.googleArtifactFormat;
     }
+    if (typeof saved.appLovinChannelEnabled === "boolean") elements.appLovinChannelEnabled.checked = saved.appLovinChannelEnabled;
+    if (typeof saved.androidStoreUrl === "string") elements.androidStoreUrl.value = saved.androidStoreUrl;
+    if (typeof saved.iosStoreUrl === "string") elements.iosStoreUrl.value = saved.iosStoreUrl;
   } catch {
     // 忽略损坏或不可用的历史配置，回退到默认值。
   }
@@ -427,6 +448,12 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
   elements.googleChannelDetails.hidden = !elements.googleChannelEnabled.checked;
   elements.googleOrientation.disabled = active || !elements.googleChannelEnabled.checked;
   elements.googleArtifactFormat.disabled = active || !elements.googleChannelEnabled.checked;
+  elements.appLovinChannelEnabled.disabled = active;
+  elements.appLovinChannelDetails.hidden = !elements.appLovinChannelEnabled.checked;
+  elements.androidStoreUrl.disabled = active;
+  elements.iosStoreUrl.disabled = active;
+  elements.defaultStoreUrlsWarning.hidden = elements.androidStoreUrl.value.trim() !== DEFAULT_ANDROID_STORE_URL
+    && elements.iosStoreUrl.value.trim() !== DEFAULT_IOS_STORE_URL;
   elements.importLogoButton.disabled = active;
   elements.clearLogoButton.disabled = active;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
@@ -552,10 +579,13 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
     channels: [
       ...(elements.facebookChannelEnabled.checked ? ["Facebook" as const] : []),
       ...(elements.googleChannelEnabled.checked ? ["Google" as const] : []),
+      ...(elements.appLovinChannelEnabled.checked ? ["AppLovin" as const] : []),
     ],
     facebookArtifactFormat: elements.facebookArtifactFormat.value as CreatorBuildConfiguration["facebookArtifactFormat"],
     googleOrientation: elements.googleOrientation.value as CreatorBuildConfiguration["googleOrientation"],
     googleArtifactFormat: elements.googleArtifactFormat.value as CreatorBuildConfiguration["googleArtifactFormat"],
+    androidStoreUrl: elements.androidStoreUrl.value.trim() || null,
+    iosStoreUrl: elements.iosStoreUrl.value.trim() || null,
   };
 }
 
@@ -635,12 +665,18 @@ module.exports = Editor.Panel.define({
       "googleChannelEnabled",
       "googleOrientation",
       "googleArtifactFormat",
+      "appLovinChannelEnabled",
+      "androidStoreUrl",
+      "iosStoreUrl",
     ] as const) {
       bind(this.$[key], "change", () => saveConfiguration(this.$));
       bind(this.$[key], "input", () => saveConfiguration(this.$));
     }
     bind(this.$.facebookChannelEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.googleChannelEnabled, "change", () => syncConfigurationState(this.$, false));
+    bind(this.$.appLovinChannelEnabled, "change", () => syncConfigurationState(this.$, false));
+    bind(this.$.androidStoreUrl, "input", () => syncConfigurationState(this.$, false));
+    bind(this.$.iosStoreUrl, "input", () => syncConfigurationState(this.$, false));
     bind(this.$.startBuildButton, "click", () => void startBuild(this.$));
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
     bind(this.$.previewButton, "click", () => void openPreview(this.$));

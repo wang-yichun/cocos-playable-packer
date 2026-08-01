@@ -523,13 +523,21 @@ export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): s
 
     if (isMraidPlatform
       && window.mraid
-      && typeof window.mraid.open === "function"
-      && storeUrl) {
-      window.mraid.open(storeUrl);
-      return;
+      && typeof window.mraid.open === "function") {
+      if (storeUrl) {
+        window.mraid.open(storeUrl);
+        return;
+      }
+      if (platform === "AppLovin") {
+        window.mraid.open();
+        return;
+      }
     }
 
-    openStoreFallback(storeUrl);
+    if (storeUrl) {
+      openStoreFallback(storeUrl);
+      return;
+    }
   };
 
   bridge.install = bridge.download;
