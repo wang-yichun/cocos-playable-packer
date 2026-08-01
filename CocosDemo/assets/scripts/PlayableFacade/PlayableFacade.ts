@@ -9,6 +9,17 @@
 
 export type PlayableLifecycleEvent = "gameReady" | "gameStart" | "gameEnd";
 
+/**
+ * 当前运行时所处的试玩广告渠道。
+ *
+ * `None` 表示 Creator 编辑器、普通浏览器预览，或没有使用本 Packer 渠道交付包的环境。
+ */
+export enum PlayableChannel {
+  None = "none",
+  Meta = "meta",
+  GoogleAds = "google-ads",
+}
+
 interface PlayableAdapter {
   cta?: () => void;
   gameReady?: () => void;
@@ -28,6 +39,9 @@ interface LegacyPlayableAdapter {
 
 type PlayableGlobal = typeof globalThis & {
   __PLAYABLE_ADAPTER__?: PlayableAdapter;
+  __PLAYABLE_CHANNEL_CONFIG__?: {
+    platform?: unknown;
+  };
   xsd_playable?: LegacyPlayableAdapter;
 };
 
@@ -43,6 +57,20 @@ function runtimeGlobal(): PlayableGlobal {
  *     PlayableFacade.track("tutorial_complete");
  */
 export class PlayableFacade {
+  /**
+   * 获取当前交付渠道。游戏代码只依赖这个枚举，无需探测 Meta 或 Google 的宿主 SDK。
+   */
+  public static getChannel(): PlayableChannel {
+    switch (runtimeGlobal().__PLAYABLE_CHANNEL_CONFIG__?.platform) {
+      case "Facebook":
+        return PlayableChannel.Meta;
+      case "Google":
+        return PlayableChannel.GoogleAds;
+      default:
+        return PlayableChannel.None;
+    }
+  }
+
   /**
    * 仅在玩家主动点击“下载 / 安装 / 立即试玩”按钮时调用。
    * 返回 true 表示已找到并调用渠道桥接；false 表示当前为本地预览环境。

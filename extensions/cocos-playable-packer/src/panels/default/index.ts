@@ -9,7 +9,8 @@ import type {
 
 const PACKAGE_NAME = "cocos-playable-packer";
 const DEFAULT_IMAGE_QUALITY = 80;
-const CONFIGURATION_STORAGE_PREFIX = "cocos-playable-packer.configuration.v1";
+// v2 starts channel delivery from the conservative defaults: no channel selected and ZIP output.
+const CONFIGURATION_STORAGE_PREFIX = "cocos-playable-packer.configuration.v2";
 const panelLogoDataUrl = `data:image/png;base64,${readFileSync(
   path.join(__dirname, "../../../static/branding/cocos-playable-packer-logo.png"),
 ).toString("base64")}`;
@@ -30,6 +31,11 @@ interface PanelElements {
   loadingScreenEnabled: HTMLInputElement;
   facebookChannelEnabled: HTMLInputElement;
   facebookArtifactFormat: HTMLSelectElement;
+  facebookChannelDetails: HTMLElement;
+  googleChannelEnabled: HTMLInputElement;
+  googleOrientation: HTMLSelectElement;
+  googleArtifactFormat: HTMLSelectElement;
+  googleChannelDetails: HTMLElement;
   loadingLogoPreview: HTMLElement;
   loadingLogoPreviewImage: HTMLImageElement;
   loadingLogoPreviewMeta: HTMLElement;
@@ -98,6 +104,9 @@ interface PersistedConfiguration {
   loadingScreenEnabled: boolean;
   facebookChannelEnabled: boolean;
   facebookArtifactFormat: string;
+  googleChannelEnabled: boolean;
+  googleOrientation: string;
+  googleArtifactFormat: string;
 }
 
 const selectors: Record<keyof PanelElements, string> = {
@@ -111,6 +120,11 @@ const selectors: Record<keyof PanelElements, string> = {
   loadingScreenEnabled: "#loadingScreenEnabled",
   facebookChannelEnabled: "#facebookChannelEnabled",
   facebookArtifactFormat: "#facebookArtifactFormat",
+  facebookChannelDetails: "#facebookChannelDetails",
+  googleChannelEnabled: "#googleChannelEnabled",
+  googleOrientation: "#googleOrientation",
+  googleArtifactFormat: "#googleArtifactFormat",
+  googleChannelDetails: "#googleChannelDetails",
   loadingLogoPreview: "#loadingLogoPreview",
   loadingLogoPreviewImage: "#loadingLogoPreviewImage",
   loadingLogoPreviewMeta: "#loadingLogoPreviewMeta",
@@ -332,6 +346,9 @@ function persistedConfigurationFrom(elements: PanelElements): PersistedConfigura
     loadingScreenEnabled: elements.loadingScreenEnabled.checked,
     facebookChannelEnabled: elements.facebookChannelEnabled.checked,
     facebookArtifactFormat: elements.facebookArtifactFormat.value,
+    googleChannelEnabled: elements.googleChannelEnabled.checked,
+    googleOrientation: elements.googleOrientation.value,
+    googleArtifactFormat: elements.googleArtifactFormat.value,
   };
 }
 
@@ -361,6 +378,13 @@ function restoreConfiguration(elements: PanelElements): void {
     if (typeof saved.facebookChannelEnabled === "boolean") elements.facebookChannelEnabled.checked = saved.facebookChannelEnabled;
     if (saved.facebookArtifactFormat === "single-html" || saved.facebookArtifactFormat === "zip") {
       elements.facebookArtifactFormat.value = saved.facebookArtifactFormat;
+    }
+    if (typeof saved.googleChannelEnabled === "boolean") elements.googleChannelEnabled.checked = saved.googleChannelEnabled;
+    if (saved.googleOrientation === "portrait" || saved.googleOrientation === "landscape" || saved.googleOrientation === "portrait,landscape") {
+      elements.googleOrientation.value = saved.googleOrientation;
+    }
+    if (saved.googleArtifactFormat === "single-html" || saved.googleArtifactFormat === "zip") {
+      elements.googleArtifactFormat.value = saved.googleArtifactFormat;
     }
   } catch {
     // 忽略损坏或不可用的历史配置，回退到默认值。
@@ -397,7 +421,12 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
   elements.audioBitrateKbps.disabled = active || !elements.audioEnabled.checked;
   elements.loadingScreenEnabled.disabled = active;
   elements.facebookChannelEnabled.disabled = active;
+  elements.facebookChannelDetails.hidden = !elements.facebookChannelEnabled.checked;
   elements.facebookArtifactFormat.disabled = active || !elements.facebookChannelEnabled.checked;
+  elements.googleChannelEnabled.disabled = active;
+  elements.googleChannelDetails.hidden = !elements.googleChannelEnabled.checked;
+  elements.googleOrientation.disabled = active || !elements.googleChannelEnabled.checked;
+  elements.googleArtifactFormat.disabled = active || !elements.googleChannelEnabled.checked;
   elements.importLogoButton.disabled = active;
   elements.clearLogoButton.disabled = active;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
@@ -520,8 +549,13 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
     audioBitrateKbps: Number(elements.audioBitrateKbps.value) || 48,
     payloadEncoding: elements.payloadEncoding.value as CreatorBuildConfiguration["payloadEncoding"],
     loadingScreenEnabled: elements.loadingScreenEnabled.checked,
-    channels: elements.facebookChannelEnabled.checked ? ["Facebook"] : [],
+    channels: [
+      ...(elements.facebookChannelEnabled.checked ? ["Facebook" as const] : []),
+      ...(elements.googleChannelEnabled.checked ? ["Google" as const] : []),
+    ],
     facebookArtifactFormat: elements.facebookArtifactFormat.value as CreatorBuildConfiguration["facebookArtifactFormat"],
+    googleOrientation: elements.googleOrientation.value as CreatorBuildConfiguration["googleOrientation"],
+    googleArtifactFormat: elements.googleArtifactFormat.value as CreatorBuildConfiguration["googleArtifactFormat"],
   };
 }
 
@@ -598,11 +632,15 @@ module.exports = Editor.Panel.define({
       "loadingScreenEnabled",
       "facebookChannelEnabled",
       "facebookArtifactFormat",
+      "googleChannelEnabled",
+      "googleOrientation",
+      "googleArtifactFormat",
     ] as const) {
       bind(this.$[key], "change", () => saveConfiguration(this.$));
       bind(this.$[key], "input", () => saveConfiguration(this.$));
     }
     bind(this.$.facebookChannelEnabled, "change", () => syncConfigurationState(this.$, false));
+    bind(this.$.googleChannelEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.startBuildButton, "click", () => void startBuild(this.$));
     bind(this.$.cancelBuildButton, "click", () => void Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "cancel-build").then((task) => renderTask(this.$, task)));
     bind(this.$.previewButton, "click", () => void openPreview(this.$));

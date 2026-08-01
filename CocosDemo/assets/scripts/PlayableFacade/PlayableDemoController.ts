@@ -11,11 +11,16 @@ const { ccclass, property } = _decorator;
  */
 @ccclass("PlayableDemoController")
 export class PlayableDemoController extends Component {
+
   @property({ type: Label, tooltip: "可选：显示按钮调用结果。" })
   public statusLabel: Label | null = null;
 
+  @property({ type: Label, tooltip: "可选：显示渠道。" })
+  public channelLabel: Label | null = null;
+
   protected onLoad(): void {
     console.info(`[PlayableDemoController] onLoad`);
+    this.channelLabel.string = PlayableFacade.getChannel();
   }
 
   /** 绑定到任意“CTA / Install / Download”按钮。 */

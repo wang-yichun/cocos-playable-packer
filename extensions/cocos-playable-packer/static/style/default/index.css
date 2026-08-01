@@ -462,6 +462,33 @@ select:disabled {
   grid-column: 1 / -1;
 }
 
+.channel-group {
+  display: grid;
+  gap: 0;
+  padding: 14px 0;
+}
+
+.channel-group:first-of-type {
+  padding-top: 0;
+}
+
+.channel-group + .channel-group {
+  border-top: 1px solid rgba(90, 113, 144, .24);
+}
+
+.config-card--channel .switch-row {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.channel-group-details {
+  display: grid;
+  gap: 0;
+  margin-top: 14px;
+}
+
 .config-card--muted {
   border-color: rgba(83, 99, 120, .26);
   background: linear-gradient(180deg, rgba(24, 33, 47, .78), rgba(18, 25, 36, .82));
@@ -671,11 +698,7 @@ select {
   grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
   align-items: center;
   gap: 12px;
-  margin-top: 10px;
-  padding: 11px 12px;
-  border: 1px solid rgba(90, 113, 144, .34);
-  border-radius: 9px;
-  background: rgba(8, 14, 24, .32);
+  padding: 10px 0;
 }
 
 .channel-format-row > span {

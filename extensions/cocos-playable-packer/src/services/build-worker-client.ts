@@ -53,6 +53,8 @@ function buildRequest(configuration: CreatorBuildConfiguration, projectName: str
     },
     channels: configuration.channels,
     facebookArtifactFormat: configuration.facebookArtifactFormat ?? "zip",
+    googleOrientation: configuration.googleOrientation ?? "portrait",
+    googleArtifactFormat: configuration.googleArtifactFormat ?? "zip",
     projectName,
   };
 }

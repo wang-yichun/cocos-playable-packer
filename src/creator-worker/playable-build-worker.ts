@@ -1,4 +1,4 @@
-import { access, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { access, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { runPlayableBuild } from "../core/index.js";
@@ -14,8 +14,11 @@ import {
   type CreatorWorkerRequest,
 } from "./protocol.js";
 import {
+  createChannelDownloadArtifact,
   createFacebookEncodedAssetMapArtifact,
   createFacebookSingleHtmlArtifact,
+  createGoogleSingleHtmlArtifact,
+  injectGoogleOrientationMeta,
 } from "../channel/liftoff-delivery.js";
 import { validateChannelArtifactFile } from "../channel/channel-spec-validation-file.js";
 
@@ -101,7 +104,7 @@ async function main(): Promise<void> {
 
   const cleanupTinyPngEnv = await ensureTinyPngEnvCompatibility(request);
   try {
-    const isFacebookBuild = request.build.channels?.includes("Facebook") === true;
+    const selectedChannels = request.build.channels ?? [];
     let result = await runPlayableBuild(request.build, {
       runtime: {
         packageRoot: request.packageRoot,
@@ -124,16 +127,19 @@ async function main(): Promise<void> {
       await applyLoadingScreenToArtifact(result.outputFile, result.reportFile, loadingScreen);
     }
 
-    if (isFacebookBuild) {
-      const outputDirectory = path.dirname(result.outputFile);
+    const sourceHtml = await readFile(result.outputFile, "utf8");
+    const outputDirectory = path.dirname(result.outputFile);
+    const generatedArtifacts: Array<{ fileName: string; body: Buffer; sha256: string }> = [];
+
+    if (selectedChannels.includes("Facebook")) {
       const facebookConfig = {
         platform: "Facebook" as const,
         androidStoreUrl: "",
         iosStoreUrl: "",
       };
       const artifact = request.build.facebookArtifactFormat === "single-html"
-        ? createFacebookSingleHtmlArtifact(await readFile(result.outputFile, "utf8"), facebookConfig)
-        : createFacebookEncodedAssetMapArtifact(await readFile(result.outputFile, "utf8"), facebookConfig);
+        ? createFacebookSingleHtmlArtifact(sourceHtml, facebookConfig)
+        : createFacebookEncodedAssetMapArtifact(sourceHtml, facebookConfig);
       const facebookOutputFile = path.join(outputDirectory, artifact.fileName);
       await writeFile(facebookOutputFile, artifact.body);
       const validation = await validateChannelArtifactFile(facebookOutputFile, "Facebook");
@@ -146,16 +152,54 @@ async function main(): Promise<void> {
       if (!validation.report.valid) {
         throw new Error(`Meta / Facebook 渠道包校验失败：${validation.report.issues.map((issue) => issue.message).join("；")}`);
       }
-      const artifactInfo = await stat(facebookOutputFile);
+      generatedArtifacts.push({ fileName: facebookOutputFile, body: artifact.body, sha256: artifact.sha256 });
       write({ type: "event", taskId: request.taskId, event: {
         type: "log", stream: "stdout", timestamp: new Date().toISOString(), elapsedMs: result.durationMs,
         line: `已生成 Meta / Facebook 渠道包：${facebookOutputFile}；校验报告：${validationReportFile}`,
       }});
+    }
+
+    if (selectedChannels.includes("Google")) {
+      const googleConfig = {
+        platform: "Google" as const,
+        androidStoreUrl: "",
+        iosStoreUrl: "",
+      };
+      const googleHtml = injectGoogleOrientationMeta(
+        sourceHtml,
+        request.build.googleOrientation ?? "portrait",
+      );
+      const artifact = request.build.googleArtifactFormat === "single-html"
+        ? createGoogleSingleHtmlArtifact(googleHtml, googleConfig)
+        : createChannelDownloadArtifact(googleHtml, googleConfig);
+      const googleOutputFile = path.join(outputDirectory, artifact.fileName);
+      await writeFile(googleOutputFile, artifact.body);
+      const validation = await validateChannelArtifactFile(googleOutputFile, "Google");
+      const validationReportFile = `${googleOutputFile}.channel-validation.json`;
+      await writeFile(validationReportFile, `${JSON.stringify({
+        inputFile: validation.inputFile,
+        entries: validation.entries,
+        ...validation.report,
+      }, null, 2)}\n`, "utf8");
+      if (!validation.report.valid && request.build.googleArtifactFormat !== "single-html") {
+        throw new Error(`Google Ads 渠道包校验失败：${validation.report.issues.map((issue) => issue.message).join("；")}`);
+      }
+      generatedArtifacts.push({ fileName: googleOutputFile, body: artifact.body, sha256: artifact.sha256 });
+      write({ type: "event", taskId: request.taskId, event: {
+        type: "log", stream: "stdout", timestamp: new Date().toISOString(), elapsedMs: result.durationMs,
+        line: request.build.googleArtifactFormat === "single-html"
+          ? `已生成 Google Ads 单 HTML 测试产物：${googleOutputFile}；校验报告：${validationReportFile}`
+          : `已生成 Google Ads 渠道包：${googleOutputFile}；校验报告：${validationReportFile}`,
+      }});
+    }
+
+    const latestArtifact = generatedArtifacts.at(-1);
+    if (latestArtifact !== undefined) {
       result = {
         ...result,
-        outputFile: facebookOutputFile,
-        outputBytes: artifactInfo.size,
-        outputSha256: artifact.sha256,
+        outputFile: latestArtifact.fileName,
+        outputBytes: latestArtifact.body.length,
+        outputSha256: latestArtifact.sha256,
       };
     }
 

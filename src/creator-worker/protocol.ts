@@ -13,8 +13,10 @@ export interface CreatorLoadingScreenRequest {
 
 export type CreatorPlayableBuildRequest = PlayableBuildRequest & {
   loadingScreen?: CreatorLoadingScreenRequest;
-  channels?: readonly "Facebook"[];
+  channels?: readonly ("Facebook" | "Google")[];
   facebookArtifactFormat?: "single-html" | "zip";
+  googleOrientation?: "portrait" | "landscape" | "portrait,landscape";
+  googleArtifactFormat?: "single-html" | "zip";
 };
 
 export interface CreatorWorkerRequest {

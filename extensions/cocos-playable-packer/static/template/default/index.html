@@ -154,23 +154,54 @@
         <article class="config-card config-card--wide config-card--channel">
           <div class="config-card-heading">
             <span class="config-index">06</span>
-            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；当前已启用 Meta / Facebook 交付包。</p></div>
+            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；支持 Meta / Facebook 与 Google Ads 交付包。</p></div>
           </div>
-          <label class="switch-row">
-            <span><strong>Meta / Facebook</strong><small>按选择生成单 HTML 或 ZIP，自动注入 CTA，并生成渠道校验报告。</small></span>
-            <span class="channel-option-actions">
-              <a class="channel-preview-link" href="https://developers.facebook.com/tools/playable-preview/" target="_blank" rel="noreferrer">Meta Playable 测试页 ↗</a>
-              <input id="facebookChannelEnabled" class="switch-input" type="checkbox">
-            </span>
-          </label>
-          <label class="channel-format-row">
-            <span><strong>产物格式</strong><small>格式由你明确选择，不根据压缩后体积自动切换。</small></span>
-            <select id="facebookArtifactFormat" class="config-select">
-              <option value="single-html">单 HTML（facebook-playable.html）</option>
-              <option value="zip" selected>ZIP（facebook-playable.zip）</option>
-            </select>
-          </label>
-          <p class="field-note">Meta 包禁止 MRAID、JavaScript 跳转和外部网络资源；HTML 与 ZIP 均需按 Meta 账号内规范检查。</p>
+          <section class="channel-group">
+            <label class="switch-row">
+              <span><strong>Meta / Facebook</strong><small>按选择生成单 HTML 或 ZIP，自动注入 CTA，并生成渠道校验报告。</small></span>
+              <span class="channel-option-actions">
+                <a class="channel-preview-link" href="https://developers.facebook.com/tools/playable-preview/" target="_blank" rel="noreferrer">Meta Playable 测试页 ↗</a>
+                <input id="facebookChannelEnabled" class="switch-input" type="checkbox">
+              </span>
+            </label>
+            <div id="facebookChannelDetails" class="channel-group-details" hidden>
+              <label class="channel-format-row">
+                <span><strong>产物格式</strong><small>格式由你明确选择，不根据压缩后体积自动切换。</small></span>
+                <select id="facebookArtifactFormat" class="config-select">
+                  <option value="single-html">单 HTML（facebook-playable.html）</option>
+                  <option value="zip" selected>ZIP（facebook-playable.zip）</option>
+                </select>
+              </label>
+              <p class="field-note">Meta 包禁止 MRAID、JavaScript 跳转和外部网络资源；HTML 与 ZIP 均需按 Meta 账号内规范检查。</p>
+            </div>
+          </section>
+          <section class="channel-group">
+            <label class="switch-row">
+              <span><strong>Google Ads</strong><small>生成单 HTML 或 <code>index.html + res.js</code> ZIP，注入 Exit API 并生成渠道校验报告。</small></span>
+              <span class="channel-option-actions">
+                <a class="channel-preview-link" href="https://ads.google.com/home/" target="_blank" rel="noreferrer">Google Ads 工作台 ↗</a>
+                <input id="googleChannelEnabled" class="switch-input" type="checkbox">
+              </span>
+            </label>
+            <div id="googleChannelDetails" class="channel-group-details" hidden>
+              <label class="channel-format-row">
+                <span><strong>产物格式</strong><small>测试可选单 HTML；正式 App Campaign 上传应使用 ZIP。</small></span>
+                <select id="googleArtifactFormat" class="config-select">
+                  <option value="single-html">单 HTML（google-playable.html）</option>
+                  <option value="zip" selected>ZIP（google-playable.zip）</option>
+                </select>
+              </label>
+              <label class="channel-format-row">
+                <span><strong>投放方向</strong><small>写入 Google Ads 所需的 <code>ad.orientation</code> 元数据。</small></span>
+                <select id="googleOrientation" class="config-select">
+                  <option value="portrait" selected>竖屏（portrait）</option>
+                  <option value="landscape">横屏（landscape）</option>
+                  <option value="portrait,landscape">竖屏和横屏（responsive）</option>
+                </select>
+              </label>
+              <p class="field-note">Google ZIP 需小于 5 MB、最多 512 个文件。CTA 使用 <code>ExitApi.exit()</code>，最终请在 Google Ads App Campaign 预览中验证。</p>
+            </div>
+          </section>
         </article>
 
         <article class="config-card config-card--summary">

@@ -18,6 +18,7 @@ import {
 import {
   CHANNEL_EXTERNAL_SCRIPT_MARKER,
   createChannelDownloadArtifact,
+  createGoogleSingleHtmlArtifact,
   GOOGLE_EXIT_API_URL,
 } from "./liftoff-delivery.js";
 import {
@@ -96,6 +97,14 @@ assert.equal(
   true,
   "Google ZIP 应使用确定性元数据。",
 );
+
+const googleHtmlArtifact = createGoogleSingleHtmlArtifact(sourceHtml, config("Google"));
+assert.equal(googleHtmlArtifact.contentType, "text/html; charset=utf-8");
+assert.equal(googleHtmlArtifact.fileName, "google-playable.html");
+assert.equal(googleHtmlArtifact.deliveryFormat, "single-html");
+assert.deepEqual(googleHtmlArtifact.entries, ["google-playable.html"]);
+assert.match(googleHtmlArtifact.body.toString("utf8"), /window\.ExitApi\.exit/);
+assert.match(googleHtmlArtifact.body.toString("utf8"), new RegExp(GOOGLE_EXIT_API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "remaining-channel-test-"));
 try {

@@ -41,6 +41,26 @@ const htmlChannelRequest = parseCreatorWorkerRequest({
 });
 assert.equal(htmlChannelRequest.build.facebookArtifactFormat, "single-html");
 
+const googleChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-google-zip",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["Google"],
+    googleOrientation: "landscape",
+    googleArtifactFormat: "single-html",
+  },
+});
+assert.deepEqual(googleChannelRequest.build.channels, ["Google"]);
+assert.equal(googleChannelRequest.build.googleOrientation, "landscape");
+assert.equal(googleChannelRequest.build.googleArtifactFormat, "single-html");
+
 const loadingScreenRequest = parseCreatorWorkerRequest({
   protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
   taskId: "task-loading-screen",
@@ -115,5 +135,8 @@ assert.match(workerSource, /signal: cancellation\.signal/);
 assert.match(workerSource, /normalizeLoadingScreenConfig\(request\.build\.loadingScreen\)/);
 assert.match(workerSource, /applyLoadingScreenToArtifact/);
 assert.match(workerSource, /createFacebookSingleHtmlArtifact/);
+assert.match(workerSource, /createChannelDownloadArtifact/);
+assert.match(workerSource, /injectGoogleOrientationMeta/);
+assert.match(workerSource, /googleArtifactFormat !== "single-html"/);
 
 console.log("Creator Worker protocol self-test passed.");

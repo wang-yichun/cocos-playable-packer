@@ -351,6 +351,19 @@ export function createChannelHtml(
     : bridgeHtml;
 }
 
+export function injectGoogleOrientationMeta(
+  html: string,
+  orientation: "portrait" | "landscape" | "portrait,landscape",
+): string {
+  if (/<meta\b[^>]*name\s*=\s*["']ad\.(?:orientation|size)["']/i.test(html)) {
+    return html;
+  }
+  return injectHeadScript(
+    html,
+    `<meta name="ad.orientation" content="${orientation}">`,
+  );
+}
+
 /**
  * Meta preview is more compatible with Cocos' original multi-file web build:
  * index.html plus its relative JS, WASM, JSON, and asset files in the same ZIP.
@@ -501,6 +514,29 @@ export function createFacebookSingleHtmlArtifact(
     deliveryFormat: "single-html",
     entries: ["facebook-playable.html"],
     entryBytes: { "facebook-playable.html": htmlBuffer.length },
+    sha256: sha256(htmlBuffer),
+    htmlBytes: htmlBuffer.length,
+  };
+}
+
+export function createGoogleSingleHtmlArtifact(
+  sourceHtml: string,
+  config: ChannelBuildConfig,
+): ChannelDownloadArtifact {
+  if (config.platform !== "Google") {
+    throw new Error("Google 单 HTML 产物目前仅用于 Google Ads。");
+  }
+  const htmlBuffer = Buffer.from(
+    injectGoogleExitApiScript(createChannelHtml(sourceHtml, config)),
+    "utf8",
+  );
+  return {
+    body: htmlBuffer,
+    contentType: "text/html; charset=utf-8",
+    fileName: "google-playable.html",
+    deliveryFormat: "single-html",
+    entries: ["google-playable.html"],
+    entryBytes: { "google-playable.html": htmlBuffer.length },
     sha256: sha256(htmlBuffer),
     htmlBytes: htmlBuffer.length,
   };

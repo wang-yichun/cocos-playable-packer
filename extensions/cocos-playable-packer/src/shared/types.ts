@@ -55,8 +55,10 @@ export type CreatorBuildTaskStatus =
 export type CreatorImageMode = "none" | "squoosh" | "tinypng" | "webp";
 export type CreatorPayloadEncoding = "base64" | "base91" | "html7";
 export type CreatorFacebookArtifactFormat = "single-html" | "zip";
+export type CreatorGoogleArtifactFormat = "single-html" | "zip";
+export type CreatorGoogleOrientation = "portrait" | "landscape" | "portrait,landscape";
 /** Channel packages selected by the Creator panel. More channels can be added without changing the request shape. */
-export type CreatorChannel = "Facebook";
+export type CreatorChannel = "Facebook" | "Google";
 
 export interface CreatorBuildConfiguration {
   inputDirectory: string;
@@ -72,6 +74,10 @@ export interface CreatorBuildConfiguration {
   channels: readonly CreatorChannel[];
   /** Explicit Meta/Facebook delivery container. ZIP remains the backwards-compatible default. */
   facebookArtifactFormat?: CreatorFacebookArtifactFormat;
+  /** Google Ads orientation metadata written to the generated HTML5 ZIP. */
+  googleOrientation?: CreatorGoogleOrientation;
+  /** Explicit Google delivery container. ZIP is the default required by App Campaign uploads. */
+  googleArtifactFormat?: CreatorGoogleArtifactFormat;
   /** Populated by the extension main process from the cached Logo, never persisted by the panel. */
   loadingLogoDataUrl?: string | null;
 }
