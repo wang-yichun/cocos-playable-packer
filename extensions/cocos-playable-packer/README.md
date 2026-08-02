@@ -52,7 +52,7 @@
 
 ### CocosDemo 与 PlayableFacade
 
-发行包内附带 `cocos-playable-packer/CocosDemo` 示例工程。示例工程展示了如何在 Cocos Creator 游戏代码中只依赖 `PlayableFacade`，而不直接调用 `FbPlayableAd`、`mraid`、`ExitApi` 或其他渠道 SDK。工程中的 `assets/scripts/PlayableFacade/PlayableFacade.ts` 提供 CTA、生命周期、事件上报、渠道和方向查询等接口；`PlayableDemoController.ts` 展示了如何绑定到 Cocos Button 的 Click Events。
+发行包内附带 `cocos-playable-packer/CocosDemo` 示例工程。示例工程展示了如何在 Cocos Creator 游戏代码中只依赖 `PlayableFacade`，而不直接调用 `FbPlayableAd`、`mraid`、`ExitApi` 或其他渠道 SDK。工程中的 `assets/scripts/PlayableFacade/PlayableFacade.ts` 提供 CTA、生命周期、事件上报、渠道和方向查询，以及可见性、屏幕尺寸、音量读取和变化订阅接口；`PlayableDemoController.ts` 展示了如何绑定到 Cocos Button 的 Click Events。
 
 游戏脚本可以按下面的方式接入：
 
@@ -64,9 +64,15 @@ PlayableFacade.gameStart();
 PlayableFacade.track("level_complete");
 PlayableFacade.cta();
 PlayableFacade.gameEnd();
+
+const size = PlayableFacade.getScreenSize();
+const volume = PlayableFacade.getAudioVolume();
+const unsubscribe = PlayableFacade.onAudioVolumeChange((state) => {
+  console.log(state.volume, state.enabled);
+});
 ```
 
-在 Creator 编辑器和普通浏览器预览中，没有渠道宿主桥接时这些调用会安全返回；打包到目标渠道后，插件会注入对应的渠道适配器。Demo 工程只保留源文件，发布包不包含 `temp`、`library` 和 `build` 等 Creator 生成目录。
+在 Creator 编辑器和普通浏览器预览中，没有渠道宿主桥接时这些调用会安全返回；打包到目标渠道后，插件会注入对应的渠道适配器。尺寸和音量变化通过 Facade 事件订阅传递给游戏代码，游戏无需读取 `window.__PLAYABLE_*` 全局变量。Demo 工程只保留源文件，发布包不包含 `temp`、`library` 和 `build` 等 Creator 生成目录。
 
 ## 使用教程
 

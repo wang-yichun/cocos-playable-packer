@@ -9,6 +9,18 @@
 
 export type PlayableLifecycleEvent = "gameReady" | "gameStart" | "gameEnd";
 
+export interface PlayableScreenSize {
+  width: number;
+  height: number;
+}
+
+export interface PlayableAudioState {
+  volume: number;
+  enabled: boolean;
+}
+
+export type PlayableUnsubscribe = () => void;
+
 /**
  * 当前运行时所处的试玩广告渠道。
  *
@@ -54,11 +66,60 @@ type PlayableGlobal = typeof globalThis & {
     platform?: unknown;
     orientation?: unknown;
   };
+  __PLAYABLE_VIEWABLE__?: boolean;
+  __PLAYABLE_SCREEN_SIZE__?: PlayableScreenSize;
+  __PLAYABLE_AUDIO_VOLUME__?: number;
+  volumeAudio?: number;
+  volumeSwitch?: boolean;
   xsd_playable?: LegacyPlayableAdapter;
+};
+
+type PlayableEventTarget = {
+  addEventListener: (type: string, listener: (event: Event) => void) => void;
+  removeEventListener: (type: string, listener: (event: Event) => void) => void;
 };
 
 function runtimeGlobal(): PlayableGlobal {
   return globalThis as PlayableGlobal;
+}
+
+function eventTarget(): PlayableEventTarget | null {
+  const runtime = runtimeGlobal() as PlayableGlobal & Partial<PlayableEventTarget>;
+  return typeof runtime.addEventListener === "function"
+    && typeof runtime.removeEventListener === "function"
+    ? runtime as PlayableEventTarget
+    : null;
+}
+
+function normalizeScreenSize(value: unknown): PlayableScreenSize | null {
+  if (typeof value !== "object" || value === null) return null;
+  const candidate = value as { width?: unknown; height?: unknown };
+  const width = Number(candidate.width);
+  const height = Number(candidate.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+  return { width: Math.round(width), height: Math.round(height) };
+}
+
+function normalizeAudioState(value: unknown): PlayableAudioState | null {
+  if (typeof value === "number") {
+    const volume = Math.max(0, Math.min(100, value));
+    return { volume, enabled: volume > 0 };
+  }
+  if (typeof value !== "object" || value === null) return null;
+  const candidate = value as { volume?: unknown; enabled?: unknown };
+  const volume = Number(candidate.volume);
+  if (!Number.isFinite(volume)) return null;
+  const normalizedVolume = Math.max(0, Math.min(100, volume));
+  return {
+    volume: normalizedVolume,
+    enabled: typeof candidate.enabled === "boolean"
+      ? candidate.enabled
+      : normalizedVolume > 0,
+  };
+}
+
+function eventDetail<T>(event: Event): T | undefined {
+  return (event as CustomEvent<T>).detail;
 }
 
 /**
@@ -106,6 +167,67 @@ export class PlayableFacade {
       default:
         return PlayableOrientation.None;
     }
+  }
+
+  /**
+   * Returns whether the playable is currently visible to the ad host.
+   * Local browser previews are treated as visible when the host has not
+   * supplied a viewability signal.
+   */
+  public static isViewable(): boolean {
+    return runtimeGlobal().__PLAYABLE_VIEWABLE__ ?? true;
+  }
+
+  /** Returns the latest MRAID/container size, or the browser viewport size. */
+  public static getScreenSize(): PlayableScreenSize | null {
+    const runtime = runtimeGlobal() as PlayableGlobal & {
+      innerWidth?: number;
+      innerHeight?: number;
+    };
+    const reportedSize = normalizeScreenSize(runtime.__PLAYABLE_SCREEN_SIZE__);
+    if (reportedSize !== null) return reportedSize;
+    return normalizeScreenSize({ width: runtime.innerWidth, height: runtime.innerHeight });
+  }
+
+  /** Returns the latest host audio volume as a percentage from 0 to 100. */
+  public static getAudioVolume(): number {
+    const runtime = runtimeGlobal();
+    const reportedVolume = Number(runtime.__PLAYABLE_AUDIO_VOLUME__);
+    if (Number.isFinite(reportedVolume)) {
+      return Math.max(0, Math.min(100, reportedVolume));
+    }
+    const legacyVolume = Number(runtime.volumeAudio);
+    if (Number.isFinite(legacyVolume)) {
+      return Math.max(0, Math.min(100, legacyVolume * 100));
+    }
+    return 100;
+  }
+
+  /** Returns whether host audio is currently enabled. */
+  public static isAudioEnabled(): boolean {
+    return runtimeGlobal().volumeSwitch ?? this.getAudioVolume() > 0;
+  }
+
+  /** Subscribe to host visibility changes and receive an unsubscribe function. */
+  public static onViewableChange(listener: (viewable: boolean) => void): PlayableUnsubscribe {
+    return this.subscribe("playable-viewable-change", (event) => {
+      const value = eventDetail<boolean>(event);
+      return typeof value === "boolean" ? value : undefined;
+    }, listener);
+  }
+
+  /** Subscribe to host/container size changes and receive an unsubscribe function. */
+  public static onScreenSizeChange(listener: (size: PlayableScreenSize) => void): PlayableUnsubscribe {
+    return this.subscribe("playable-size-change", (event) => {
+      return normalizeScreenSize(eventDetail<PlayableScreenSize>(event));
+    }, listener);
+  }
+
+  /** Subscribe to host audio-volume changes and receive an unsubscribe function. */
+  public static onAudioVolumeChange(listener: (state: PlayableAudioState) => void): PlayableUnsubscribe {
+    return this.subscribe("playable-audio-volume-change", (event) => {
+      return normalizeAudioState(eventDetail<PlayableAudioState | number>(event));
+    }, listener);
   }
 
   /**
@@ -162,6 +284,22 @@ export class PlayableFacade {
     }
 
     return false;
+  }
+
+  private static subscribe<T>(
+    eventName: string,
+    readValue: (event: Event) => T | undefined | null,
+    listener: (value: T) => void,
+  ): PlayableUnsubscribe {
+    const target = eventTarget();
+    if (target === null) return () => {};
+
+    const handler = (event: Event): void => {
+      const value = readValue(event);
+      if (value !== undefined && value !== null) listener(value);
+    };
+    target.addEventListener(eventName, handler);
+    return () => target.removeEventListener(eventName, handler);
   }
 
   private static lifecycle(event: PlayableLifecycleEvent): boolean {
