@@ -18,9 +18,13 @@ export class PlayableDemoController extends Component {
   @property({ type: Label, tooltip: "可选：显示渠道。" })
   public channelLabel: Label | null = null;
 
+  @property({ type: Label, tooltip: "可选：显示渠道。" })
+  public orientationLabel: Label | null = null;
+
   protected onLoad(): void {
     console.info(`[PlayableDemoController] onLoad`);
     this.channelLabel.string = PlayableFacade.getChannel();
+    this.orientationLabel.string = PlayableFacade.getOrientation();
   }
 
   /** 绑定到任意“CTA / Install / Download”按钮。 */
