@@ -725,6 +725,28 @@ select {
   line-height: 1.35;
 }
 
+.cache-management-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.cache-management-row > div {
+  min-width: 0;
+}
+
+.cache-management-row .field-help {
+  margin: 6px 0 0;
+}
+
+@media (max-width: 620px) {
+  .cache-management-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .channel-format-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);

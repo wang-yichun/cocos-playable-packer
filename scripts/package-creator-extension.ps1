@@ -59,6 +59,7 @@ $releaseRoot = Join-Path $repositoryRoot "release"
 $archivePath = Join-Path $releaseRoot "$extensionName-v$version.zip"
 $stagingRoot = Join-Path $releaseRoot ".package-staging-$extensionName"
 $stagingExtensionRoot = Join-Path $stagingRoot $extensionName
+$stagingDemoRoot = Join-Path $stagingRoot "CocosDemo"
 $demoProjectRoot = Join-Path $repositoryRoot "CocosDemo"
 $demoExtensionsRoot = Join-Path $demoProjectRoot "extensions"
 $demoExtensionRoot = Join-Path $demoExtensionsRoot $extensionName
@@ -73,11 +74,12 @@ try {
 
   # Only production files are copied. runtime/src is included because the image
   # quality flow invokes its TypeScript CLI through tsx at runtime.
-  # Caches, workspaces, logs, and locally saved loading-logo assets stay out.
+  # Caches, workspaces, and logs stay out. The bundled default loading Logo is
+  # intentionally included so the installed extension has a ready-made asset.
   foreach ($file in @(".gitignore", "package.json", "README.md")) {
     Copy-Item -LiteralPath (Join-Path $extensionRoot $file) -Destination $stagingExtensionRoot
   }
-  foreach ($directory in @("dist", "runtime\src", "runtime\node_modules", "static\branding", "static\style", "static\template")) {
+  foreach ($directory in @(".logo-cache", "dist", "runtime\src", "runtime\node_modules", "static\branding", "static\style", "static\template")) {
     $source = Join-Path $extensionRoot $directory
     $destination = Join-Path $stagingExtensionRoot $directory
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
@@ -97,6 +99,31 @@ try {
     Copy-Item -LiteralPath $source -Destination $destination -Force
   }
 
+  # Include the demo project as source material. Creator regenerates these
+  # directories, so shipping them would make the release unnecessarily large
+  # and can make the project depend on the machine that produced the archive.
+  # The installed extension is intentionally omitted as well: the extension
+  # above is the single release copy and is installed into the working demo
+  # below for verification.
+  $demoExcludedDirectories = @(".git", "temp", "library", "build", "extensions")
+  New-Item -ItemType Directory -Force -Path $stagingDemoRoot | Out-Null
+  Get-ChildItem -LiteralPath $demoProjectRoot -Recurse -Force -File | ForEach-Object {
+    $relativePath = $_.FullName.Substring($demoProjectRoot.Length).TrimStart([char[]]@('\', '/'))
+    $normalizedRelativePath = $relativePath -replace '\\', '/'
+    $isExcluded = $false
+    foreach ($excludedDirectory in $demoExcludedDirectories) {
+      if ($normalizedRelativePath -eq $excludedDirectory -or $normalizedRelativePath.StartsWith("$excludedDirectory/", [StringComparison]::OrdinalIgnoreCase)) {
+        $isExcluded = $true
+        break
+      }
+    }
+    if ($isExcluded) { return }
+
+    $destination = Join-Path $stagingDemoRoot $relativePath
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
+    Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
+  }
+
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   [System.IO.Compression.ZipFile]::CreateFromDirectory(
     $stagingRoot,
@@ -107,13 +134,16 @@ try {
 
   $archiveEntries = [System.IO.Compression.ZipFile]::OpenRead($archivePath).Entries.FullName |
     ForEach-Object { $_ -replace '\\', '/' }
-  $forbiddenPattern = '(^|/)(\.squoosh-cache|\.tinypng-cache|\.packer-web|workspaces|web-mobile|node_modules/\.cache)(/|$)|(^|/)loading-logo\.|/runtime/dist/.*\.(html|json|zip)$'
+  $forbiddenPattern = '(^|/)(\.squoosh-cache|\.tinypng-cache|\.packer-web|workspaces|web-mobile|node_modules/\.cache|CocosDemo/(temp|library|build|extensions))(/|$)|/runtime/dist/.*\.(html|json|zip)$'
   $forbidden = @($archiveEntries | Where-Object { $_ -match $forbiddenPattern })
   if ($forbidden.Count -gt 0) {
     throw "Release archive contains excluded files: $($forbidden -join ', ')"
   }
   foreach ($relativePath in @("$extensionName/package.json", "$extensionName/dist/main.js", "$extensionName/runtime/dist/creator-worker/playable-build-worker.js")) {
     if ($archiveEntries -notcontains $relativePath) { throw "Release archive is missing: $relativePath" }
+  }
+  foreach ($relativePath in @("CocosDemo/package.json", "CocosDemo/tsconfig.json", "CocosDemo/assets/scene/main.scene")) {
+    if ($archiveEntries -notcontains $relativePath) { throw "Release archive is missing demo file: $relativePath" }
   }
 
   # Install the exact release archive into CocosDemo. This deliberately avoids

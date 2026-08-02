@@ -138,7 +138,7 @@
           </div>
           <label class="switch-row">
             <span><strong>启用 Logo 与蓝色进度条</strong><small>关闭后不会向最终 HTML 注入加载界面</small></span>
-             <input id="loadingScreenEnabled" class="switch-input" type="checkbox">
+             <input id="loadingScreenEnabled" class="switch-input" type="checkbox" checked>
           </label>
           <div class="logo-import-row">
             <button id="importLogoButton" class="button button--ghost" type="button"><span class="button-icon">◇</span>导入加载页 Logo</button>
@@ -292,6 +292,14 @@
   <details class="advanced-details">
     <summary>高级信息与诊断</summary>
     <div class="advanced-details-content">
+      <section class="panel-section cache-management-section">
+        <div class="section-title"><div><p class="section-kicker">CACHE MANAGEMENT</p><h2>缓存管理</h2></div><span>配置、Logo、临时文件</span></div>
+        <div class="cache-management-row">
+          <div><strong>清理全部缓存并恢复默认配置</strong><p class="field-help">清除当前项目的配置项缓存、加载页 Logo 缓存和构建临时文件。此操作不会删除构建产物。</p></div>
+          <button id="clearAllCachesButton" class="button button--danger" type="button">清理全部缓存</button>
+        </div>
+      </section>
+
       <section class="panel-section">
         <div class="section-title"><div><p class="section-kicker">PROJECT</p><h2>当前项目</h2></div><span id="checkedAt">-</span></div>
         <dl class="details">

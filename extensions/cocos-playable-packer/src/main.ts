@@ -107,13 +107,25 @@ async function saveLoadingLogo(sourcePath: string): Promise<{ filePath: string }
 }
 
 async function clearLoadingLogo(): Promise<void> {
-  const directory = path.join(extensionRootPath(), LOADING_LOGO_DIRECTORY);
-  for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
-    if (entry.isFile() && entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) {
-      await unlink(path.join(directory, entry.name));
+  for (const directoryName of [LOADING_LOGO_DIRECTORY, LEGACY_LOADING_LOGO_DIRECTORY]) {
+    const directory = path.join(extensionRootPath(), directoryName);
+    for (const entry of await readdir(directory, { withFileTypes: true }).catch(() => [])) {
+      if (entry.isFile() && entry.name.startsWith(`${LOADING_LOGO_BASENAME}.`)) {
+        await unlink(path.join(directory, entry.name));
+      }
     }
   }
   appendLog("已清空加载页 Logo 缓存。");
+}
+
+async function clearAllCaches(): Promise<void> {
+  const task = taskManager.current();
+  if (task.status === "starting" || task.status === "running") {
+    throw new Error("构建任务正在运行，请先取消任务后再清理缓存。");
+  }
+  await clearLoadingLogo();
+  await rm(path.join(Editor.Project.tmpDir, PACKAGE_NAME), { recursive: true, force: true });
+  appendLog(`已清理插件全部缓存：${path.join(Editor.Project.tmpDir, PACKAGE_NAME)}`);
 }
 
 async function detectPackerRoot(extensionRoot: string, realExtensionRoot: string): Promise<string | null> {
@@ -407,6 +419,7 @@ export const methods = {
   queryLoadingLogo,
   saveLoadingLogo,
   clearLoadingLogo,
+  clearAllCaches,
 };
 
 export function load(): void {

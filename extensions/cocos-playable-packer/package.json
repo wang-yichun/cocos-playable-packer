@@ -40,7 +40,8 @@
       "read-build-report": { "methods": ["readBuildReport"] },
       "query-loading-logo": { "methods": ["queryLoadingLogo"] },
       "save-loading-logo": { "methods": ["saveLoadingLogo"] },
-      "clear-loading-logo": { "methods": ["clearLoadingLogo"] }
+      "clear-loading-logo": { "methods": ["clearLoadingLogo"] },
+      "clear-all-caches": { "methods": ["clearAllCaches"] }
     }
   },
   "scripts": {

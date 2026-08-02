@@ -129,6 +129,7 @@ assert.equal(typeof mainModule.methods?.readBuildReport, "function");
 assert.equal(typeof mainModule.methods?.queryLoadingLogo, "function");
 assert.equal(typeof mainModule.methods?.saveLoadingLogo, "function");
 assert.equal(typeof mainModule.methods?.clearLoadingLogo, "function");
+assert.equal(typeof mainModule.methods?.clearAllCaches, "function");
 
   mainModule.load();
   await mainModule.methods.openPanel();
@@ -243,6 +244,7 @@ assert.equal(typeof mainModule.methods?.clearLoadingLogo, "function");
   assert.equal(panelDefinition?.$.projectCheck, "#projectCheck");
   assert.equal(panelDefinition?.$.nodeCheck, "#nodeCheck");
   assert.equal(panelDefinition?.$.externalNodeErrorRow, "#externalNodeErrorRow");
+  assert.equal(panelDefinition?.$.clearAllCachesButton, "#clearAllCachesButton");
 
   const panelElements = Object.fromEntries(
     Object.keys(panelDefinition.$).map((key) => [key, createPanelElement()]),

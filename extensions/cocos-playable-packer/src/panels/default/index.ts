@@ -30,6 +30,7 @@ interface PanelElements {
   outputFolderButton: HTMLButtonElement;
   importLogoButton: HTMLButtonElement;
   clearLogoButton: HTMLButtonElement;
+  clearAllCachesButton: HTMLButtonElement;
   loadingScreenEnabled: HTMLInputElement;
   facebookChannelEnabled: HTMLInputElement;
   facebookArtifactFormat: HTMLSelectElement;
@@ -132,6 +133,7 @@ const selectors: Record<keyof PanelElements, string> = {
   outputFolderButton: "#outputFolderButton",
   importLogoButton: "#importLogoButton",
   clearLogoButton: "#clearLogoButton",
+  clearAllCachesButton: "#clearAllCachesButton",
   loadingScreenEnabled: "#loadingScreenEnabled",
   facebookChannelEnabled: "#facebookChannelEnabled",
   facebookArtifactFormat: "#facebookArtifactFormat",
@@ -473,6 +475,7 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
     && elements.iosStoreUrl.value.trim() !== DEFAULT_IOS_STORE_URL;
   elements.importLogoButton.disabled = active;
   elements.clearLogoButton.disabled = active;
+  elements.clearAllCachesButton.disabled = active;
   elements.audioSettings.classList.toggle("config-card--muted", !elements.audioEnabled.checked);
   elements.webpWarning.hidden = imageMode !== "webp";
   elements.audioWarning.hidden = !elements.audioEnabled.checked;
@@ -627,6 +630,46 @@ async function startBuild(elements: PanelElements): Promise<void> {
   }
 }
 
+function restoreDefaultConfiguration(elements: PanelElements): void {
+  elements.inputDirectory.value = "";
+  elements.outputFile.value = "";
+  elements.imageMode.value = "squoosh";
+  elements.pngQuality.value = String(DEFAULT_IMAGE_QUALITY);
+  elements.jpegQuality.value = String(DEFAULT_IMAGE_QUALITY);
+  elements.tinyPngApiKey.value = "";
+  elements.payloadEncoding.value = "html7";
+  elements.audioEnabled.checked = false;
+  elements.audioBitrateKbps.value = "48";
+  elements.loadingScreenEnabled.checked = true;
+  elements.facebookChannelEnabled.checked = false;
+  elements.facebookArtifactFormat.value = "zip";
+  elements.googleChannelEnabled.checked = false;
+  elements.googleOrientation.value = "portrait,landscape";
+  elements.googleArtifactFormat.value = "zip";
+  elements.appLovinChannelEnabled.checked = false;
+  elements.unityChannelEnabled.checked = false;
+  elements.unityOrientation.value = "responsive";
+  elements.androidStoreUrl.value = DEFAULT_ANDROID_STORE_URL;
+  elements.iosStoreUrl.value = DEFAULT_IOS_STORE_URL;
+  syncConfigurationState(elements, false);
+}
+
+async function clearAllCaches(elements: PanelElements): Promise<void> {
+  if (!window.confirm("确定清理全部缓存并恢复默认配置吗？\n\n将清除配置项、加载页 Logo 和构建临时文件，但不会删除构建产物。")) return;
+  elements.clearAllCachesButton.disabled = true;
+  try {
+    await Editor.Message.request<void>(PACKAGE_NAME, "clear-all-caches");
+    window.localStorage.removeItem(configurationStorageKey());
+    restoreDefaultConfiguration(elements);
+    renderLoadingLogoPreview(elements, null);
+    setText(elements, "panelStatus", "已清理全部缓存，配置项已恢复默认值。" );
+  } catch (error) {
+    setText(elements, "panelStatus", `清理缓存失败：${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    elements.clearAllCachesButton.disabled = false;
+  }
+}
+
 async function refreshTask(elements: PanelElements): Promise<void> {
   renderTask(elements, await Editor.Message.request<CreatorBuildTask>(PACKAGE_NAME, "query-build-task"));
 }
@@ -704,7 +747,8 @@ module.exports = Editor.Panel.define({
     bind(this.$.previewButton, "click", () => void openPreview(this.$));
     bind(this.$.outputFolderButton, "click", () => void openOutputFolder(this.$));
     bind(this.$.importLogoButton, "click", () => void importLoadingLogo(this.$));
-    bind(this.$.clearLogoButton, "click", () => void clearLoadingLogo(this.$));
+  bind(this.$.clearLogoButton, "click", () => void clearLoadingLogo(this.$));
+    bind(this.$.clearAllCachesButton, "click", () => void clearAllCaches(this.$));
     if (this.$.pngQuality.value.trim().length === 0) this.$.pngQuality.value = String(DEFAULT_IMAGE_QUALITY);
     if (this.$.jpegQuality.value.trim().length === 0) this.$.jpegQuality.value = String(DEFAULT_IMAGE_QUALITY);
     syncConfigurationState(this.$, false);
