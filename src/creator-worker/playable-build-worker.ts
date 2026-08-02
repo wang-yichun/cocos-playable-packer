@@ -89,6 +89,23 @@ function listenForCancellation(taskId: string, controller: AbortController): voi
   });
 }
 
+function unityOutputOrientations(
+  orientation: "responsive" | "portrait" | "landscape" | "portrait,landscape",
+): readonly ("responsive" | "portrait" | "landscape")[] {
+  switch (orientation) {
+    case "responsive": return ["responsive"];
+    case "portrait": return ["portrait"];
+    case "landscape": return ["landscape"];
+    case "portrait,landscape": return ["portrait", "landscape"];
+  }
+}
+
+function channelOrientationForGoogle(
+  orientation: "portrait" | "landscape" | "portrait,landscape",
+): "responsive" | "portrait" | "landscape" {
+  return orientation === "portrait,landscape" ? "responsive" : orientation;
+}
+
 async function main(): Promise<void> {
   const requestFile = process.argv[2];
   if (requestFile === undefined) {
@@ -160,14 +177,16 @@ async function main(): Promise<void> {
     }
 
     if (selectedChannels.includes("Google")) {
+      const googleOrientation = request.build.googleOrientation ?? "portrait,landscape";
       const googleConfig = {
         platform: "Google" as const,
+        orientation: channelOrientationForGoogle(googleOrientation),
         androidStoreUrl: request.build.androidStoreUrl ?? null,
         iosStoreUrl: request.build.iosStoreUrl ?? null,
       };
       const googleHtml = injectGoogleOrientationMeta(
         sourceHtml,
-        request.build.googleOrientation ?? "portrait",
+        googleOrientation,
       );
       const artifact = request.build.googleArtifactFormat === "single-html"
         ? createGoogleSingleHtmlArtifact(googleHtml, googleConfig)
@@ -217,6 +236,38 @@ async function main(): Promise<void> {
         type: "log", stream: "stdout", timestamp: new Date().toISOString(), elapsedMs: result.durationMs,
         line: `已生成 AppLovin 渠道包：${appLovinOutputFile}；校验报告：${validationReportFile}`,
       }});
+    }
+
+    if (selectedChannels.includes("Unity")) {
+      const unityConfig = {
+        platform: "Unity" as const,
+        androidStoreUrl: request.build.androidStoreUrl ?? null,
+        iosStoreUrl: request.build.iosStoreUrl ?? null,
+      };
+      for (const orientation of unityOutputOrientations(request.build.unityOrientation ?? "responsive")) {
+        const artifact = createChannelDownloadArtifact(sourceHtml, { ...unityConfig, orientation });
+        const fileName = orientation === "responsive"
+          ? artifact.fileName
+          : `unity-${orientation}-playable.html`;
+        const unityOutputFile = path.join(outputDirectory, fileName);
+        await writeFile(unityOutputFile, artifact.body);
+        const validation = await validateChannelArtifactFile(unityOutputFile, "Unity");
+        const validationReportFile = `${unityOutputFile}.channel-validation.json`;
+        await writeFile(validationReportFile, `${JSON.stringify({
+          inputFile: validation.inputFile,
+          orientation,
+          entries: validation.entries,
+          ...validation.report,
+        }, null, 2)}\n`, "utf8");
+        if (!validation.report.valid) {
+          throw new Error(`Unity Ads 渠道包校验失败：${validation.report.issues.map((issue) => issue.message).join("；")}`);
+        }
+        generatedArtifacts.push({ fileName: unityOutputFile, body: artifact.body, sha256: artifact.sha256 });
+        write({ type: "event", taskId: request.taskId, event: {
+          type: "log", stream: "stdout", timestamp: new Date().toISOString(), elapsedMs: result.durationMs,
+          line: `已生成 Unity Ads ${orientation} 渠道包：${unityOutputFile}；校验报告：${validationReportFile}`,
+        }});
+      }
     }
 
     const latestArtifact = generatedArtifacts.at(-1);

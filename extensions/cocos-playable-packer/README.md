@@ -19,6 +19,7 @@
 - 提供 HTML7、Base91、Base64 三种 Payload 编码方式，其中 HTML7 为默认推荐选项。
 - 可向最终 Playable 注入自定义 Logo 与蓝色加载进度条。
 - 支持 Meta / Facebook 渠道交付，可明确选择单 HTML 或 ZIP，不自动按体积切换。
+- 支持 Unity Ads 单 HTML 交付，显式声明宿主提供的 MRAID 3.0 并注入生命周期与 CTA 桥；可输出 Responsive、仅竖屏、仅横屏或一对竖横屏文件，并在每个文件上执行 5 MB 上限静态校验。
 - 构建完成后展示体积对比、耗时等报告，并可直接浏览器预览或打开输出目录。
 
 ### 安装与使用前注意事项
@@ -74,6 +75,7 @@
 - **Payload 编码**：默认选 HTML7；遇到渠道兼容性问题可切换 Base64 进行排查。
 - **Playable 加载界面**：启用后先导入 PNG、JPG/JPEG 或 WebP Logo（最大 40 KB），否则无法开始构建。
 - **Meta / Facebook**：先启用渠道，再在“产物格式”中选择“单 HTML”或“ZIP”。两种产物都会注入 `FbPlayableAd.onCTAClick()` 并执行渠道校验；最终以 Meta 账号内的 Preview/广告创建流程为准。
+- **Unity Ads**：选择「响应式」生成 `unity-playable.html`；选择「仅竖屏」或「仅横屏」会生成相应的方向文件；选择「竖屏和横屏」会同时生成 `unity-portrait-playable.html` 与 `unity-landscape-playable.html`。每个文件都使用 `mraid.open()` CTA 和 MRAID viewable 启动门控；在 Unity 后台可选择性上传一个或两个方向文件，并在 Unity Ad Testing App 中完成 iOS/Android 真机验证。
 
 ### Step 6：开始构建并查看报告
 

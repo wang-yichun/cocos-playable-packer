@@ -188,11 +188,28 @@ for (const testCase of singleHtmlCases) {
   }
 }
 
+const unityPortraitArtifact = createChannelDownloadArtifact(sourceHtml, {
+  ...config("Unity"),
+  orientation: "portrait",
+});
+assert.match(unityPortraitArtifact.body.toString("utf8"), /"orientation":"portrait"/);
+
+const googleResponsiveArtifact = createGoogleSingleHtmlArtifact(sourceHtml, {
+  ...config("Google"),
+  orientation: "responsive",
+});
+assert.match(googleResponsiveArtifact.body.toString("utf8"), /"orientation":"responsive"/);
+
 const unityHtml = createChannelDownloadArtifact(sourceHtml, config("Unity")).body.toString("utf8");
-assert.doesNotMatch(unityHtml, /<script[^>]+src=["']mraid\.js["']/i);
+assert.match(unityHtml, /<script[^>]+data-cocos-playable-unity-mraid[^>]+src="mraid\.js"/i);
+assert.match(unityHtml, /window\.addEventListener\("resize", forwardSize\)/);
 assert.match(unityHtml, /isMraidPlatform = true/);
 assert.match(unityHtml, /var mraidListeners/);
 assert.match(unityHtml, /\bwindow\.open\s*\(/);
+
+const appLovinHtml = createChannelDownloadArtifact(sourceHtml, config("AppLovin")).body.toString("utf8");
+assert.doesNotMatch(appLovinHtml, /data-cocos-playable-unity-mraid/);
+assert.doesNotMatch(appLovinHtml, /window\.addEventListener\("resize", forwardSize\)/);
 
 const molocoHtml = createChannelDownloadArtifact(sourceHtml, config("Moloco")).body.toString("utf8");
 assert.doesNotMatch(molocoHtml, /openStoreFallback|selectStoreUrl/);

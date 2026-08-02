@@ -200,6 +200,11 @@ function injectHeadScript(html: string, script: string): string {
   return `${script}\n${html}`;
 }
 
+export function injectUnityMraidScript(html: string): string {
+  if (/\bsrc\s*=\s*["'][^"']*mraid\.js(?:[?#][^"']*)?["']/i.test(html)) return html;
+  return injectHeadScript(html, `<script data-cocos-playable-unity-mraid src="mraid.js"></script>`);
+}
+
 export function injectGoogleExitApiScript(html: string): string {
   if (html.includes(CHANNEL_EXTERNAL_SCRIPT_MARKER) || html.includes(GOOGLE_EXIT_API_URL)) {
     return html;
@@ -547,6 +552,7 @@ export function createChannelDownloadArtifact(
   config: ChannelBuildConfig,
 ): ChannelDownloadArtifact {
   let html = createChannelHtml(sourceHtml, config);
+  if (config.platform === "Unity") html = injectUnityMraidScript(html);
 
   if (config.platform === "Google") {
     html = injectGoogleExitApiScript(html);

@@ -40,6 +40,9 @@ interface PanelElements {
   googleChannelDetails: HTMLElement;
   appLovinChannelEnabled: HTMLInputElement;
   appLovinChannelDetails: HTMLElement;
+  unityChannelEnabled: HTMLInputElement;
+  unityChannelDetails: HTMLElement;
+  unityOrientation: HTMLSelectElement;
   androidStoreUrl: HTMLInputElement;
   iosStoreUrl: HTMLInputElement;
   defaultStoreUrlsWarning: HTMLElement;
@@ -115,6 +118,8 @@ interface PersistedConfiguration {
   googleOrientation: string;
   googleArtifactFormat: string;
   appLovinChannelEnabled: boolean;
+  unityChannelEnabled: boolean;
+  unityOrientation: string;
   androidStoreUrl: string;
   iosStoreUrl: string;
 }
@@ -137,6 +142,9 @@ const selectors: Record<keyof PanelElements, string> = {
   googleChannelDetails: "#googleChannelDetails",
   appLovinChannelEnabled: "#appLovinChannelEnabled",
   appLovinChannelDetails: "#appLovinChannelDetails",
+  unityChannelEnabled: "#unityChannelEnabled",
+  unityChannelDetails: "#unityChannelDetails",
+  unityOrientation: "#unityOrientation",
   androidStoreUrl: "#androidStoreUrl",
   iosStoreUrl: "#iosStoreUrl",
   defaultStoreUrlsWarning: "#defaultStoreUrlsWarning",
@@ -365,6 +373,8 @@ function persistedConfigurationFrom(elements: PanelElements): PersistedConfigura
     googleOrientation: elements.googleOrientation.value,
     googleArtifactFormat: elements.googleArtifactFormat.value,
     appLovinChannelEnabled: elements.appLovinChannelEnabled.checked,
+    unityChannelEnabled: elements.unityChannelEnabled.checked,
+    unityOrientation: elements.unityOrientation.value,
     androidStoreUrl: elements.androidStoreUrl.value,
     iosStoreUrl: elements.iosStoreUrl.value,
   };
@@ -405,6 +415,10 @@ function restoreConfiguration(elements: PanelElements): void {
       elements.googleArtifactFormat.value = saved.googleArtifactFormat;
     }
     if (typeof saved.appLovinChannelEnabled === "boolean") elements.appLovinChannelEnabled.checked = saved.appLovinChannelEnabled;
+    if (typeof saved.unityChannelEnabled === "boolean") elements.unityChannelEnabled.checked = saved.unityChannelEnabled;
+    if (saved.unityOrientation === "responsive" || saved.unityOrientation === "portrait" || saved.unityOrientation === "landscape" || saved.unityOrientation === "portrait,landscape") {
+      elements.unityOrientation.value = saved.unityOrientation;
+    }
     if (typeof saved.androidStoreUrl === "string") elements.androidStoreUrl.value = saved.androidStoreUrl;
     if (typeof saved.iosStoreUrl === "string") elements.iosStoreUrl.value = saved.iosStoreUrl;
   } catch {
@@ -450,6 +464,9 @@ function syncConfigurationState(elements: PanelElements, active: boolean): void 
   elements.googleArtifactFormat.disabled = active || !elements.googleChannelEnabled.checked;
   elements.appLovinChannelEnabled.disabled = active;
   elements.appLovinChannelDetails.hidden = !elements.appLovinChannelEnabled.checked;
+  elements.unityChannelEnabled.disabled = active;
+  elements.unityChannelDetails.hidden = !elements.unityChannelEnabled.checked;
+  elements.unityOrientation.disabled = active || !elements.unityChannelEnabled.checked;
   elements.androidStoreUrl.disabled = active;
   elements.iosStoreUrl.disabled = active;
   elements.defaultStoreUrlsWarning.hidden = elements.androidStoreUrl.value.trim() !== DEFAULT_ANDROID_STORE_URL
@@ -580,10 +597,12 @@ function configurationFrom(elements: PanelElements): CreatorBuildConfiguration {
       ...(elements.facebookChannelEnabled.checked ? ["Facebook" as const] : []),
       ...(elements.googleChannelEnabled.checked ? ["Google" as const] : []),
       ...(elements.appLovinChannelEnabled.checked ? ["AppLovin" as const] : []),
+      ...(elements.unityChannelEnabled.checked ? ["Unity" as const] : []),
     ],
     facebookArtifactFormat: elements.facebookArtifactFormat.value as CreatorBuildConfiguration["facebookArtifactFormat"],
     googleOrientation: elements.googleOrientation.value as CreatorBuildConfiguration["googleOrientation"],
     googleArtifactFormat: elements.googleArtifactFormat.value as CreatorBuildConfiguration["googleArtifactFormat"],
+    unityOrientation: elements.unityOrientation.value as CreatorBuildConfiguration["unityOrientation"],
     androidStoreUrl: elements.androidStoreUrl.value.trim() || null,
     iosStoreUrl: elements.iosStoreUrl.value.trim() || null,
   };
@@ -666,6 +685,8 @@ module.exports = Editor.Panel.define({
       "googleOrientation",
       "googleArtifactFormat",
       "appLovinChannelEnabled",
+      "unityChannelEnabled",
+      "unityOrientation",
       "androidStoreUrl",
       "iosStoreUrl",
     ] as const) {
@@ -675,6 +696,7 @@ module.exports = Editor.Panel.define({
     bind(this.$.facebookChannelEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.googleChannelEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.appLovinChannelEnabled, "change", () => syncConfigurationState(this.$, false));
+    bind(this.$.unityChannelEnabled, "change", () => syncConfigurationState(this.$, false));
     bind(this.$.androidStoreUrl, "input", () => syncConfigurationState(this.$, false));
     bind(this.$.iosStoreUrl, "input", () => syncConfigurationState(this.$, false));
     bind(this.$.startBuildButton, "click", () => void startBuild(this.$));

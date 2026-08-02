@@ -19,6 +19,15 @@ export enum PlayableChannel {
   Meta = "meta",
   GoogleAds = "google-ads",
   AppLovin = "applovin",
+  UnityAds = "unity-ads",
+}
+
+/** The layout class of the generated playable asset, independent from the device's current rotation. */
+export enum PlayableOrientation {
+  None = "none",
+  Responsive = "responsive",
+  Portrait = "portrait",
+  Landscape = "landscape",
 }
 
 interface PlayableAdapter {
@@ -43,6 +52,7 @@ type PlayableGlobal = typeof globalThis & {
   __PLATFORM?: unknown;
   __PLAYABLE_CHANNEL_CONFIG__?: {
     platform?: unknown;
+    orientation?: unknown;
   };
   xsd_playable?: LegacyPlayableAdapter;
 };
@@ -73,8 +83,28 @@ export class PlayableFacade {
         return PlayableChannel.GoogleAds;
       case "AppLovin":
         return PlayableChannel.AppLovin;
+      case "Unity":
+        return PlayableChannel.UnityAds;
       default:
         return PlayableChannel.None;
+    }
+  }
+
+  /**
+   * Returns the orientation class selected when this playable was packaged.
+   * Responsive remains a single adaptive asset; portrait and landscape are the
+   * independent files emitted for Unity's Portrait & Landscape upload mode.
+   */
+  public static getOrientation(): PlayableOrientation {
+    switch (runtimeGlobal().__PLAYABLE_CHANNEL_CONFIG__?.orientation) {
+      case "responsive":
+        return PlayableOrientation.Responsive;
+      case "portrait":
+        return PlayableOrientation.Portrait;
+      case "landscape":
+        return PlayableOrientation.Landscape;
+      default:
+        return PlayableOrientation.None;
     }
   }
 

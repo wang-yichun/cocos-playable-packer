@@ -189,6 +189,12 @@ export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): s
 
   const serializedConfig = safeJson(config);
   const mraidPlatform = usesMraid(config.platform);
+  const unityResizeHandler = config.platform === "Unity"
+    ? `      if (typeof window.addEventListener === "function") {
+        window.addEventListener("resize", forwardSize);
+      }
+`
+    : "";
 
   return `(() => {
   const config = ${serializedConfig};
@@ -452,7 +458,7 @@ export function createChannelDownloadBridgeSource(config: ChannelBuildConfig): s
         api.addEventListener("sizeChange", forwardSize);
         api.addEventListener("audioVolumeChange", forwardVolume);
       }
-      forwardSize();
+${unityResizeHandler}      forwardSize();
       try {
         forwardVolume(typeof api.getAudioVolume === "function" ? api.getAudioVolume() : 100);
       } catch (_error) {

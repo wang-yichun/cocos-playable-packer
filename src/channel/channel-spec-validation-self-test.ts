@@ -133,6 +133,18 @@ const cocosShaderFacebook = validateChannelArtifact({
     "assets/internal/import/effect.json": "vec2 location = getPixelLocation();",
   },
 });
+
+const unityWithoutMraidDeclaration = validateChannelArtifact({
+  platform: "Unity",
+  deliveryFormat: "single-html",
+  artifactBytes: 4_000_000,
+  entries: ["unity-playable.html"],
+  textFiles: {
+    "unity-playable.html": "<script>mraid.open(); window.__PACK_RUNTIME_START_GATE__ = true; window.addEventListener('viewableChange', () => {});</script>",
+  },
+});
+assert.equal(unityWithoutMraidDeclaration.valid, false);
+assert.ok(issueCodes(unityWithoutMraidDeclaration).includes("UNITY_MRAID_SCRIPT_REFERENCE_MISSING"));
 assert.equal(cocosShaderFacebook.valid, true);
 assert.ok(!issueCodes(cocosShaderFacebook).includes("FACEBOOK_JAVASCRIPT_REDIRECT_PRESENT"));
 

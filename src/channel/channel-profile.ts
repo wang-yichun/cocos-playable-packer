@@ -31,6 +31,7 @@ export type ChannelBridge =
   | "google-exit-api"
   | "bytedance-playable-sdk";
 export type ChannelStartupPolicy = "window-load" | "mraid-viewable";
+export type ChannelOrientation = "responsive" | "portrait" | "landscape";
 export type ChannelAnalyticsAdapter = "none" | "applovin" | "custom-beacon";
 export type ChannelIntegrationStatus =
   | "profile-only"
@@ -53,6 +54,8 @@ export interface ChannelProfile {
 
 export interface ChannelBuildConfig {
   platform: ChannelPlatform;
+  /** Optional delivery orientation, used by Unity Ads' distinct HTML assets. */
+  orientation?: ChannelOrientation;
   androidStoreUrl: string | null;
   iosStoreUrl: string | null;
 }

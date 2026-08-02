@@ -154,7 +154,7 @@
         <article class="config-card config-card--wide config-card--channel">
           <div class="config-card-heading">
             <span class="config-index">06</span>
-            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；支持 Meta / Facebook、Google Ads 与 AppLovin 交付包。</p></div>
+            <div><h3>渠道交付 Pipeline</h3><p>可同时选择多个渠道；支持 Meta / Facebook、Google Ads、AppLovin 与 Unity Ads 交付包。</p></div>
           </div>
           <section class="channel-group">
             <label class="switch-row">
@@ -177,6 +177,27 @@
           </section>
           <section class="channel-group">
             <label class="switch-row">
+              <span><strong>Unity Ads</strong><small>生成 Unity 可上传的单 HTML，声明宿主提供的 MRAID 3.0 并注入生命周期和 CTA 桥。</small></span>
+              <span class="channel-option-actions">
+                <a class="channel-preview-link" href="https://cloud.unity.com/home" target="_blank" rel="noreferrer">Unity Cloud 工作台 ↗</a>
+                <input id="unityChannelEnabled" class="switch-input" type="checkbox">
+              </span>
+            </label>
+            <div id="unityChannelDetails" class="channel-group-details" hidden>
+              <label class="channel-format-row">
+                <span><strong>投放方向</strong><small>与 Unity Creative Pack 的 playable type 对应；Portrait &amp; Landscape 可仅上传其中一个文件。</small></span>
+                <select id="unityOrientation" class="config-select">
+                  <option value="responsive" selected>响应式（Responsive）</option>
+                  <option value="portrait">仅竖屏（Portrait）</option>
+                  <option value="landscape">仅横屏（Landscape）</option>
+                  <option value="portrait,landscape">竖屏和横屏（Portrait &amp; Landscape）</option>
+                </select>
+              </label>
+              <p class="field-note">响应式生成 <code>unity-playable.html</code>；仅竖屏或横屏分别生成对应方向 HTML；竖屏和横屏会同时生成 <code>unity-portrait-playable.html</code> 与 <code>unity-landscape-playable.html</code>。每个文件均为内联单 HTML、不得超过 5 MB，并显式声明宿主提供的 <code>mraid.js</code>；CTA 使用 <code>mraid.open()</code>。</p>
+            </div>
+          </section>
+          <section class="channel-group">
+            <label class="switch-row">
               <span><strong>Google Ads</strong><small>生成单 HTML 或 <code>index.html + res.js</code> ZIP，注入 Exit API 并生成渠道校验报告。</small></span>
               <span class="channel-option-actions">
                 <a class="channel-preview-link" href="https://ads.google.com/home/" target="_blank" rel="noreferrer">Google Ads 工作台 ↗</a>
@@ -194,9 +215,9 @@
               <label class="channel-format-row">
                 <span><strong>投放方向</strong><small>写入 Google Ads 所需的 <code>ad.orientation</code> 元数据。</small></span>
                 <select id="googleOrientation" class="config-select">
-                  <option value="portrait" selected>竖屏（portrait）</option>
+                  <option value="portrait">竖屏（portrait）</option>
                   <option value="landscape">横屏（landscape）</option>
-                  <option value="portrait,landscape">竖屏和横屏（responsive）</option>
+                  <option value="portrait,landscape" selected>竖屏和横屏（responsive）</option>
                 </select>
               </label>
               <p class="field-note">Google ZIP 需小于 5 MB、最多 512 个文件。CTA 使用 <code>ExitApi.exit()</code>，最终请在 Google Ads App Campaign 预览中验证。</p>
@@ -217,7 +238,7 @@
           <section class="channel-group channel-group--shared-settings">
             <div class="channel-shared-heading">
               <strong>安装跳转配置</strong>
-              <small>所有渠道共用。当前 AppLovin 会按设备选择并传给 <code>mraid.open()</code>；Meta 和 Google 仍由广告后台的 CTA 管理。</small>
+              <small>所有渠道共用。AppLovin 与 Unity Ads 会按设备选择并传给 <code>mraid.open()</code>；Meta 和 Google 仍由广告后台的 CTA 管理。</small>
             </div>
             <div class="channel-store-grid">
               <label class="field">
