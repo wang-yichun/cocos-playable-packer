@@ -59,7 +59,7 @@ $releaseRoot = Join-Path $repositoryRoot "release"
 $archivePath = Join-Path $releaseRoot "$extensionName-v$version.zip"
 $stagingRoot = Join-Path $releaseRoot ".package-staging-$extensionName"
 $stagingExtensionRoot = Join-Path $stagingRoot $extensionName
-$stagingDemoRoot = Join-Path $stagingRoot "CocosDemo"
+$stagingDemoRoot = Join-Path $stagingExtensionRoot "CocosDemo"
 $demoProjectRoot = Join-Path $repositoryRoot "CocosDemo"
 $demoExtensionsRoot = Join-Path $demoProjectRoot "extensions"
 $demoExtensionRoot = Join-Path $demoExtensionsRoot $extensionName
@@ -134,15 +134,19 @@ try {
 
   $archiveEntries = [System.IO.Compression.ZipFile]::OpenRead($archivePath).Entries.FullName |
     ForEach-Object { $_ -replace '\\', '/' }
-  $forbiddenPattern = '(^|/)(\.squoosh-cache|\.tinypng-cache|\.packer-web|workspaces|web-mobile|node_modules/\.cache|CocosDemo/(temp|library|build|extensions))(/|$)|/runtime/dist/.*\.(html|json|zip)$'
+  $forbiddenPattern = '(^|/)(\.squoosh-cache|\.tinypng-cache|\.packer-web|workspaces|web-mobile|node_modules/\.cache|cocos-playable-packer/CocosDemo/(temp|library|build|extensions))(/|$)|/runtime/dist/.*\.(html|json|zip)$'
   $forbidden = @($archiveEntries | Where-Object { $_ -match $forbiddenPattern })
   if ($forbidden.Count -gt 0) {
     throw "Release archive contains excluded files: $($forbidden -join ', ')"
   }
+  $topLevelEntries = @($archiveEntries | ForEach-Object { ($_ -split '/')[0] } | Sort-Object -Unique)
+  if ($topLevelEntries.Count -ne 1 -or $topLevelEntries[0] -ne $extensionName) {
+    throw "Release archive must contain only the $extensionName top-level directory: $($topLevelEntries -join ', ')"
+  }
   foreach ($relativePath in @("$extensionName/package.json", "$extensionName/dist/main.js", "$extensionName/runtime/dist/creator-worker/playable-build-worker.js")) {
     if ($archiveEntries -notcontains $relativePath) { throw "Release archive is missing: $relativePath" }
   }
-  foreach ($relativePath in @("CocosDemo/package.json", "CocosDemo/tsconfig.json", "CocosDemo/assets/scene/main.scene")) {
+  foreach ($relativePath in @("$extensionName/CocosDemo/package.json", "$extensionName/CocosDemo/tsconfig.json", "$extensionName/CocosDemo/assets/scene/main.scene")) {
     if ($archiveEntries -notcontains $relativePath) { throw "Release archive is missing demo file: $relativePath" }
   }
 
@@ -162,6 +166,7 @@ try {
   Remove-Item -LiteralPath $demoExtensionRoot -Recurse -Force -ErrorAction SilentlyContinue
   New-Item -ItemType Directory -Force -Path $demoExtensionRoot | Out-Null
   Get-ChildItem -LiteralPath (Join-Path $demoInstallStagingRoot $extensionName) -Force | ForEach-Object {
+    if ($_.Name -eq "CocosDemo") { return }
     Copy-Item -LiteralPath $_.FullName -Destination $demoExtensionRoot -Recurse -Force
   }
   $installedVersion = (Get-Content -LiteralPath (Join-Path $demoExtensionRoot "package.json") -Raw | ConvertFrom-Json).version
