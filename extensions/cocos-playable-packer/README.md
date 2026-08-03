@@ -144,11 +144,12 @@ const unsubscribe = PlayableFacade.onAudioVolumeChange((state) => {
 
 ## 更新声明
 
-### 1.0.0
+### 1.1.1
 
-- 首次发布 Cocos Creator 3.8.x Playable 单文件打包工作流。
-- 支持图片、音频、Payload 编码与加载页配置。
-- 新增构建报告、浏览器预览与输出目录快捷入口。
+- 渠道补齐重点：Liftoff 使用 MRAID 生命周期桥接，输出根目录仅含 `index.html` 的 ZIP；发布前需通过 Liftoff 预览确认 CTA 和 `mraid.open()` 行为。
+- 渠道补齐重点：ironSource 使用宿主提供的 MRAID，输出单 HTML；发布前需在目标 Ad Testing 环境确认 ready/viewable、尺寸、音量和 CTA。
+- 渠道补齐重点：Moloco 输出小于 5 MB 的单 HTML，使用无参数 `FbPlayableAd.onCTAClick()`；产物不得包含外部网络、XHR、MRAID 或 JavaScript 跳转。
+- 发布门槛：三类渠道均纳入渠道 profile、产物校验、桥接自测、Web 交付自测，并使用同一份 1.1.1 ZIP 安装到 `CocosDemo` 验证。
 
 ### 1.1.0
 
@@ -156,6 +157,12 @@ const unsubscribe = PlayableFacade.onAudioVolumeChange((state) => {
 - 新增 MRAID 生命周期、CTA、尺寸和音量桥接，以及 Google Exit API 桥接。
 - 相较 1.0.0 改善渠道发布兼容性：Meta 对 Blob URL 的行为与普通浏览器不同，最终采用 Data URI 才获得稳定表现；资源处理只替换传输层，不替代引擎解析层，`.cconb` 仍交给 Cocos 原生解析，我们只负责把字节送入引擎。这一原则同样适用于音频、WASM、字体和视频资源。
 - 新增 `CocosDemo` 与 `PlayableFacade` 接入示例。
+
+### 1.0.0
+
+- 首次发布 Cocos Creator 3.8.x Playable 单文件打包工作流。
+- 支持图片、音频、Payload 编码与加载页配置。
+- 新增构建报告、浏览器预览与输出目录快捷入口。
 
 ## 购买须知
 
