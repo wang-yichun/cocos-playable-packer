@@ -1,6 +1,6 @@
 {
   "package_version": 2,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "name": "cocos-playable-packer",
   "title": "Cocos Playable Packer",
   "description": "Cocos Creator 3.8.x Playable packaging extension.",
