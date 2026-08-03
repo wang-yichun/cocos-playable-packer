@@ -24,6 +24,80 @@ const request = parseCreatorWorkerRequest({
 assert.equal(request.taskId, "task-1");
 assert.equal(request.build.payloadEncoding, "html7");
 
+const htmlChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-facebook-html",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["Facebook"],
+    facebookArtifactFormat: "single-html",
+  },
+});
+assert.equal(htmlChannelRequest.build.facebookArtifactFormat, "single-html");
+
+const googleChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-google-zip",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["Google"],
+    googleOrientation: "landscape",
+    googleArtifactFormat: "single-html",
+  },
+});
+assert.deepEqual(googleChannelRequest.build.channels, ["Google"]);
+assert.equal(googleChannelRequest.build.googleOrientation, "landscape");
+assert.equal(googleChannelRequest.build.googleArtifactFormat, "single-html");
+
+const appLovinChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-applovin-html",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["AppLovin"],
+    androidStoreUrl: "https://play.google.com/store/apps/details?id=com.google.android.apps.maps",
+    iosStoreUrl: "https://apps.apple.com/app/google-maps/id585027354",
+  },
+});
+assert.deepEqual(appLovinChannelRequest.build.channels, ["AppLovin"]);
+assert.match(appLovinChannelRequest.build.androidStoreUrl ?? "", /play\.google\.com/);
+
+const unityChannelRequest = parseCreatorWorkerRequest({
+  protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
+  taskId: "task-unity-html",
+  packageRoot: "C:/packer",
+  nodeExecutable: "C:/node/node.exe",
+  build: {
+    inputDirectory: "C:/game/build/web-mobile",
+    outputFile: "C:/game/build/playable/game.html",
+    image: { mode: "none" },
+    audio: null,
+    payloadEncoding: "html7",
+    channels: ["Unity"],
+    unityOrientation: "portrait,landscape",
+  },
+});
+assert.deepEqual(unityChannelRequest.build.channels, ["Unity"]);
+assert.equal(unityChannelRequest.build.unityOrientation, "portrait,landscape");
+
 const loadingScreenRequest = parseCreatorWorkerRequest({
   protocolVersion: CREATOR_WORKER_PROTOCOL_VERSION,
   taskId: "task-loading-screen",
@@ -97,5 +171,19 @@ assert.match(workerSource, /listenForCancellation/);
 assert.match(workerSource, /signal: cancellation\.signal/);
 assert.match(workerSource, /normalizeLoadingScreenConfig\(request\.build\.loadingScreen\)/);
 assert.match(workerSource, /applyLoadingScreenToArtifact/);
+assert.match(workerSource, /createFacebookSingleHtmlArtifact/);
+assert.match(workerSource, /createChannelDownloadArtifact/);
+assert.match(workerSource, /injectGoogleOrientationMeta/);
+assert.match(workerSource, /channelOrientationForGoogle/);
+assert.match(workerSource, /orientation: channelOrientationForGoogle\(googleOrientation\)/);
+assert.match(workerSource, /googleArtifactFormat !== "single-html"/);
+assert.match(workerSource, /selectedChannels\.includes\("AppLovin"\)/);
+assert.match(workerSource, /validateChannelArtifactFile\(appLovinOutputFile, "AppLovin"\)/);
+assert.match(workerSource, /selectedChannels\.includes\("Unity"\)/);
+assert.match(workerSource, /validateChannelArtifactFile\(unityOutputFile, "Unity"\)/);
+assert.match(workerSource, /unityOutputOrientations/);
+assert.match(workerSource, /unity-\$\{orientation\}-playable\.html/);
+assert.match(workerSource, /createChannelDownloadArtifact\(sourceHtml, \{ \.\.\.unityConfig, orientation \}\)/);
+assert.match(workerSource, /androidStoreUrl: request\.build\.androidStoreUrl \?\? null/);
 
 console.log("Creator Worker protocol self-test passed.");

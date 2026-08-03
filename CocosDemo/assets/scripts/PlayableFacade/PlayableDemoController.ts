@@ -11,11 +11,45 @@ const { ccclass, property } = _decorator;
  */
 @ccclass("PlayableDemoController")
 export class PlayableDemoController extends Component {
+
   @property({ type: Label, tooltip: "可选：显示按钮调用结果。" })
   public statusLabel: Label | null = null;
 
+  @property({ type: Label, tooltip: "可选：显示渠道。" })
+  public channelLabel: Label | null = null;
+
+  @property({ type: Label, tooltip: "可选：显示渠道。" })
+  public orientationLabel: Label | null = null;
+
+  @property({ type: Label, tooltip: "可选：显示宿主可见性。" })
+  public viewableLabel: Label | null = null;
+
+  @property({ type: Label, tooltip: "可选：显示宿主尺寸。" })
+  public screenSizeLabel: Label | null = null;
+
+  @property({ type: Label, tooltip: "可选：显示宿主音量。" })
+  public volumeLabel: Label | null = null;
+
+  private readonly unsubscribers: Array<() => void> = [];
+
   protected onLoad(): void {
     console.info(`[PlayableDemoController] onLoad`);
+    if (this.channelLabel !== null) {
+      this.channelLabel.string = `Channel: ${PlayableFacade.getChannel()}`;
+    }
+    if (this.orientationLabel !== null) {
+      this.orientationLabel.string = `Orientation: ${PlayableFacade.getOrientation()}`;
+    }
+    this.renderPlayableState();
+    this.unsubscribers.push(
+      PlayableFacade.onViewableChange(() => this.renderPlayableState()),
+      PlayableFacade.onScreenSizeChange(() => this.renderPlayableState()),
+      PlayableFacade.onAudioVolumeChange(() => this.renderPlayableState()),
+    );
+  }
+
+  protected onDestroy(): void {
+    for (const unsubscribe of this.unsubscribers.splice(0)) unsubscribe();
   }
 
   /** 绑定到任意“CTA / Install / Download”按钮。 */
@@ -61,5 +95,20 @@ export class PlayableDemoController extends Component {
       this.statusLabel.string = message;
     }
     console.info(`[CocosDemo] ${message}`);
+  }
+
+  private renderPlayableState(): void {
+    const size = PlayableFacade.getScreenSize();
+    if (this.viewableLabel !== null) {
+      this.viewableLabel.string = `Viewable: ${PlayableFacade.isViewable()}`;
+    }
+    if (this.screenSizeLabel !== null) {
+      this.screenSizeLabel.string = size === null
+        ? "Size: unknown"
+        : `Size: ${size.width} × ${size.height}`;
+    }
+    if (this.volumeLabel !== null) {
+      this.volumeLabel.string = `Volume: ${PlayableFacade.getAudioVolume()}%`;
+    }
   }
 }

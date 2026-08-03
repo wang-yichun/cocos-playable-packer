@@ -28,6 +28,7 @@ audio-benchmark-report.json
 
 .tinypng-cache/
 .squoosh-cache/
+.logo-cache/
 workspaces/*/runs/
 workspaces/*/reports/
 workspaces/*/preview/

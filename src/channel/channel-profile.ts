@@ -31,6 +31,7 @@ export type ChannelBridge =
   | "google-exit-api"
   | "bytedance-playable-sdk";
 export type ChannelStartupPolicy = "window-load" | "mraid-viewable";
+export type ChannelOrientation = "responsive" | "portrait" | "landscape";
 export type ChannelAnalyticsAdapter = "none" | "applovin" | "custom-beacon";
 export type ChannelIntegrationStatus =
   | "profile-only"
@@ -53,6 +54,8 @@ export interface ChannelProfile {
 
 export interface ChannelBuildConfig {
   platform: ChannelPlatform;
+  /** Optional delivery orientation, used by Unity Ads' distinct HTML assets. */
+  orientation?: ChannelOrientation;
   androidStoreUrl: string | null;
   iosStoreUrl: string | null;
 }
@@ -136,7 +139,7 @@ export const CHANNEL_PROFILES: Readonly<Record<ChannelPlatform, ChannelProfile>>
     externalScripts: [],
     requiresExternalApi: true,
     warnings: [
-      "当前实现会生成 ZIP（index.html + res.js）并注入 FbPlayableAd.onCTAClick；正式投放前仍需通过 Meta Validator。",
+      "当前交付支持单 HTML 或 ZIP，并注入 FbPlayableAd.onCTAClick；正式投放前仍需通过 Meta Validator。",
     ],
   },
   Liftoff: {

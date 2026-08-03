@@ -18,6 +18,7 @@ import {
 import {
   CHANNEL_EXTERNAL_SCRIPT_MARKER,
   createChannelDownloadArtifact,
+  createGoogleSingleHtmlArtifact,
   GOOGLE_EXIT_API_URL,
 } from "./liftoff-delivery.js";
 import {
@@ -96,6 +97,14 @@ assert.equal(
   true,
   "Google ZIP 应使用确定性元数据。",
 );
+
+const googleHtmlArtifact = createGoogleSingleHtmlArtifact(sourceHtml, config("Google"));
+assert.equal(googleHtmlArtifact.contentType, "text/html; charset=utf-8");
+assert.equal(googleHtmlArtifact.fileName, "google-playable.html");
+assert.equal(googleHtmlArtifact.deliveryFormat, "single-html");
+assert.deepEqual(googleHtmlArtifact.entries, ["google-playable.html"]);
+assert.match(googleHtmlArtifact.body.toString("utf8"), /window\.ExitApi\.exit/);
+assert.match(googleHtmlArtifact.body.toString("utf8"), new RegExp(GOOGLE_EXIT_API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "remaining-channel-test-"));
 try {
@@ -179,11 +188,28 @@ for (const testCase of singleHtmlCases) {
   }
 }
 
+const unityPortraitArtifact = createChannelDownloadArtifact(sourceHtml, {
+  ...config("Unity"),
+  orientation: "portrait",
+});
+assert.match(unityPortraitArtifact.body.toString("utf8"), /"orientation":"portrait"/);
+
+const googleResponsiveArtifact = createGoogleSingleHtmlArtifact(sourceHtml, {
+  ...config("Google"),
+  orientation: "responsive",
+});
+assert.match(googleResponsiveArtifact.body.toString("utf8"), /"orientation":"responsive"/);
+
 const unityHtml = createChannelDownloadArtifact(sourceHtml, config("Unity")).body.toString("utf8");
-assert.doesNotMatch(unityHtml, /<script[^>]+src=["']mraid\.js["']/i);
+assert.match(unityHtml, /<script[^>]+data-cocos-playable-unity-mraid[^>]+src="mraid\.js"/i);
+assert.match(unityHtml, /window\.addEventListener\("resize", forwardSize\)/);
 assert.match(unityHtml, /isMraidPlatform = true/);
 assert.match(unityHtml, /var mraidListeners/);
 assert.match(unityHtml, /\bwindow\.open\s*\(/);
+
+const appLovinHtml = createChannelDownloadArtifact(sourceHtml, config("AppLovin")).body.toString("utf8");
+assert.doesNotMatch(appLovinHtml, /data-cocos-playable-unity-mraid/);
+assert.doesNotMatch(appLovinHtml, /window\.addEventListener\("resize", forwardSize\)/);
 
 const molocoHtml = createChannelDownloadArtifact(sourceHtml, config("Moloco")).body.toString("utf8");
 assert.doesNotMatch(molocoHtml, /openStoreFallback|selectStoreUrl/);

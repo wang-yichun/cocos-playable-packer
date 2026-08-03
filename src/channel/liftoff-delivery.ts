@@ -200,6 +200,11 @@ function injectHeadScript(html: string, script: string): string {
   return `${script}\n${html}`;
 }
 
+export function injectUnityMraidScript(html: string): string {
+  if (/\bsrc\s*=\s*["'][^"']*mraid\.js(?:[?#][^"']*)?["']/i.test(html)) return html;
+  return injectHeadScript(html, `<script data-cocos-playable-unity-mraid src="mraid.js"></script>`);
+}
+
 export function injectGoogleExitApiScript(html: string): string {
   if (html.includes(CHANNEL_EXTERNAL_SCRIPT_MARKER) || html.includes(GOOGLE_EXIT_API_URL)) {
     return html;
@@ -351,6 +356,19 @@ export function createChannelHtml(
     : bridgeHtml;
 }
 
+export function injectGoogleOrientationMeta(
+  html: string,
+  orientation: "portrait" | "landscape" | "portrait,landscape",
+): string {
+  if (/<meta\b[^>]*name\s*=\s*["']ad\.(?:orientation|size)["']/i.test(html)) {
+    return html;
+  }
+  return injectHeadScript(
+    html,
+    `<meta name="ad.orientation" content="${orientation}">`,
+  );
+}
+
 /**
  * Meta preview is more compatible with Cocos' original multi-file web build:
  * index.html plus its relative JS, WASM, JSON, and asset files in the same ZIP.
@@ -479,11 +497,62 @@ export function createFacebookEncodedAssetMapArtifact(
   };
 }
 
+/**
+ * Creates the single-file Meta/Facebook variant from the same channel HTML
+ * used by the ZIP delivery.  Keeping this as a channel artifact lets callers
+ * validate and report both containers identically while leaving the choice to
+ * the user.
+ */
+export function createFacebookSingleHtmlArtifact(
+  sourceHtml: string,
+  config: ChannelBuildConfig,
+): ChannelDownloadArtifact {
+  if (config.platform !== "Facebook") {
+    throw new Error("Meta 单 HTML 产物目前仅用于 Meta / Facebook。");
+  }
+
+  const htmlBuffer = Buffer.from(createChannelHtml(sourceHtml, config), "utf8");
+  return {
+    body: htmlBuffer,
+    contentType: "text/html; charset=utf-8",
+    fileName: "facebook-playable.html",
+    deliveryFormat: "single-html",
+    entries: ["facebook-playable.html"],
+    entryBytes: { "facebook-playable.html": htmlBuffer.length },
+    sha256: sha256(htmlBuffer),
+    htmlBytes: htmlBuffer.length,
+  };
+}
+
+export function createGoogleSingleHtmlArtifact(
+  sourceHtml: string,
+  config: ChannelBuildConfig,
+): ChannelDownloadArtifact {
+  if (config.platform !== "Google") {
+    throw new Error("Google 单 HTML 产物目前仅用于 Google Ads。");
+  }
+  const htmlBuffer = Buffer.from(
+    injectGoogleExitApiScript(createChannelHtml(sourceHtml, config)),
+    "utf8",
+  );
+  return {
+    body: htmlBuffer,
+    contentType: "text/html; charset=utf-8",
+    fileName: "google-playable.html",
+    deliveryFormat: "single-html",
+    entries: ["google-playable.html"],
+    entryBytes: { "google-playable.html": htmlBuffer.length },
+    sha256: sha256(htmlBuffer),
+    htmlBytes: htmlBuffer.length,
+  };
+}
+
 export function createChannelDownloadArtifact(
   sourceHtml: string,
   config: ChannelBuildConfig,
 ): ChannelDownloadArtifact {
   let html = createChannelHtml(sourceHtml, config);
+  if (config.platform === "Unity") html = injectUnityMraidScript(html);
 
   if (config.platform === "Google") {
     html = injectGoogleExitApiScript(html);

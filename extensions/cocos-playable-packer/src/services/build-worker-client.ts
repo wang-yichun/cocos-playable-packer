@@ -52,6 +52,12 @@ function buildRequest(configuration: CreatorBuildConfiguration, projectName: str
       logoDataUrl: configuration.loadingLogoDataUrl ?? null,
     },
     channels: configuration.channels,
+    facebookArtifactFormat: configuration.facebookArtifactFormat ?? "zip",
+    googleOrientation: configuration.googleOrientation ?? "portrait,landscape",
+    googleArtifactFormat: configuration.googleArtifactFormat ?? "zip",
+    unityOrientation: configuration.unityOrientation ?? "responsive",
+    androidStoreUrl: configuration.androidStoreUrl ?? null,
+    iosStoreUrl: configuration.iosStoreUrl ?? null,
     projectName,
   };
 }

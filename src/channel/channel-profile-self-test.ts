@@ -90,7 +90,7 @@ const facebookReport = createChannelReport({
 });
 assert.equal(facebookReport.bridge, "facebook-cta");
 assert.equal(facebookReport.deliveryFormat, "zip-multi-file");
-assert.ok(facebookReport.warnings.some((warning) => warning.includes("index.html")));
+assert.ok(facebookReport.warnings.some((warning) => warning.includes("FbPlayableAd.onCTAClick")));
 
 for (const platform of ["IronSource", "Unity", "Moloco", "Pangle", "TikTok"] as const) {
   const channelReport = createChannelReport({

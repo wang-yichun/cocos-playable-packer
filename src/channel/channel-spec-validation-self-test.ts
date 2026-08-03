@@ -6,6 +6,7 @@ import path from "node:path";
 import {
   createChannelDownloadArtifact,
   createFacebookMultiFileArtifact,
+  createFacebookSingleHtmlArtifact,
 } from "./liftoff-delivery.js";
 import {
   TEST_ANDROID_STORE_URL,
@@ -132,6 +133,18 @@ const cocosShaderFacebook = validateChannelArtifact({
     "assets/internal/import/effect.json": "vec2 location = getPixelLocation();",
   },
 });
+
+const unityWithoutMraidDeclaration = validateChannelArtifact({
+  platform: "Unity",
+  deliveryFormat: "single-html",
+  artifactBytes: 4_000_000,
+  entries: ["unity-playable.html"],
+  textFiles: {
+    "unity-playable.html": "<script>mraid.open(); window.__PACK_RUNTIME_START_GATE__ = true; window.addEventListener('viewableChange', () => {});</script>",
+  },
+});
+assert.equal(unityWithoutMraidDeclaration.valid, false);
+assert.ok(issueCodes(unityWithoutMraidDeclaration).includes("UNITY_MRAID_SCRIPT_REFERENCE_MISSING"));
 assert.equal(cocosShaderFacebook.valid, true);
 assert.ok(!issueCodes(cocosShaderFacebook).includes("FACEBOOK_JAVASCRIPT_REDIRECT_PRESENT"));
 
@@ -264,6 +277,13 @@ try {
   assert.equal(facebook.report.specificationStatus, "official-confirmed");
   assert.equal(facebook.report.maximumArtifactBytes, 5_000_000);
   assert.equal(facebook.report.actualFormat, "zip-multi-file");
+
+  const facebookHtmlArtifact = createFacebookSingleHtmlArtifact(sourceHtml, config("Facebook"));
+  const facebookHtmlFile = path.join(temporaryRoot, facebookHtmlArtifact.fileName);
+  await writeFile(facebookHtmlFile, facebookHtmlArtifact.body);
+  const facebookHtml = await validateChannelArtifactFile(facebookHtmlFile, "Facebook");
+  assert.equal(facebookHtml.report.valid, true);
+  assert.equal(facebookHtml.report.actualFormat, "single-html");
 
   const ironSourceArtifact = createChannelDownloadArtifact(
     sourceHtml,

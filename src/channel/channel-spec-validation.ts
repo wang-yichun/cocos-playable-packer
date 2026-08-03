@@ -48,6 +48,7 @@ export interface ChannelArtifactValidationReport {
 interface ChannelRuleSet {
   specificationStatus: ChannelSpecificationStatus;
   expectedFormat: ChannelDeliveryFormat | null;
+  acceptedFormats?: readonly ChannelArtifactFormat[];
   maximumArtifactBytes: number | null;
   sizeSeverity: ChannelValidationSeverity;
   maximumEntries: number | null;
@@ -80,6 +81,7 @@ const CHANNEL_RULES: Readonly<Record<ChannelPlatform, ChannelRuleSet>> = {
   Facebook: {
     specificationStatus: "official-confirmed",
     expectedFormat: "zip-multi-file",
+    acceptedFormats: ["zip-multi-file", "single-html"],
     maximumArtifactBytes: FIVE_MB,
     sizeSeverity: "error",
     maximumEntries: 100,
@@ -218,6 +220,19 @@ function checkNoMraidScript(
   }
 }
 
+function checkUnityMraidScriptReference(
+  issues: ChannelValidationIssue[],
+  files: Readonly<Record<string, string>>,
+): void {
+  if (matchingFile(files, MRAID_SCRIPT) === undefined) {
+    pushIssue(issues, {
+      code: "UNITY_MRAID_SCRIPT_REFERENCE_MISSING",
+      severity: "error",
+      message: "Unity 产物必须尽早声明宿主提供的 <script src=\"mraid.js\"></script>。",
+    });
+  }
+}
+
 function checkMraidBridge(
   issues: ChannelValidationIssue[],
   source: string,
@@ -288,7 +303,8 @@ export function validateChannelArtifact(
     });
   }
 
-  if (rules.expectedFormat !== null && input.deliveryFormat !== rules.expectedFormat) {
+  const formatAccepted = rules.acceptedFormats?.includes(input.deliveryFormat) ?? input.deliveryFormat === rules.expectedFormat;
+  if (rules.expectedFormat !== null && !formatAccepted) {
     pushIssue(issues, {
       code: "DELIVERY_FORMAT_MISMATCH",
       severity: "error",
@@ -399,7 +415,7 @@ export function validateChannelArtifact(
       checkMraidBridge(issues, source);
       checkNoExternalResources(issues, input.textFiles, "error");
       checkXhrReference(issues, input.textFiles);
-      checkNoMraidScript(issues, input.textFiles, "error");
+      checkUnityMraidScriptReference(issues, input.textFiles);
       pushIssue(issues, {
         code: "UNITY_DEVICE_TEST_REQUIRED",
         severity: "warning",

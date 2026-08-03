@@ -458,6 +458,69 @@ select:disabled {
   padding: 16px;
 }
 
+.config-card--channel {
+  grid-column: 1 / -1;
+}
+
+.channel-group {
+  display: grid;
+  gap: 0;
+  padding: 14px 0;
+}
+
+.channel-group:first-of-type {
+  padding-top: 0;
+}
+
+.channel-group + .channel-group {
+  border-top: 1px solid rgba(90, 113, 144, .24);
+}
+
+.config-card--channel .switch-row {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.channel-group-details {
+  display: grid;
+  gap: 0;
+  margin-top: 14px;
+}
+
+.channel-shared-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.channel-shared-heading strong {
+  color: #e8eef8;
+  font-size: 13px;
+}
+
+.channel-shared-heading small {
+  color: #98a9bd;
+  line-height: 1.5;
+}
+
+.channel-store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.field-note--warning {
+  color: #fbbf24;
+}
+
+@media (max-width: 760px) {
+  .channel-store-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .config-card--muted {
   border-color: rgba(83, 99, 120, .26);
   background: linear-gradient(180deg, rgba(24, 33, 47, .78), rgba(18, 25, 36, .82));
@@ -660,6 +723,58 @@ select {
   color: #7f91a8;
   font-size: 9px;
   line-height: 1.35;
+}
+
+.cache-management-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.cache-management-row > div {
+  min-width: 0;
+}
+
+.cache-management-row .field-help {
+  margin: 6px 0 0;
+}
+
+@media (max-width: 620px) {
+  .cache-management-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.channel-format-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 260px);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.channel-format-row > span {
+  display: grid;
+  gap: 3px;
+}
+
+.channel-format-row strong {
+  color: #dce7f4;
+  font-size: 11px;
+}
+
+.channel-format-row small {
+  color: #7f91a8;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+@media (max-width: 620px) {
+  .channel-format-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .switch-input {
@@ -903,6 +1018,26 @@ select {
   font-size: 10px;
   line-height: 1.55;
   text-align: center;
+}
+
+.channel-option-actions {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.channel-preview-link {
+  color: #8bb8ff;
+  font-size: 10px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.channel-preview-link:hover {
+  color: #dceaff;
+  text-decoration: underline;
 }
 
 .advanced-details {
